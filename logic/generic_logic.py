@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi logic module base class.
 
@@ -18,20 +17,22 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
+
 from qtpy import QtCore
+
 from core.module import Base
 from core.util.mutex import Mutex
 
 
 class GenericLogic(Base):
-    """A generic logic interface class.
-    """
+    """A generic logic interface class."""
+
     _threaded = True
 
     def __init__(self, **kwargs):
-        """ Initialzize a logic module.
+        """Initialzize a logic module.
 
-          @param dict kwargs: dict of additional arguments
+        @param dict kwargs: dict of additional arguments
         """
         super().__init__(**kwargs)
         self.taskLock = Mutex()
@@ -41,21 +42,21 @@ class GenericLogic(Base):
         super().moveToThread(thread)
 
     def getModuleThread(self):
-        """ Get the thread associated to this module.
+        """Get the thread associated to this module.
 
-          @return QThread: thread with qt event loop associated with this module
+        @return QThread: thread with qt event loop associated with this module
         """
-        return self._manager.tm._threads['mod-logic-' + self._name].thread
+        return self._manager.tm._threads["mod-logic-" + self._name].thread
 
     def getTaskRunner(self):
-        """ Get a reference to the task runner module registered in the manager.
+        """Get a reference to the task runner module registered in the manager.
 
-          @return object: reference to task runner
+        @return object: reference to task runner
 
-          If there isno registered task runner, an exception is raised.
+        If there isno registered task runner, an exception is raised.
         """
         with self._manager.lock:
             if self._manager.tr is not None:
                 return self._manager.tr
             else:
-                raise Exception('Tried to access task runner without loading one!')
+                raise Exception("Tried to access task runner without loading one!")

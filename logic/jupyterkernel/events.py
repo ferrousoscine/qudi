@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Infrastructure for registering and firing callbacks on application events.
 
 Unlike :mod:`IPython.core.hooks`, which lets end users set single functions to
@@ -14,10 +13,10 @@ events and the arguments which will be passed to them.
 
 class EventManager:
     """Manage a collection of events and a sequence of callbacks for each.
-    
+
     This is attached to :class:`~IPython.core.interactiveshell.InteractiveShell`
     instances as an ``events`` attribute.
-    
+
     .. note::
 
        This API is experimental in IPython 2.0, and may be revised in future versions.
@@ -25,7 +24,7 @@ class EventManager:
 
     def __init__(self, kernel, available_callbacks):
         """Initialise the :class:`CallbackManager`.
-        
+
         Parameters
         ----------
         kernel
@@ -37,7 +36,7 @@ class EventManager:
 
     def register(self, event, register_function):
         """Register a new event callback
-        
+
         Parameters
         ----------
         event : str
@@ -45,7 +44,7 @@ class EventManager:
         register_function : callable
           A function to be called on the given event. It should take the same
           parameters as the appropriate callback prototype.
-        
+
         Raises
         ------
         TypeError
@@ -54,7 +53,7 @@ class EventManager:
           If ``event`` is not one of the known events.
         """
         if not callable(register_function):
-            raise TypeError('Need a callable, got {0!r}'.format(register_function))
+            raise TypeError(f"Need a callable, got {register_function!r}")
         self.callbacks[event].append(register_function)
 
     def unregister(self, event, register_function):
@@ -63,7 +62,7 @@ class EventManager:
 
     def trigger(self, event, *args, **kwargs):
         """Call callbacks for ``event``.
-        
+
         Any additional arguments are passed to all callbacks registered for this
         event. Exceptions raised by callbacks are caught, and a message printed.
         """
@@ -71,7 +70,7 @@ class EventManager:
             try:
                 func(*args, **kwargs)
             except Exception:
-                print("Error in callback {0} (for {1}):".format(func, event))
+                print(f"Error in callback {func} (for {event}):")
                 self.kernel.showtraceback()
 
 
@@ -91,10 +90,11 @@ def _define_event(callback_proto):
 # signatures of callbacks for those events.
 # ------------------------------------------------------------------------------
 
+
 @_define_event
 def pre_execute():
     """Fires before code is executed in response to user/frontend action.
-    
+
     This includes comm and widget messages and silent execution, as well as user
     code cells."""
     pass
@@ -109,7 +109,7 @@ def pre_run_cell():
 @_define_event
 def post_execute():
     """Fires after code is executed in response to user/frontend action.
-    
+
     This includes comm and widget messages and silent execution, as well as user
     code cells."""
     pass
@@ -124,10 +124,10 @@ def post_run_cell():
 @_define_event
 def shell_initialized(ip):
     """Fires after initialisation of :class:`~IPython.core.interactiveshell.InteractiveShell`.
-    
+
     This is before extensions and startup scripts are loaded, so it can only be
     set by subclassing.
-    
+
     Parameters
     ----------
     ip : :class:`~IPython.core.interactiveshell.InteractiveShell`

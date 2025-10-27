@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains a gui to show data from a simple data source.
 
@@ -20,24 +18,23 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import os
 
+import numpy as np
+from qtpy import QtCore, QtWidgets, uic
+
 from core.connector import Connector
-from gui.guibase import GUIBase
 from gui.colordefs import QudiPalettePale as palette
-from qtpy import QtWidgets
-from qtpy import QtCore
-from qtpy import uic
+from gui.guibase import GUIBase
 
 
 class SimpleMainWindow(QtWidgets.QMainWindow):
-    """ Create the Main Window based on the *.ui file. """
+    """Create the Main Window based on the *.ui file."""
 
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_simpledata_gui.ui')
+        ui_file = os.path.join(this_dir, "ui_simpledata_gui.ui")
 
         # Load it
         super().__init__()
@@ -46,25 +43,24 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
 
 
 class SimpleDataGui(GUIBase):
-    """ FIXME: Please document
-    """
+    """FIXME: Please document"""
+
     # declare connectors
-    simplelogic = Connector(interface='SimpleDataLogic')
+    simplelogic = Connector(interface="SimpleDataLogic")
 
     sigStart = QtCore.Signal()
     sigStop = QtCore.Signal()
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
         for key in config.keys():
-            self.log.info('{0}: {1}'.format(key,config[key]))
+            self.log.info(f"{key}: {config[key]}")
 
     def on_activate(self):
-        """ Definition and initialisation of the GUI.
-        """
+        """Definition and initialisation of the GUI."""
         self._simple_logic = self.simplelogic()
 
         #####################
@@ -80,10 +76,10 @@ class SimpleDataGui(GUIBase):
         self._pw = self._mw.trace_PlotWidget
 
         self.plot1 = self._pw.plotItem
-        self.plot1.setLabel('left', 'Some Value', units='some unit', color='#00ff00')
-        self.plot1.setLabel('bottom', 'Number of values', units='some unit')
+        self.plot1.setLabel("left", "Some Value", units="some unit", color="#00ff00")
+        self.plot1.setLabel("bottom", "Number of values", units="some unit")
         self.plot2 = self._pw.plotItem
-        self.plot2.setLabel('right', 'Smooth Value', units='some unit', color='#ff0000')
+        self.plot2.setLabel("right", "Smooth Value", units="some unit", color="#ff0000")
 
         self.curvearr = []
         self.smootharr = []
@@ -91,9 +87,9 @@ class SimpleDataGui(GUIBase):
         ## Create an empty plot curve to be filled later, set its pen
         for i in range(self._simple_logic._data_logic.getChannels()):
             self.curvearr.append(self.plot1.plot())
-            self.curvearr[-1].setPen(colorlist[(2*i)%len(colorlist)])
+            self.curvearr[-1].setPen(colorlist[(2 * i) % len(colorlist)])
             self.smootharr.append(self.plot2.plot())
-            self.smootharr[-1].setPen(colorlist[(2*i+1)%len(colorlist)], width=2)
+            self.smootharr[-1].setPen(colorlist[(2 * i + 1) % len(colorlist)], width=2)
 
         # make correct button state
         self._mw.startAction.setChecked(False)
@@ -111,47 +107,42 @@ class SimpleDataGui(GUIBase):
         self._simple_logic.sigRepeat.connect(self.updateData)
 
     def show(self):
-        """Make window visible and put it above all other windows.
-        """
+        """Make window visible and put it above all other windows."""
         QtWidgets.QMainWindow.show(self._mw)
         self._mw.activateWindow()
         self._mw.raise_()
 
     def on_deactivate(self):
-        """ Deactivate the module properly.
-        """
+        """Deactivate the module properly."""
         # FIXME: !
         self._mw.close()
 
     def updateData(self):
-        """ The function that grabs the data and sends it to the plot.
-        """
+        """The function that grabs the data and sends it to the plot."""
         for i in range(self._simple_logic._data_logic.getChannels()):
             self.curvearr[i].setData(
                 y=self._simple_logic.buf[0:-11, i],
-                x=np.arange(0, len(self._simple_logic.buf[0:-11]))
-                )
+                x=np.arange(0, len(self._simple_logic.buf[0:-11])),
+            )
             self.smootharr[i].setData(
-                y=self._simple_logic.smooth[24:-25-10, i],
-                x=np.arange(0, len(self._simple_logic.smooth[24:-25-10]))
-                )
+                y=self._simple_logic.smooth[24 : -25 - 10, i],
+                x=np.arange(0, len(self._simple_logic.smooth[24 : -25 - 10])),
+            )
 
-        if self._simple_logic.module_state() == 'locked':
-            self._mw.startAction.setText('Stop')
+        if self._simple_logic.module_state() == "locked":
+            self._mw.startAction.setText("Stop")
         else:
-            self._mw.startAction.setText('Start')
+            self._mw.startAction.setText("Start")
 
     def start_clicked(self):
-        """ Handling the Start button to stop and restart the counter.
-        """
-        if self._simple_logic.module_state() == 'locked':
-            self._mw.startAction.setText('Start')
+        """Handling the Start button to stop and restart the counter."""
+        if self._simple_logic.module_state() == "locked":
+            self._mw.startAction.setText("Start")
             self.sigStop.emit()
         else:
-            self._mw.startAction.setText('Stop')
+            self._mw.startAction.setText("Stop")
             self.sigStart.emit()
 
     def save_clicked(self):
-        """ Handling the save button to save the data into a file.
-        """
+        """Handling the save button to save the data into a file."""
         return

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi GUI module utility classes.
 
@@ -24,7 +22,7 @@ import pyqtgraph as pg
 
 
 class ColorBar(pg.GraphicsObject):
-    """ Create a ColorBar according to a previously defined color map.
+    """Create a ColorBar according to a previously defined color map.
 
     @param object pyqtgraph.ColorMap cmap: a defined colormap
     @param float width: width of the colorbar in x direction, starting from
@@ -33,12 +31,11 @@ class ColorBar(pg.GraphicsObject):
     """
 
     def __init__(self, cmap, width, cb_min, cb_max):
-
         pg.GraphicsObject.__init__(self)
 
         # handle the passed arguments:
-        self.stops, self.colors = cmap.getStops('float')
-        self.stops = (self.stops - self.stops.min())/self.stops.ptp()
+        self.stops, self.colors = cmap.getStops("float")
+        self.stops = (self.stops - self.stops.min()) / self.stops.ptp()
         self.width = width
 
         # Constructs an empty picture which can be altered by QPainter
@@ -48,8 +45,8 @@ class ColorBar(pg.GraphicsObject):
 
         self.refresh_colorbar(cb_min, cb_max)
 
-    def refresh_colorbar(self, cb_min, cb_max, width = None, height = None, xMin = None, yMin = None):
-        """ Refresh the appearance of the colorbar for a changed count range.
+    def refresh_colorbar(self, cb_min, cb_max, width=None, height=None, xMin=None, yMin=None):
+        """Refresh the appearance of the colorbar for a changed count range.
 
         @param float cb_min: The minimal count value should be passed here.
         @param float cb_max: The maximal count value should be passed here.
@@ -62,18 +59,18 @@ class ColorBar(pg.GraphicsObject):
         else:
             self.width = width
 
-#       FIXME: Until now, if you want to refresh the colorbar, a new QPainter
-#              object has been created, but I think that it is not necassary.
-#              I have to figure out how to use the created object properly.
+        #       FIXME: Until now, if you want to refresh the colorbar, a new QPainter
+        #              object has been created, but I think that it is not necassary.
+        #              I have to figure out how to use the created object properly.
         p = pg.QtGui.QPainter(self.pic)
         p.drawRect(self.boundingRect())
-        p.setPen(pg.mkPen('k'))
-        grad = pg.QtGui.QLinearGradient(width/2.0, cb_min*1.0, width/2.0, cb_max*1.0)
+        p.setPen(pg.mkPen("k"))
+        grad = pg.QtGui.QLinearGradient(width / 2.0, cb_min * 1.0, width / 2.0, cb_max * 1.0)
         for stop, color in zip(self.stops, self.colors):
-            grad.setColorAt(1.0 - stop, pg.QtGui.QColor(*[255*c for c in color]))
+            grad.setColorAt(1.0 - stop, pg.QtGui.QColor(*[255 * c for c in color]))
         p.setBrush(pg.QtGui.QBrush(grad))
         if xMin is None:
-            p.drawRect(pg.QtCore.QRectF(0, cb_min, width, cb_max-cb_min))
+            p.drawRect(pg.QtCore.QRectF(0, cb_min, width, cb_max - cb_min))
         else:
             # If this picture whants to be set in a plot, which is going to be
             # saved:
@@ -88,7 +85,7 @@ class ColorBar(pg.GraphicsObject):
             vb.enableAutoRange()
 
     def paint(self, p, *args):
-        """ Overwrite the paint method from GraphicsObject.
+        """Overwrite the paint method from GraphicsObject.
 
         @param object p: a pyqtgraph.QtGui.QPainter object, which is used to
                          set the color of the pen.
@@ -101,9 +98,8 @@ class ColorBar(pg.GraphicsObject):
         p.drawPicture(0, 0, self.pic)
 
     def boundingRect(self):
-        """ Overwrite the paint method from GraphicsObject.
+        """Overwrite the paint method from GraphicsObject.
 
         Get the position, width and hight of the displayed object.
         """
         return pg.QtCore.QRectF(self.pic.boundingRect())
-

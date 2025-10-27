@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains a POI Manager core class which gives capability to mark
 points of interest, re-optimise their position, and keep track of sample drift
@@ -22,16 +21,17 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import os
-import numpy as np
 import time
-
 from collections import OrderedDict
+from datetime import datetime
+
+import numpy as np
+from qtpy import QtCore
+
 from core.connector import Connector
 from core.statusvariable import StatusVar
-from datetime import datetime
-from logic.generic_logic import GenericLogic
-from qtpy import QtCore
 from core.util.mutex import Mutex
+from logic.generic_logic import GenericLogic
 
 
 class RegionOfInterest:
@@ -44,8 +44,16 @@ class RegionOfInterest:
     The anchors of each individual POI is given relative to the initial ROI origin (even if added later).
     """
 
-    def __init__(self, name=None, creation_time=None, history=None, scan_image=None,
-                 scan_image_extent=None, poi_list=None, poi_nametag=None):
+    def __init__(
+        self,
+        name=None,
+        creation_time=None,
+        history=None,
+        scan_image=None,
+        scan_image_extent=None,
+        poi_list=None,
+        poi_nametag=None,
+    ):
         # Remember the creation time for drift history timestamps
         self._creation_time = None
         # Keep track of the global position history relative to the initial position (sample drift).
@@ -81,10 +89,10 @@ class RegionOfInterest:
     def name(self, new_name):
         if isinstance(new_name, str) and new_name:
             self._name = str(new_name)
-        elif new_name is None or new_name == '':
-            self._name = self._creation_time.strftime('roi_%Y%m%d_%H%M_%S_%f')
+        elif new_name is None or new_name == "":
+            self._name = self._creation_time.strftime("roi_%Y%m%d_%H%M_%S_%f")
         else:
-            raise TypeError('ROI name to set must be None or of type str.')
+            raise TypeError("ROI name to set must be None or of type str.")
         return
 
     @property
@@ -98,7 +106,7 @@ class RegionOfInterest:
         elif isinstance(new_tag, str):
             self._poi_tag = str(new_tag)
         else:
-            raise TypeError('POI name tag to set must be None or of type str.')
+            raise TypeError("POI name tag to set must be None or of type str.")
         return
 
     @property
@@ -120,14 +128,14 @@ class RegionOfInterest:
 
     @property
     def creation_time_as_str(self):
-        return datetime.strftime(self._creation_time, '%Y-%m-%d %H:%M:%S.%f')
+        return datetime.strftime(self._creation_time, "%Y-%m-%d %H:%M:%S.%f")
 
     @creation_time.setter
     def creation_time(self, new_time):
         if not new_time:
             new_time = datetime.now()
         elif isinstance(new_time, str):
-            new_time = datetime.strptime(new_time, '%Y-%m-%d %H:%M:%S.%f')
+            new_time = datetime.strptime(new_time, "%Y-%m-%d %H:%M:%S.%f")
         if isinstance(new_time, datetime):
             self._creation_time = new_time
         return
@@ -164,39 +172,43 @@ class RegionOfInterest:
 
     def get_poi_position(self, name):
         if not isinstance(name, str):
-            raise TypeError('POI name must be of type str.')
+            raise TypeError("POI name must be of type str.")
         if name not in self._pois:
-            raise KeyError('No POI with name "{0}" found in POI list.'.format(name))
+            raise KeyError(f'No POI with name "{name}" found in POI list.')
         return self._pois[name].position + self.origin
 
     def get_poi_anchor(self, name):
         if not isinstance(name, str):
-            raise TypeError('POI name must be of type str.')
+            raise TypeError("POI name must be of type str.")
         if name not in self._pois:
-            raise KeyError('No POI with name "{0}" found in POI list.'.format(name))
+            raise KeyError(f'No POI with name "{name}" found in POI list.')
         return self._pois[name].position
 
     def set_poi_position(self, name, new_pos):
         if name not in self._pois:
-            raise KeyError('POI with name "{0}" not found in ROI "{1}".\n'
-                           'Unable to change POI position.'.format(name, self.name))
+            raise KeyError(
+                f'POI with name "{name}" not found in ROI "{self.name}".\n'
+                "Unable to change POI position."
+            )
         self._pois[name].position = np.array(new_pos, dtype=float) - self.origin
         return
 
     def set_poi_anchor(self, name, new_pos):
         if name not in self._pois:
-            raise KeyError('POI with name "{0}" not found in ROI "{1}".\n'
-                           'Unable to change POI position.'.format(name, self.name))
+            raise KeyError(
+                f'POI with name "{name}" not found in ROI "{self.name}".\n'
+                "Unable to change POI position."
+            )
         self._pois[name].position = new_pos
         return
 
     def rename_poi(self, name, new_name=None):
         if new_name is not None and not isinstance(new_name, str):
-            raise TypeError('POI name to set must be of type str or None.')
+            raise TypeError("POI name to set must be of type str or None.")
         if name not in self._pois:
-            raise KeyError('Name "{0}" not found in POI list.'.format(name))
+            raise KeyError(f'Name "{name}" not found in POI list.')
         if new_name in self._pois:
-            raise NameError('New POI name "{0}" already present in current POI list.'.format(new_name))
+            raise NameError(f'New POI name "{new_name}" already present in current POI list.')
         self._pois[name].name = new_name
         self._pois[new_name] = self._pois.pop(name)
         return
@@ -211,21 +223,23 @@ class RegionOfInterest:
                 tag_index = len(self._pois)
                 while True:
                     tag_index += 1
-                    name = '{0}{1:d}'.format(self._poi_tag, tag_index)
+                    name = f"{self._poi_tag}{tag_index:d}"
                     if name not in self._pois:
                         break
             poi_inst = PointOfInterest(position=position, name=name)
         if poi_inst.name in self._pois:
-            raise ValueError('POI with name "{0}" already present in ROI "{1}".\n'
-                             'Could not add POI to ROI'.format(poi_inst.name, self.name))
+            raise ValueError(
+                f'POI with name "{poi_inst.name}" already present in ROI "{self.name}".\n'
+                "Could not add POI to ROI"
+            )
         self._pois[poi_inst.name] = poi_inst
         return
 
     def delete_poi(self, name):
         if not isinstance(name, str):
-            raise TypeError('POI name to delete must be of type str.')
+            raise TypeError("POI name to delete must be of type str.")
         if name not in self._pois:
-            raise KeyError('Name "{0}" not found in POI list.'.format(name))
+            raise KeyError(f'Name "{name}" not found in POI list.')
         del self._pois[name]
         return
 
@@ -254,7 +268,7 @@ class RegionOfInterest:
                                  (relative to initial position)
         """
         if len(new_pos) != 3:
-            raise ValueError('ROI history position to set must be iterable of length 3 (X, Y, Z).')
+            raise ValueError("ROI history position to set must be iterable of length 3 (X, Y, Z).")
         timedelta = datetime.now() - self.creation_time
         self._pos_history.append(np.array((timedelta.total_seconds(), *new_pos), dtype=float))
         return
@@ -274,31 +288,36 @@ class RegionOfInterest:
         return
 
     def to_dict(self):
-        return {'name': self.name,
-                'poi_nametag': self.poi_nametag,
-                'creation_time': self.creation_time_as_str,
-                'pos_history': self.pos_history,
-                'scan_image': self.scan_image,
-                'scan_image_extent': self.scan_image_extent,
-                'pois': [poi.to_dict() for poi in self._pois.values()]}
+        return {
+            "name": self.name,
+            "poi_nametag": self.poi_nametag,
+            "creation_time": self.creation_time_as_str,
+            "pos_history": self.pos_history,
+            "scan_image": self.scan_image,
+            "scan_image_extent": self.scan_image_extent,
+            "pois": [poi.to_dict() for poi in self._pois.values()],
+        }
 
     @classmethod
     def from_dict(cls, dict_repr):
         if not isinstance(dict_repr, dict):
-            raise TypeError('Parameter to generate RegionOfInterest instance from must be of type '
-                            'dict.')
-        if 'pois' in dict_repr:
-            poi_list = [PointOfInterest.from_dict(poi) for poi in dict_repr.get('pois')]
+            raise TypeError(
+                "Parameter to generate RegionOfInterest instance from must be of type dict."
+            )
+        if "pois" in dict_repr:
+            poi_list = [PointOfInterest.from_dict(poi) for poi in dict_repr.get("pois")]
         else:
             poi_list = None
 
-        roi = cls(name=dict_repr.get('name'),
-                  creation_time=dict_repr.get('creation_time'),
-                  history=dict_repr.get('pos_history'),
-                  scan_image=dict_repr.get('scan_image'),
-                  scan_image_extent=dict_repr.get('scan_image_extent'),
-                  poi_list=poi_list,
-                  poi_nametag=dict_repr.get('poi_nametag'))
+        roi = cls(
+            name=dict_repr.get("name"),
+            creation_time=dict_repr.get("creation_time"),
+            history=dict_repr.get("pos_history"),
+            scan_image=dict_repr.get("scan_image"),
+            scan_image_extent=dict_repr.get("scan_image_extent"),
+            poi_list=poi_list,
+            poi_nametag=dict_repr.get("poi_nametag"),
+        )
         return roi
 
 
@@ -309,7 +328,7 @@ class PointOfInterest:
 
     def __init__(self, position, name=None):
         # Name of the POI
-        self._name = ''
+        self._name = ""
         # Relative POI position within the ROI (x,y,z)
         self._position = np.zeros(3)
         # Initialize properties
@@ -323,10 +342,10 @@ class PointOfInterest:
     @name.setter
     def name(self, new_name):
         if new_name is not None and not isinstance(new_name, str):
-            raise TypeError('Name to set must be either None or of type str.')
+            raise TypeError("Name to set must be either None or of type str.")
 
         if not new_name:
-            new_name = datetime.now().strftime('poi_%Y%m%d%H%M%S%f')
+            new_name = datetime.now().strftime("poi_%Y%m%d%H%M%S%f")
         self._name = str(new_name)
         return
 
@@ -337,12 +356,12 @@ class PointOfInterest:
     @position.setter
     def position(self, pos):
         if len(pos) != 3:
-            raise ValueError('POI position to set must be iterable of length 3 (X, Y, Z).')
+            raise ValueError("POI position to set must be iterable of length 3 (X, Y, Z).")
         self._position = np.array(pos, dtype=float)
         return
 
     def to_dict(self):
-        return {'name': self.name, 'position': tuple(self.position)}
+        return {"name": self.name, "position": tuple(self.position)}
 
     @classmethod
     def from_dict(cls, dict_repr):
@@ -350,15 +369,14 @@ class PointOfInterest:
 
 
 class PoiManagerLogic(GenericLogic):
-
     """
     This is the Logic class for mapping and tracking bright features in the confocal scan.
     """
 
     # declare connectors
-    optimiserlogic = Connector(interface='OptimizerLogic')
-    scannerlogic = Connector(interface='ConfocalLogic')
-    savelogic = Connector(interface='SaveLogic')
+    optimiserlogic = Connector(interface="OptimizerLogic")
+    scannerlogic = Connector(interface="ConfocalLogic")
+    savelogic = Connector(interface="SaveLogic")
 
     # status vars
     _roi = StatusVar(default=dict())  # Notice constructor and representer further below
@@ -394,8 +412,7 @@ class PoiManagerLogic(GenericLogic):
         return
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self.__timer = QtCore.QTimer()
         self.__timer.setSingleShot(False)
         self._last_refocus = 0
@@ -403,24 +420,31 @@ class PoiManagerLogic(GenericLogic):
 
         # Connect callback for a finished refocus
         self.optimiserlogic().sigRefocusFinished.connect(
-            self._optimisation_callback, QtCore.Qt.QueuedConnection)
+            self._optimisation_callback, QtCore.Qt.QueuedConnection
+        )
         # Connect internal start/stop signals to decouple QTimer from other threads
         self.__sigStartPeriodicRefocus.connect(
-            self.start_periodic_refocus, QtCore.Qt.QueuedConnection)
+            self.start_periodic_refocus, QtCore.Qt.QueuedConnection
+        )
         self.__sigStopPeriodicRefocus.connect(
-            self.stop_periodic_refocus, QtCore.Qt.QueuedConnection)
+            self.stop_periodic_refocus, QtCore.Qt.QueuedConnection
+        )
 
         # Initialise the ROI scan image (xy confocal image) if not present
         if self._roi.scan_image is None:
             self.set_scan_image(False)
 
-        self.sigRoiUpdated.emit({'name': self.roi_name,
-                                 'poi_nametag': self.poi_nametag,
-                                 'pois': self.poi_positions,
-                                 'history': self.roi_pos_history,
-                                 'scan_image': self.roi_scan_image,
-                                 'scan_image_extent': self.roi_scan_image_extent})
-        self.sigActivePoiUpdated.emit('' if self.active_poi is None else self.active_poi)
+        self.sigRoiUpdated.emit(
+            {
+                "name": self.roi_name,
+                "poi_nametag": self.poi_nametag,
+                "pois": self.poi_positions,
+                "history": self.roi_pos_history,
+                "scan_image": self.roi_scan_image,
+                "scan_image_extent": self.roi_scan_image_extent,
+            }
+        )
+        self.sigActivePoiUpdated.emit("" if self.active_poi is None else self.active_poi)
         self.update_poi_tag_in_savelogic()
         return
 
@@ -535,7 +559,7 @@ class PoiManagerLogic(GenericLogic):
     def time_until_refocus(self):
         if not self.__timer.isActive():
             return -1
-        return max(0., self._refocus_period - (time.time() - self._last_refocus))
+        return max(0.0, self._refocus_period - (time.time() - self._last_refocus))
 
     @property
     def scanner_position(self):
@@ -560,12 +584,12 @@ class PoiManagerLogic(GenericLogic):
     @QtCore.Slot(str)
     def set_poi_nametag(self, tag):
         if tag is None or isinstance(tag, str):
-            if tag == '':
+            if tag == "":
                 tag = None
             self._roi.poi_nametag = tag
-            self.sigRoiUpdated.emit({'poi_nametag': self.poi_nametag})
+            self.sigRoiUpdated.emit({"poi_nametag": self.poi_nametag})
         else:
-            self.log.error('POI name tag must be str or None.')
+            self.log.error("POI name tag must be str or None.")
         return
 
     @QtCore.Slot()
@@ -596,7 +620,7 @@ class PoiManagerLogic(GenericLogic):
 
         # Notify about a changed set of POIs if necessary
         if emit_change:
-            self.sigPoiUpdated.emit('', poi_name, self.get_poi_position(poi_name))
+            self.sigPoiUpdated.emit("", poi_name, self.get_poi_position(poi_name))
 
         # Set newly created POI as active poi
         self.set_active_poi(poi_name)
@@ -611,11 +635,11 @@ class PoiManagerLogic(GenericLogic):
         @param bool emit_change: Flag indicating if the changed POI set should be signaled.
         """
         if len(self.poi_names) == 0:
-            self.log.warning('Can not delete POI. No POI present in ROI.')
+            self.log.warning("Can not delete POI. No POI present in ROI.")
             return
         if name is None:
             if self.active_poi is None:
-                self.log.error('No POI name to delete and no active POI set.')
+                self.log.error("No POI name to delete and no active POI set.")
                 return
             else:
                 name = self.active_poi
@@ -629,7 +653,7 @@ class PoiManagerLogic(GenericLogic):
                 self.set_active_poi(None)
 
         # Notify about a changed set of POIs if necessary
-        self.sigPoiUpdated.emit(name, '', np.zeros(3))
+        self.sigPoiUpdated.emit(name, "", np.zeros(3))
         return
 
     @QtCore.Slot()
@@ -637,7 +661,7 @@ class PoiManagerLogic(GenericLogic):
         self.active_poi = None
         for name in self.poi_names:
             self._roi.delete_poi(name)
-            self.sigPoiUpdated.emit(name, '', np.zeros(3))
+            self.sigPoiUpdated.emit(name, "", np.zeros(3))
         return
 
     @QtCore.Slot(str)
@@ -649,12 +673,12 @@ class PoiManagerLogic(GenericLogic):
         @param str new_name:
         """
         if not isinstance(new_name, str) or not new_name:
-            self.log.error('POI name to set must be str of length > 0.')
+            self.log.error("POI name to set must be str of length > 0.")
             return
 
         if name is None:
             if self.active_poi is None:
-                self.log.error('Unable to rename POI. No POI name given and no active POI set.')
+                self.log.error("Unable to rename POI. No POI name given and no active POI set.")
                 return
             else:
                 name = self.active_poi
@@ -674,15 +698,15 @@ class PoiManagerLogic(GenericLogic):
         @param name:
         """
         if not isinstance(name, str) and name is not None:
-            self.log.error('POI name must be of type str or None.')
-        elif name is None or name == '':
+            self.log.error("POI name must be of type str or None.")
+        elif name is None or name == "":
             self._active_poi = None
         elif name in self.poi_names:
             self._active_poi = str(name)
         else:
-            self.log.error('No POI with name "{0}" found in POI list.'.format(name))
+            self.log.error(f'No POI with name "{name}" found in POI list.')
 
-        self.sigActivePoiUpdated.emit('' if self.active_poi is None else self.active_poi)
+        self.sigActivePoiUpdated.emit("" if self.active_poi is None else self.active_poi)
         self.update_poi_tag_in_savelogic()
         return
 
@@ -718,17 +742,18 @@ class PoiManagerLogic(GenericLogic):
 
         if name is None:
             if self.active_poi is None:
-                self.log.error('Unable to set POI position. '
-                               'No POI name given and no active POI set.')
+                self.log.error(
+                    "Unable to set POI position. No POI name given and no active POI set."
+                )
                 return
             else:
                 name = self.active_poi
 
         if len(position) != 3:
-            self.log.error('POI position must be iterable of length 3.')
+            self.log.error("POI position must be iterable of length 3.")
             return
         if not isinstance(name, str):
-            self.log.error('POI name must be of type str.')
+            self.log.error("POI name must be of type str.")
 
         shift = position - self.get_poi_position(name)
         self.add_roi_position(self.roi_origin + shift)
@@ -741,17 +766,18 @@ class PoiManagerLogic(GenericLogic):
 
         if name is None:
             if self.active_poi is None:
-                self.log.error('Unable to set POI position. '
-                               'No POI name given and no active POI set.')
+                self.log.error(
+                    "Unable to set POI position. No POI name given and no active POI set."
+                )
                 return
             else:
                 name = self.active_poi
 
         if len(position) != 3:
-            self.log.error('POI position must be iterable of length 3.')
+            self.log.error("POI position must be iterable of length 3.")
             return
         if not isinstance(name, str):
-            self.log.error('POI name must be of type str.')
+            self.log.error("POI name must be of type str.")
 
         shift = position - self.get_poi_position(name)
         self._roi.set_poi_anchor(name, self.get_poi_anchor(name) + shift)
@@ -760,20 +786,24 @@ class PoiManagerLogic(GenericLogic):
 
     @QtCore.Slot(str)
     def rename_roi(self, new_name):
-        if not isinstance(new_name, str) or new_name == '':
-            self.log.error('ROI name to set must be str of length > 0.')
+        if not isinstance(new_name, str) or new_name == "":
+            self.log.error("ROI name to set must be str of length > 0.")
             return
         self._roi.name = new_name
-        self.sigRoiUpdated.emit({'name': self.roi_name})
+        self.sigRoiUpdated.emit({"name": self.roi_name})
         return
 
     @QtCore.Slot(np.ndarray)
     def add_roi_position(self, position):
         self._roi.add_history_entry(position)
-        self.sigRoiUpdated.emit({'pois': self.poi_positions,
-                                 'history': self.roi_pos_history,
-                                 'scan_image': self.roi_scan_image,
-                                 'scan_image_extent': self.roi_scan_image_extent})
+        self.sigRoiUpdated.emit(
+            {
+                "pois": self.poi_positions,
+                "history": self.roi_pos_history,
+                "scan_image": self.roi_scan_image,
+                "scan_image_extent": self.roi_scan_image_extent,
+            }
+        )
         return
 
     @QtCore.Slot()
@@ -787,12 +817,16 @@ class PoiManagerLogic(GenericLogic):
         old_roi_origin = self.roi_origin
         self._roi.delete_history_entry(history_index)
         if np.any(old_roi_origin != self.roi_origin):
-            self.sigRoiUpdated.emit({'pois': self.poi_positions,
-                                     'history': self.roi_pos_history,
-                                     'scan_image': self.roi_scan_image,
-                                     'scan_image_extent': self.roi_scan_image_extent})
+            self.sigRoiUpdated.emit(
+                {
+                    "pois": self.poi_positions,
+                    "history": self.roi_pos_history,
+                    "scan_image": self.roi_scan_image,
+                    "scan_image_extent": self.roi_scan_image_extent,
+                }
+            )
         else:
-            self.sigRoiUpdated.emit({'history': self.roi_pos_history})
+            self.sigRoiUpdated.emit({"history": self.roi_pos_history})
         return
 
     @QtCore.Slot()
@@ -805,28 +839,30 @@ class PoiManagerLogic(GenericLogic):
         if name is None:
             name = self.active_poi
         if not isinstance(name, str):
-            self.log.error('POI name to move to must be of type str.')
+            self.log.error("POI name to move to must be of type str.")
             return
         self.move_scanner(self.get_poi_position(name))
         return
 
     def move_scanner(self, position):
         if len(position) != 3:
-            self.log.error('Scanner position to set must be iterable of length 3.')
+            self.log.error("Scanner position to set must be iterable of length 3.")
             return
-        self.scannerlogic().set_position('poimanager', x=position[0], y=position[1], z=position[2])
+        self.scannerlogic().set_position("poimanager", x=position[0], y=position[1], z=position[2])
         return
 
     @QtCore.Slot()
     def set_scan_image(self, emit_change=True):
-        """ Get the current xy scan data and set as scan_image of ROI. """
+        """Get the current xy scan data and set as scan_image of ROI."""
         self._roi.set_scan_image(
             self.scannerlogic().xy_image[:, :, 3],
-            (tuple(self.scannerlogic().image_x_range), tuple(self.scannerlogic().image_y_range)))
+            (tuple(self.scannerlogic().image_x_range), tuple(self.scannerlogic().image_y_range)),
+        )
 
         if emit_change:
-            self.sigRoiUpdated.emit({'scan_image': self.roi_scan_image,
-                                     'scan_image_extent': self.roi_scan_image_extent})
+            self.sigRoiUpdated.emit(
+                {"scan_image": self.roi_scan_image, "scan_image_extent": self.roi_scan_image_extent}
+            )
         return
 
     @QtCore.Slot()
@@ -834,26 +870,31 @@ class PoiManagerLogic(GenericLogic):
         self.stop_periodic_refocus()
         self._roi = RegionOfInterest()
         self.set_scan_image(False)
-        self.sigRoiUpdated.emit({'name': self.roi_name,
-                                 'poi_nametag': self.poi_nametag,
-                                 'pois': self.poi_positions,
-                                 'history': self.roi_pos_history,
-                                 'scan_image': self.roi_scan_image,
-                                 'scan_image_extent': self.roi_scan_image_extent})
+        self.sigRoiUpdated.emit(
+            {
+                "name": self.roi_name,
+                "poi_nametag": self.poi_nametag,
+                "pois": self.poi_positions,
+                "history": self.roi_pos_history,
+                "scan_image": self.roi_scan_image,
+                "scan_image_extent": self.roi_scan_image_extent,
+            }
+        )
         self.set_active_poi(None)
         return
 
     @QtCore.Slot(int)
     @QtCore.Slot(float)
     def set_refocus_period(self, period):
-        """ Change the duration of the periodic optimise timer during active
+        """Change the duration of the periodic optimise timer during active
         periodic refocusing.
 
         @param float period: The time between optimisation procedures.
         """
         if period < 0:
-            self.log.error('Refocus period must be a value > 0. Unable to set period of "{0}".'
-                           ''.format(period))
+            self.log.error(
+                f'Refocus period must be a value > 0. Unable to set period of "{period}".'
+            )
             return
         # Acquire thread lock in order to change the period during a running periodic refocus
         with self._threadlock:
@@ -867,7 +908,7 @@ class PoiManagerLogic(GenericLogic):
     @QtCore.Slot(float)
     def set_poi_threshold(self, threshold):
         if not threshold > 1:
-            self.log.error('threshold must > 1!')
+            self.log.error("threshold must > 1!")
         self._poi_threshold = float(threshold)
         self.sigThresholdUpdated.emit(threshold)
         return
@@ -887,19 +928,21 @@ class PoiManagerLogic(GenericLogic):
         """
         if name is None:
             if self.active_poi is None:
-                self.log.error('Unable to start periodic refocus. No POI name given and no active '
-                               'POI set.')
+                self.log.error(
+                    "Unable to start periodic refocus. No POI name given and no active POI set."
+                )
                 return
             else:
                 name = self.active_poi
         if name not in self.poi_names:
-            self.log.error('No POI with name "{0}" found in POI list.\n'
-                           'Unable to start periodic refocus.')
+            self.log.error(
+                'No POI with name "{0}" found in POI list.\nUnable to start periodic refocus.'
+            )
             return
 
         with self._threadlock:
             if self.__timer.isActive():
-                self.log.error('Periodic refocus already running. Unable to start a new one.')
+                self.log.error("Periodic refocus already running. Unable to start a new one.")
                 return
             self.module_state.lock()
             self._periodic_refocus_poi = name
@@ -912,7 +955,7 @@ class PoiManagerLogic(GenericLogic):
         return
 
     def stop_periodic_refocus(self):
-        """ Stops the periodic refocusing of the POI. """
+        """Stops the periodic refocusing of the POI."""
         with self._threadlock:
             if self.__timer.isActive():
                 self.__timer.stop()
@@ -936,7 +979,7 @@ class PoiManagerLogic(GenericLogic):
 
     @QtCore.Slot()
     def _periodic_refocus_loop(self):
-        """ This is the looped function that does the actual periodic refocus.
+        """This is the looped function that does the actual periodic refocus.
 
         If the time has run out, it refocuses the current poi.
         Otherwise it just updates the time that is left.
@@ -945,7 +988,7 @@ class PoiManagerLogic(GenericLogic):
             if self.__timer.isActive():
                 remaining_time = self.time_until_refocus
                 self.sigRefocusTimerUpdated.emit(True, self.refocus_period, remaining_time)
-                if remaining_time <= 0 and self.optimiserlogic().module_state() == 'idle':
+                if remaining_time <= 0 and self.optimiserlogic().module_state() == "idle":
                     self.optimise_poi_position(self._periodic_refocus_poi)
                     self._last_refocus = time.time()
         return
@@ -963,24 +1006,27 @@ class PoiManagerLogic(GenericLogic):
         """
         if name is None:
             if self.active_poi is None:
-                self.log.error('Unable to optimize POI position. '
-                               'No POI name given and not active POI set.')
+                self.log.error(
+                    "Unable to optimize POI position. No POI name given and not active POI set."
+                )
                 return
             else:
                 name = self.active_poi
 
         if update_roi_position:
-            tag = 'poimanagermoveroi_{0}'.format(name)
+            tag = f"poimanagermoveroi_{name}"
         else:
-            tag = 'poimanager_{0}'.format(name)
+            tag = f"poimanager_{name}"
 
-        if self.optimiserlogic().module_state() == 'idle':
-            self.optimiserlogic().start_refocus(initial_pos=self.get_poi_position(name),
-                                                caller_tag=tag)
+        if self.optimiserlogic().module_state() == "idle":
+            self.optimiserlogic().start_refocus(
+                initial_pos=self.get_poi_position(name), caller_tag=tag
+            )
             self.sigRefocusStateUpdated.emit(True)
         else:
-            self.log.warning('Unable to start POI refocus procedure. '
-                             'OptimizerLogic module is still locked.')
+            self.log.warning(
+                "Unable to start POI refocus procedure. OptimizerLogic module is still locked."
+            )
         return
 
     def _optimisation_callback(self, caller_tag, optimal_pos):
@@ -993,9 +1039,9 @@ class PoiManagerLogic(GenericLogic):
         @param optimal_pos:
         """
         # If the refocus was initiated by poimanager, update POI and ROI position
-        if caller_tag.startswith('poimanager_') or caller_tag.startswith('poimanagermoveroi_'):
-            shift_roi = caller_tag.startswith('poimanagermoveroi_')
-            poi_name = caller_tag.split('_', 1)[1]
+        if caller_tag.startswith("poimanager_") or caller_tag.startswith("poimanagermoveroi_"):
+            shift_roi = caller_tag.startswith("poimanagermoveroi_")
+            poi_name = caller_tag.split("_", 1)[1]
             if poi_name in self.poi_names:
                 # We only need x, y, z
                 optimal_pos = np.array(optimal_pos[:3], dtype=float)
@@ -1010,9 +1056,9 @@ class PoiManagerLogic(GenericLogic):
 
     def update_poi_tag_in_savelogic(self):
         if not self._active_poi:
-            self.savelogic().remove_additional_parameter('Active POI')
+            self.savelogic().remove_additional_parameter("Active POI")
         else:
-            self.savelogic().update_additional_parameters({'Active POI': self._active_poi})
+            self.savelogic().update_additional_parameters({"Active POI": self._active_poi})
 
     def save_roi(self):
         """
@@ -1021,23 +1067,25 @@ class PoiManagerLogic(GenericLogic):
         Save ROI scan image (if present) to a third file (binary numpy .npy-format).
         """
         # File path and names
-        filepath = self.savelogic().get_path_for_module(module_name='ROIs')
-        roi_name_no_blanks = self.roi_name.replace(' ', '_')
+        filepath = self.savelogic().get_path_for_module(module_name="ROIs")
+        roi_name_no_blanks = self.roi_name.replace(" ", "_")
         timestamp = datetime.now()
-        pois_filename = '{0}_poi_list'.format(roi_name_no_blanks)
-        roi_history_filename = '{0}_{1}_history.npy'.format(
-            timestamp.strftime('%Y%m%d-%H%M-%S'), roi_name_no_blanks)
-        roi_image_filename = '{0}_{1}_scan_image.npy'.format(
-            timestamp.strftime('%Y%m%d-%H%M-%S'), roi_name_no_blanks)
+        pois_filename = f"{roi_name_no_blanks}_poi_list"
+        roi_history_filename = "{0}_{1}_history.npy".format(
+            timestamp.strftime("%Y%m%d-%H%M-%S"), roi_name_no_blanks
+        )
+        roi_image_filename = "{0}_{1}_scan_image.npy".format(
+            timestamp.strftime("%Y%m%d-%H%M-%S"), roi_name_no_blanks
+        )
 
         # Metadata to save in both file headers
         x_extent, y_extent = self.roi_scan_image_extent
         parameters = OrderedDict()
-        parameters['roi_name'] = self.roi_name
-        parameters['poi_nametag'] = '' if self.poi_nametag is None else self.poi_nametag
-        parameters['roi_creation_time'] = self.roi_creation_time_as_str
-        parameters['scan_image_x_extent'] = '{0:.9e},{1:.9e}'.format(*x_extent)
-        parameters['scan_image_y_extent'] = '{0:.9e},{1:.9e}'.format(*y_extent)
+        parameters["roi_name"] = self.roi_name
+        parameters["poi_nametag"] = "" if self.poi_nametag is None else self.poi_nametag
+        parameters["roi_creation_time"] = self.roi_creation_time_as_str
+        parameters["scan_image_x_extent"] = "{0:.9e},{1:.9e}".format(*x_extent)
+        parameters["scan_image_y_extent"] = "{0:.9e},{1:.9e}".format(*y_extent)
 
         ##################################
         # Save POI positions to first file
@@ -1046,18 +1094,20 @@ class PoiManagerLogic(GenericLogic):
         poi_positions = np.array(tuple(poi_dict.values()), dtype=float)
         data = OrderedDict()
         # Save POI names in the first column
-        data['name'] = np.array(tuple(poi_dict), dtype=str)
+        data["name"] = np.array(tuple(poi_dict), dtype=str)
         # Save x,y,z coordinates in the following 3 columns
-        data['X (m)'] = poi_positions[:, 0]
-        data['Y (m)'] = poi_positions[:, 1]
-        data['Z (m)'] = poi_positions[:, 2]
+        data["X (m)"] = poi_positions[:, 0]
+        data["Y (m)"] = poi_positions[:, 1]
+        data["Z (m)"] = poi_positions[:, 2]
 
-        self.savelogic().save_data(data,
-                                   timestamp=timestamp,
-                                   filepath=filepath,
-                                   parameters=parameters,
-                                   filelabel=pois_filename,
-                                   fmt=['%s', '%.6e', '%.6e', '%.6e'])
+        self.savelogic().save_data(
+            data,
+            timestamp=timestamp,
+            filepath=filepath,
+            parameters=parameters,
+            filelabel=pois_filename,
+            fmt=["%s", "%.6e", "%.6e", "%.6e"],
+        )
 
         ############################################
         # Save ROI history to second file (binary) if present
@@ -1079,29 +1129,33 @@ class PoiManagerLogic(GenericLogic):
 
         # Try to detect legacy file format
         is_legacy_format = False
-        if not complete_path.endswith('_poi_list.dat'):
-            self.log.info('Trying to read ROI from legacy file format...')
-            with open(complete_path, 'r') as file:
+        if not complete_path.endswith("_poi_list.dat"):
+            self.log.info("Trying to read ROI from legacy file format...")
+            with open(complete_path) as file:
                 for line in file.readlines():
-                    if line.strip() == '#POI Name\tPOI Key\tX\tY\tZ':
+                    if line.strip() == "#POI Name\tPOI Key\tX\tY\tZ":
                         is_legacy_format = True
-                    elif not line.startswith('#'):
+                    elif not line.startswith("#"):
                         break
             if not is_legacy_format:
-                self.log.error('Unable to load ROI from file. File format not understood.')
+                self.log.error("Unable to load ROI from file. File format not understood.")
                 return
 
         if is_legacy_format:
-            filetag = filename.split('_', 1)[1].rsplit('.dat', 1)[0]
+            filetag = filename.split("_", 1)[1].rsplit(".dat", 1)[0]
         else:
-            filetag = filename.rsplit('_poi_list.dat', 1)[0]
+            filetag = filename.rsplit("_poi_list.dat", 1)[0]
 
         # Read POI data as well as roi metadata from textfile
-        poi_names = np.loadtxt(complete_path, delimiter='\t', usecols=0, dtype=str, ndmin=1)
+        poi_names = np.loadtxt(complete_path, delimiter="\t", usecols=0, dtype=str, ndmin=1)
         if is_legacy_format:
-            poi_coords = np.loadtxt(complete_path, delimiter='\t', usecols=(2, 3, 4), dtype=float, ndmin=2)
+            poi_coords = np.loadtxt(
+                complete_path, delimiter="\t", usecols=(2, 3, 4), dtype=float, ndmin=2
+            )
         else:
-            poi_coords = np.loadtxt(complete_path, delimiter='\t', usecols=(1, 2, 3), dtype=float, ndmin=2)
+            poi_coords = np.loadtxt(
+                complete_path, delimiter="\t", usecols=(1, 2, 3), dtype=float, ndmin=2
+            )
 
         # Create list of POI instances
         poi_list = [PointOfInterest(pos, poi_names[i]) for i, pos in enumerate(poi_coords)]
@@ -1113,33 +1167,35 @@ class PoiManagerLogic(GenericLogic):
         if is_legacy_format:
             roi_name = filetag
         else:
-            with open(complete_path, 'r') as file:
+            with open(complete_path) as file:
                 for line in file.readlines():
-                    if not line.startswith('#'):
+                    if not line.startswith("#"):
                         break
-                    if line.startswith('#roi_name:'):
-                        roi_name = line.split('#roi_name:', 1)[1].strip()
-                    elif line.startswith('#poi_nametag:'):
-                        poi_nametag = line.split('#poi_nametag:', 1)[1].strip()
-                    elif line.startswith('#roi_creation_time:'):
-                        roi_creation_time = line.split('#roi_creation_time:', 1)[1].strip()
-                    elif line.startswith('#scan_image_x_extent:'):
-                        scan_x_extent = line.split('#scan_image_x_extent:', 1)[1].strip().split(',')
-                    elif line.startswith('#scan_image_y_extent:'):
-                        scan_y_extent = line.split('#scan_image_y_extent:', 1)[1].strip().split(',')
-            scan_extent = ((float(scan_x_extent[0]), float(scan_x_extent[1])),
-                           (float(scan_y_extent[0]), float(scan_y_extent[1])))
+                    if line.startswith("#roi_name:"):
+                        roi_name = line.split("#roi_name:", 1)[1].strip()
+                    elif line.startswith("#poi_nametag:"):
+                        poi_nametag = line.split("#poi_nametag:", 1)[1].strip()
+                    elif line.startswith("#roi_creation_time:"):
+                        roi_creation_time = line.split("#roi_creation_time:", 1)[1].strip()
+                    elif line.startswith("#scan_image_x_extent:"):
+                        scan_x_extent = line.split("#scan_image_x_extent:", 1)[1].strip().split(",")
+                    elif line.startswith("#scan_image_y_extent:"):
+                        scan_y_extent = line.split("#scan_image_y_extent:", 1)[1].strip().split(",")
+            scan_extent = (
+                (float(scan_x_extent[0]), float(scan_x_extent[1])),
+                (float(scan_y_extent[0]), float(scan_y_extent[1])),
+            )
             poi_nametag = None if not poi_nametag else poi_nametag
 
         # Read ROI position history from binary file
-        history_filename = os.path.join(filepath, '{0}_history.npy'.format(filetag))
+        history_filename = os.path.join(filepath, f"{filetag}_history.npy")
         try:
             roi_history = np.load(history_filename)
         except FileNotFoundError:
             roi_history = None
 
         # Read ROI scan image from binary file
-        image_filename = os.path.join(filepath, '{0}_scan_image.npy'.format(filetag))
+        image_filename = os.path.join(filepath, f"{filetag}_scan_image.npy")
         try:
             roi_scan_image = np.load(image_filename)
         except FileNotFoundError:
@@ -1147,20 +1203,26 @@ class PoiManagerLogic(GenericLogic):
 
         # Reset current ROI and initialize new one from loaded data
         self.reset_roi()
-        self._roi = RegionOfInterest(name=roi_name,
-                                     creation_time=roi_creation_time,
-                                     history=roi_history,
-                                     scan_image=roi_scan_image,
-                                     scan_image_extent=scan_extent,
-                                     poi_list=poi_list,
-                                     poi_nametag=poi_nametag)
+        self._roi = RegionOfInterest(
+            name=roi_name,
+            creation_time=roi_creation_time,
+            history=roi_history,
+            scan_image=roi_scan_image,
+            scan_image_extent=scan_extent,
+            poi_list=poi_list,
+            poi_nametag=poi_nametag,
+        )
         print(poi_nametag, self.poi_nametag)
-        self.sigRoiUpdated.emit({'name': self.roi_name,
-                                 'poi_nametag': self.poi_nametag,
-                                 'pois': self.poi_positions,
-                                 'history': self.roi_pos_history,
-                                 'scan_image': self.roi_scan_image,
-                                 'scan_image_extent': self.roi_scan_image_extent})
+        self.sigRoiUpdated.emit(
+            {
+                "name": self.roi_name,
+                "poi_nametag": self.poi_nametag,
+                "pois": self.poi_positions,
+                "history": self.roi_pos_history,
+                "scan_image": self.roi_scan_image,
+                "scan_image_extent": self.roi_scan_image_extent,
+            }
+        )
         self.set_active_poi(None if len(poi_names) == 0 else poi_names[0])
         return
 
@@ -1175,9 +1237,9 @@ class PoiManagerLogic(GenericLogic):
     def transform_roi(self, transform_matrix):
         # TODO: Implement this
         if transform_matrix.shape != (3, 3):
-            self.log.error('Tranformation matrix must be numpy array of shape (3, 3).')
+            self.log.error("Tranformation matrix must be numpy array of shape (3, 3).")
             return
-        self.log.error('Tranformation of all POI positions not implemented yet.')
+        self.log.error("Tranformation of all POI positions not implemented yet.")
         return
 
     def _spot_filter(self, scan):
@@ -1204,9 +1266,7 @@ class PoiManagerLogic(GenericLogic):
                 unspot_e += 1
             if vm_local_arr > hm_local_arr * 1.2:
                 unspot_e += 1
-        if ensem_e > 4:
-            return False
-        elif unspot_e > 1:
+        if ensem_e > 4 or unspot_e > 1:
             return False
         else:
             return True
@@ -1220,10 +1280,14 @@ class PoiManagerLogic(GenericLogic):
         yc = []
         for i in range(0, len(scan) - filter_size):
             for j in range(0, len(scan[i]) - filter_size):
-                local_arr = scan[i:i + filter_size, j:j + filter_size]
+                local_arr = scan[i : i + filter_size, j : j + filter_size]
                 local_arr = np.asarray(local_arr)
                 arr_threshold = scan_m * self._poi_threshold * 0.5
-                if scan[i + mid_f][j + mid_f] == local_arr.max() and self._is_spot_shape(local_arr) and local_arr.mean() > arr_threshold:
+                if (
+                    scan[i + mid_f][j + mid_f] == local_arr.max()
+                    and self._is_spot_shape(local_arr)
+                    and local_arr.mean() > arr_threshold
+                ):
                     xc.append(i + mid_f)
                     yc.append(j + mid_f)
         return xc, yc
@@ -1237,7 +1301,9 @@ class PoiManagerLogic(GenericLogic):
 
         for i in range(0, len(scan_image)):
             for j in range(0, len(scan_image[i])):
-                scan_image[i][j] = int(scan_image[i][j])  # data here somehow needs to be reset, otherwise shit happens.
+                scan_image[i][j] = int(
+                    scan_image[i][j]
+                )  # data here somehow needs to be reset, otherwise shit happens.
 
         threshold = scan_image.mean() * self._poi_threshold
 

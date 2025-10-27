@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface file for simple data acquisition.
 
@@ -25,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class SimpleDataInterface(metaclass=InterfaceMetaclass):
-    """ An interface to get read one or multiple values from a device.
+    """An interface to get read one or multiple values from a device.
 
     Deprecated : This interface is redundant with process_interface. Please use the other if possible?
     TODO: Remove in future versions ?
@@ -33,10 +31,10 @@ class SimpleDataInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def getData(self):
-        """ Return a measured value """
+        """Return a measured value"""
         pass
 
     @abstract_interface_method
     def getChannels(self):
-        """ Return number of channels for value """
+        """Return number of channels for value"""
         pass

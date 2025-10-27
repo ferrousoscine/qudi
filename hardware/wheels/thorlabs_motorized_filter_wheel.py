@@ -23,7 +23,7 @@ from core.configoption import ConfigOption
 
 
 class ThorlabsMotorizedFilterWheel(Base):
-    """ This class is implements communication with Thorlabs Motorized Filter Wheels
+    """This class is implements communication with Thorlabs Motorized Filter Wheels
 
     Example config for copy-paste:
 
@@ -39,7 +39,7 @@ class ThorlabsMotorizedFilterWheel(Base):
         by the user.
     """
 
-    interface = ConfigOption('interface', 'COM3', missing='error')
+    interface = ConfigOption("interface", "COM3", missing="error")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -47,40 +47,41 @@ class ThorlabsMotorizedFilterWheel(Base):
         self._inst = None
 
     def on_activate(self):
-        """ Module activation method """
+        """Module activation method"""
         self._rm = visa.ResourceManager()
         try:
-            self._inst = self._rm.open_resource(self.interface, baud_rate=115200, write_termination='\r',
-                                                read_termination='\r')
-            idn = self._query('*idn?')
-            self.log.debug('Connected to : {}'.format(idn))
+            self._inst = self._rm.open_resource(
+                self.interface, baud_rate=115200, write_termination="\r", read_termination="\r"
+            )
+            idn = self._query("*idn?")
+            self.log.debug("Connected to : {}".format(idn))
         except visa.VisaIOError:
-            self.log.error('Could not connect to device')
+            self.log.error("Could not connect to device")
 
     def on_deactivate(self):
-        """ Disconnect from hardware on deactivation. """
+        """Disconnect from hardware on deactivation."""
         self._inst.close()
         self._rm.close()
 
     def _query(self, text):
-        """ Send query, get and return answer """
+        """Send query, get and return answer"""
         echo = self._write(text)
         answer = self._inst.read()
         return answer
 
     def _write(self, text):
-        """ Write command, do not expect answer """
+        """Write command, do not expect answer"""
         self._inst.write(text)
         echo = self._inst.read()
         return echo
 
     def get_position(self):
-        """ Get the current position, from 1 to 6 (or 12) """
-        position = self._query('pos?')
+        """Get the current position, from 1 to 6 (or 12)"""
+        position = self._query("pos?")
         return int(position)
 
     def set_position(self, value):
-        """ Set the position to a given value
+        """Set the position to a given value
 
         The wheel will take the shorter path. If upward or downward are equivalent, the wheel take the upward path.
         """

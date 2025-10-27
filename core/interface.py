@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Decorators and objects used for qudi interfaces
 
@@ -66,16 +65,19 @@ class InterfaceMethod:
 
     def __call__(self, *args, **kwargs):
         if self.__isabstractmethod__:
-            raise NotImplementedError('No methods registered on abstractmethod {0}.'
-                                      ''.format(self.default_callable.__name__))
+            raise NotImplementedError(
+                f"No methods registered on abstractmethod {self.default_callable.__name__}."
+            )
         elif self.registered:
-            raise Exception('No keyword given for call to overloaded interface method. '
-                            'Valid keywords are: {0}'.format(tuple(self.registered)))
+            raise Exception(
+                "No keyword given for call to overloaded interface method. "
+                f"Valid keywords are: {tuple(self.registered)}"
+            )
         return self._default_callable(*args, **kwargs)
 
     def __getitem__(self, key):
         if key not in self.registered:
-            raise KeyError('No method registered for interface "{0}".'.format(key))
+            raise KeyError(f'No method registered for interface "{key}".')
         return self.registered[key]
 
     def register(self, interface):
@@ -98,11 +100,13 @@ class InterfaceMethod:
         @param str interface: Name of the interface class the decorated method is associated to
         @return: Decorator
         """
+
         def decorator(func):
             self.registered[interface] = func
             self.__isabstractmethod__ = False
             InterfaceMethod._latest_unregistered_instances.pop(self._name, None)
             return func
+
         return decorator
 
     # def __repr__(self):
@@ -112,13 +116,13 @@ class InterfaceMethod:
     # Makes this object compatible with abc.abstractmethod
     @property
     def __isabstractmethod__(self):
-        if hasattr(self._default_callable, '__isabstractmethod__'):
+        if hasattr(self._default_callable, "__isabstractmethod__"):
             return self._default_callable.__isabstractmethod__
         return False
 
     @__isabstractmethod__.setter
     def __isabstractmethod__(self, flag):
-        if hasattr(self, '__isabstractmethod__'):
+        if hasattr(self, "__isabstractmethod__"):
             self._default_callable.__isabstractmethod__ = bool(flag)
 
 
@@ -126,7 +130,8 @@ class ScalarConstraint:
     """
     Constraint definition for a scalar variable hardware parameter.
     """
-    def __init__(self, min=0.0, max=0.0, step=0.0, default=0.0, unit=''):
+
+    def __init__(self, min=0.0, max=0.0, step=0.0, default=0.0, unit=""):
         # allowed minimum value for parameter
         self.min = min
         # allowed maximum value for parameter

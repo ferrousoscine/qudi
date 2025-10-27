@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dummy implementation for process control.
 
@@ -19,14 +18,16 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from core.module import Base
-from interface.process_interface import ProcessInterface
-from interface.process_control_interface import ProcessControlInterface
-from qtpy import QtCore
 import numpy as np
+from qtpy import QtCore
+
+from core.module import Base
+from interface.process_control_interface import ProcessControlInterface
+from interface.process_interface import ProcessInterface
+
 
 class ProcessDummy(Base, ProcessInterface, ProcessControlInterface):
-    """ Methods to control slow laser switching devices.
+    """Methods to control slow laser switching devices.
 
     Example config for copy-paste:
 
@@ -34,9 +35,9 @@ class ProcessDummy(Base, ProcessInterface, ProcessControlInterface):
         module.Class: 'process_dummy.ProcessDummy'
 
     """
+
     def on_activate(self):
-        """ Activate module.
-        """
+        """Activate module."""
         self.temperature = 300.0
         self.pwmpower = 0
 
@@ -45,75 +46,74 @@ class ProcessDummy(Base, ProcessInterface, ProcessControlInterface):
         self.recalctimer.start(100)
 
     def on_deactivate(self):
-        """ Deactivate module.
-        """
+        """Deactivate module."""
         pass
 
     def get_process_value(self):
-        """ Process value, here temperature.
+        """Process value, here temperature.
 
-            @return float: process value
+        @return float: process value
         """
         return self.temperature
 
     def get_process_unit(self):
-        """ Process unit, here kelvin.
+        """Process unit, here kelvin.
 
-            @return float: process unit
+        @return float: process unit
         """
-        return 'K', 'kelvin'
+        return "K", "kelvin"
 
     def set_control_value(self, value):
-        """ Set control value, here heating power.
+        """Set control value, here heating power.
 
-            @param flaot value: control value
+        @param flaot value: control value
         """
         self.pwmpower = value
 
     def get_control_value(self):
-        """ Get current control value, here heating power
+        """Get current control value, here heating power
 
-            @return float: current control value
+        @return float: current control value
         """
         return self.pwmpower
 
     def get_control_unit(self):
-        """ Get unit of control value.
+        """Get unit of control value.
 
-            @return tuple(str): short and text unit of control value
+        @return tuple(str): short and text unit of control value
         """
-        return '%', 'percent'
+        return "%", "percent"
 
     def get_control_limit(self):
-        """ Get minimum and maximum of control value.
+        """Get minimum and maximum of control value.
 
-            @return tuple(float, float): minimum and maximum of control value
+        @return tuple(float, float): minimum and maximum of control value
         """
         return -100, 100
 
     def _recalcTemp(self):
-        """ Update current temperature based on model.
-        """
+        """Update current temperature based on model."""
         pfactor = 1
         heatCapacity = self.metalHeatCapacity(self.temperature)
-        dt = self.pwmpower * abs((self.temperature - 4)/self.temperature) * pfactor / heatCapacity
+        dt = self.pwmpower * abs((self.temperature - 4) / self.temperature) * pfactor / heatCapacity
         if abs(dt) > 10:
-            dt = 10*np.sign(dt)
+            dt = 10 * np.sign(dt)
         self.temperature = self.temperature + dt
 
     def metalHeatCapacity(self, T):
-        """ Calculate heat capacity of copper at given temperature.
+        """Calculate heat capacity of copper at given temperature.
 
-            @param float T: temperature at which to calculate heat capacity
+        @param float T: temperature at which to calculate heat capacity
 
-            @return float: hrat capacity at temperature T
+        @return float: hrat capacity at temperature T
         """
         NA = 6.02214086 * 10**23  # Avogadro constant
-        k = 1.38064852 * 10**(-23)  # Boltzmann constant
-        TD = 343.5 # Debye temperatre of copper
-        Ef = 7 * 1.602176565 * 10**(-19) # fermi energy of copper (7eV)
-        heatcapacity = np.pi**2 * NA * k**2 * T / (2*Ef) + 12 * np.pi**4 * NA * k * T**3 / (5 * TD**3)
+        k = 1.38064852 * 10 ** (-23)  # Boltzmann constant
+        TD = 343.5  # Debye temperatre of copper
+        Ef = 7 * 1.602176565 * 10 ** (-19)  # fermi energy of copper (7eV)
+        heatcapacity = np.pi**2 * NA * k**2 * T / (2 * Ef) + 12 * np.pi**4 * NA * k * T**3 / (
+            5 * TD**3
+        )
         if heatcapacity < 0.0005:
             return 0.0005
         return heatcapacity
-

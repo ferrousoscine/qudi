@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi task runner module.
 
@@ -19,25 +18,31 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-
-from qtpy import QtCore
 import importlib
 
+from qtpy import QtCore
+
+import logic.generic_task as gt
 from core.util.models import ListTableModel
 from logic.generic_logic import GenericLogic
-import logic.generic_task as gt
 
 
 class TaskListTableModel(ListTableModel):
-    """ An extension of the ListTableModel for keeping a task list in a TaskRunner.
-    """
+    """An extension of the ListTableModel for keeping a task list in a TaskRunner."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.headers = ['Task Name', 'Task State', 'Pre/Post actions', 'Pauses',
-                        'Needs modules', 'is ok']
+        self.headers = [
+            "Task Name",
+            "Task State",
+            "Pre/Post actions",
+            "Pauses",
+            "Needs modules",
+            "is ok",
+        ]
 
     def data(self, index, role):
-        """ Get data from model for a given cell. Data can have a role that
+        """Get data from model for a given cell. Data can have a role that
         affects display.
 
         @param QModelIndex index: cell for which data is requested
@@ -49,24 +54,24 @@ class TaskListTableModel(ListTableModel):
             return None
         elif role == QtCore.Qt.DisplayRole:
             if index.column() == 0:
-               return self.storage[index.row()]['name']
+                return self.storage[index.row()]["name"]
             elif index.column() == 1:
-               return self.storage[index.row()]['object'].current
+                return self.storage[index.row()]["object"].current
             elif index.column() == 2:
-               return str(self.storage[index.row()]['preposttasks'])
+                return str(self.storage[index.row()]["preposttasks"])
             elif index.column() == 3:
-               return str(self.storage[index.row()]['pausetasks'])
+                return str(self.storage[index.row()]["pausetasks"])
             elif index.column() == 4:
-               return str(list(self.storage[index.row()]['needsmodules']))
+                return str(list(self.storage[index.row()]["needsmodules"]))
             elif index.column() == 5:
-               return self.storage[index.row()]['ok']
+                return self.storage[index.row()]["ok"]
             else:
                 return None
         else:
             return None
 
     def append(self, data):
-        """ Add a task to the end of the storage list and listen to its signals.
+        """Add a task to the end of the storage list and listen to its signals.
 
         @param object data: PrePostTask or InterruptableTask to add to list.
         """
@@ -75,27 +80,22 @@ class TaskListTableModel(ListTableModel):
             self.beginInsertRows(QtCore.QModelIndex(), n, n)
             self.storage.append(data)
             self.endInsertRows()
-            self.storage[-1]['object'].sigStateChanged.connect(
-                lambda x:
-                    self.dataChanged.emit(
-                        self.index(n, 1),
-                        self.index(n, 1)
-                        )
-                )
+            self.storage[-1]["object"].sigStateChanged.connect(
+                lambda x: self.dataChanged.emit(self.index(n, 1), self.index(n, 1))
+            )
 
 
 class TaskRunner(GenericLogic):
-    """ This module keeps a collection of tasks that have varying preconditions,
-        postconditions and conflicts and executes these tasks as their given
-        conditions allow.
+    """This module keeps a collection of tasks that have varying preconditions,
+    postconditions and conflicts and executes these tasks as their given
+    conditions allow.
     """
 
     sigLoadTasks = QtCore.Signal()
     sigCheckTasks = QtCore.Signal()
 
     def on_activate(self):
-        """ Initialise task runner.
-        """
+        """Initialise task runner."""
         self.model = TaskListTableModel()
         self.model.rowsInserted.connect(self.modelChanged)
         self.model.rowsRemoved.connect(self.modelChanged)
@@ -105,75 +105,78 @@ class TaskRunner(GenericLogic):
         self.sigLoadTasks.emit()
 
     def on_deactivate(self):
-        """ Shut down task runner.
-        """
+        """Shut down task runner."""
         self._manager.registerTaskRunner(None)
 
     def loadTasks(self):
-        """ Load all tasks specified in the configuration.
-            Check dependencies and load necessary modules.
+        """Load all tasks specified in the configuration.
+        Check dependencies and load necessary modules.
         """
         config = self.getConfiguration()
-        if not 'tasks' in config:
+        if "tasks" not in config:
             return
-        if config['tasks'] is None:
+        if config["tasks"] is None:
             return
-        for task in config['tasks']:
-            t = {'ok': False, 'object': None, 'name': task}
+        for task in config["tasks"]:
+            t = {"ok": False, "object": None, "name": task}
             # print('tsk:', task)
-            if not 'module' in config['tasks'][task]:
-                self.log.error('No module given for task {0}'.format(task))
+            if "module" not in config["tasks"][task]:
+                self.log.error(f"No module given for task {task}")
                 continue
             else:
-                t['module'] = config['tasks'][task]['module']
+                t["module"] = config["tasks"][task]["module"]
                 # print('mod:', config['tasks'][task]['module'])
 
-            if 'preposttasks' in config['tasks'][task]:
-                t['preposttasks'] = config['tasks'][task]['preposttasks']
+            if "preposttasks" in config["tasks"][task]:
+                t["preposttasks"] = config["tasks"][task]["preposttasks"]
             else:
-                t['preposttasks'] = []
+                t["preposttasks"] = []
 
-            if 'pausetasks' in config['tasks'][task]:
-                t['pausetasks'] = config['tasks'][task]['pausetasks']
+            if "pausetasks" in config["tasks"][task]:
+                t["pausetasks"] = config["tasks"][task]["pausetasks"]
             else:
-                t['pausetasks'] = []
+                t["pausetasks"] = []
 
-            if 'needsmodules' in config['tasks'][task]:
-                t['needsmodules'] = config['tasks'][task]['needsmodules']
+            if "needsmodules" in config["tasks"][task]:
+                t["needsmodules"] = config["tasks"][task]["needsmodules"]
             else:
-                t['needsmodules'] = {}
+                t["needsmodules"] = {}
 
-            if 'config' in config['tasks'][task]:
-                t['config'] = config['tasks'][task]['config']
+            if "config" in config["tasks"][task]:
+                t["config"] = config["tasks"][task]["config"]
             else:
-                t['config'] = {}
+                t["config"] = {}
 
             try:
                 ref = dict()
-                for moddef, mod in t['needsmodules'].items():
-                    if mod in self._manager.tree['defined']['logic'] and not mod in self._manager.tree['loaded']['logic']:
-                        success = self._manager.startModule('logic', mod)
+                for moddef, mod in t["needsmodules"].items():
+                    if (
+                        mod in self._manager.tree["defined"]["logic"]
+                        and mod not in self._manager.tree["loaded"]["logic"]
+                    ):
+                        success = self._manager.startModule("logic", mod)
                         if success < 0:
-                            raise Exception('Loading module {0} failed.'.format(mod))
-                    ref[moddef] = self._manager.tree['loaded']['logic'][mod]
+                            raise Exception(f"Loading module {mod} failed.")
+                    ref[moddef] = self._manager.tree["loaded"]["logic"][mod]
                 # print('Attempting to import: logic.tasks.{}'.format(t['module']))
-                mod = importlib.__import__('logic.tasks.{0}'.format(t['module']), fromlist=['*'])
+                mod = importlib.__import__("logic.tasks.{0}".format(t["module"]), fromlist=["*"])
                 # print('loaded:', mod)
                 # print('dir:', dir(mod))
-                t['object'] = mod.Task(name=t['name'], runner=self,
-                        references=ref, config=t['config'])
-                if isinstance(t['object'], gt.InterruptableTask) or isinstance(t['object'], gt.PrePostTask):
+                t["object"] = mod.Task(
+                    name=t["name"], runner=self, references=ref, config=t["config"]
+                )
+                if isinstance(t["object"], gt.InterruptableTask) or isinstance(
+                    t["object"], gt.PrePostTask
+                ):
                     self.model.append(t)
                 else:
-                    self.log.error('Not a subclass of allowd task classes {}'
-                            ''.format(task))
+                    self.log.error(f"Not a subclass of allowd task classes {task}")
             except:
-                self.log.exception('Error while importing module for '
-                        'task {}'.format(t['name']))
+                self.log.exception("Error while importing module for task {}".format(t["name"]))
         self.sigCheckTasks.emit()
 
     def registerTask(self, task):
-        """ Add a task from an external source (i.e. not loaded by task runner) to task runner.
+        """Add a task from an external source (i.e. not loaded by task runner) to task runner.
 
         @param dict task: dictionary describing a task to register
 
@@ -190,76 +193,76 @@ class TaskRunner(GenericLogic):
             dict config: extra configuration
         """
         try:
-            if not 'preposttasks' in task:
-                task['preposttasks'] = []
-            if not 'pausetasks' in task:
-                task['pausetasks'] = []
-            task['module'] = None
-            task['needsmodules'] = {}
-            task['config'] = {}
+            if "preposttasks" not in task:
+                task["preposttasks"] = []
+            if "pausetasks" not in task:
+                task["pausetasks"] = []
+            task["module"] = None
+            task["needsmodules"] = {}
+            task["config"] = {}
         except:
-            self.log.error('Cannot register task, not a writeable dict.')
+            self.log.error("Cannot register task, not a writeable dict.")
             return False
 
-        checklist = ('ok', 'object', 'name')
+        checklist = ("ok", "object", "name")
         for entry in checklist:
-            if not entry in task:
+            if entry not in task:
                 return False
-        if (
-            isinstance(t['object'], gt.InterruptableTask) or isinstance(t['object'], gt.PrePostTask)
-            ):
+        if isinstance(t["object"], gt.InterruptableTask) or isinstance(t["object"], gt.PrePostTask):
             self.model.append(t)
         else:
-            self.log.error('Not a subclass of allowd task classes {0}'.format(
-                task))
+            self.log.error(f"Not a subclass of allowd task classes {task}")
             return False
         return True
 
     def checkTasksInModel(self):
-        """ Check all loaded tasks for consistency and completeness of dependencies.
-        """
+        """Check all loaded tasks for consistency and completeness of dependencies."""
         for task in self.model.storage:
             ppok = False
             pok = True
             modok = False
 
             # check if we require pre/post actions
-            if len(task['preposttasks']) == 0:
+            if len(task["preposttasks"]) == 0:
                 ppok = True
 
             # check if all required pre/post action tasks tasks are present
             for t in self.model.storage:
-                if t['name'] in task['preposttasks']:
-                    ppok =True
+                if t["name"] in task["preposttasks"]:
+                    ppok = True
 
-            #check if all required pause tasks are present
-            #if len(task['pausetasks']) == 0:
+            # check if all required pause tasks are present
+            # if len(task['pausetasks']) == 0:
             #    pok = True
-            #for ptask in task['pausetasks']:
+            # for ptask in task['pausetasks']:
             #    for t in self.model.storage:
             #        if t['name'] == ptask:
             #            pok = True
 
             # check if all required moduls are present
-            if len(task['needsmodules']) == 0:
+            if len(task["needsmodules"]) == 0:
                 modok = True
-            for moddef, mod in task['needsmodules'].items():
-                if mod in self._manager.tree['defined']['logic'] and not mod in self._manager.tree['loaded']['logic']:
-                    self._manager.startModule('logic', mod)
-                if (mod in self._manager.tree['loaded']['logic']
-                        and not self._manager.tree['loaded']['logic'][mod].module_state.isstate('deactivated')):
+            for moddef, mod in task["needsmodules"].items():
+                if (
+                    mod in self._manager.tree["defined"]["logic"]
+                    and mod not in self._manager.tree["loaded"]["logic"]
+                ):
+                    self._manager.startModule("logic", mod)
+                if mod in self._manager.tree["loaded"]["logic"] and not self._manager.tree[
+                    "loaded"
+                ]["logic"][mod].module_state.isstate("deactivated"):
                     modok = True
             # print(task['name'], ppok, pok, modok)
-            task['ok'] = ppok and pok and modok
+            task["ok"] = ppok and pok and modok
 
     @QtCore.Slot(QtCore.QModelIndex, int, int)
     def modelChanged(self, parent, first, last):
-        """ React to model changes (right now debug only) """
+        """React to model changes (right now debug only)"""
         # print('Inserted into task list: {} {}'.format(first, last))
         pass
 
     def startTaskByIndex(self, index):
-        """ Try starting a task identified by its list index.
+        """Try starting a task identified by its list index.
 
         @param int index: index of task in task list
         """
@@ -267,7 +270,7 @@ class TaskRunner(GenericLogic):
         self.startTask(task)
 
     def startTaskByName(self, taskname):
-        """ Try starting a task identified by its configured name.
+        """Try starting a task identified by its configured name.
 
         @param str name: name assigned to task
         """
@@ -275,29 +278,30 @@ class TaskRunner(GenericLogic):
         self.startTask(task)
 
     def startTask(self, task):
-        """ Try starting a task identified by its task dictionary
+        """Try starting a task identified by its task dictionary
 
         @param dict task: dictionary that contains all information about task
         """
         # print('runner', QtCore.QThread.currentThreadId())
-        if not task['ok']:
-            self.log.error('Task {} did not pass all checks for required '
-                    'tasks and modules and cannot be run'.format(
-                        task['name']))
+        if not task["ok"]:
+            self.log.error(
+                "Task {} did not pass all checks for required "
+                "tasks and modules and cannot be run".format(task["name"])
+            )
             return
-        if task['object'].can('run'):
-            task['object'].run()
-        elif task['object'].can('resume'):
-            task['object'].resume()
-        elif task['object'].can('prerun'):
-            task['object'].prerun()
-        elif task['object'].can('postrun'):
-            task['object'].postrun()
+        if task["object"].can("run"):
+            task["object"].run()
+        elif task["object"].can("resume"):
+            task["object"].resume()
+        elif task["object"].can("prerun"):
+            task["object"].prerun()
+        elif task["object"].can("postrun"):
+            task["object"].postrun()
         else:
-            self.log.error('Task cannot be run: {0}'.format(task.name))
+            self.log.error(f"Task cannot be run: {task.name}")
 
     def pauseTaskByIndex(self, index):
-        """ Try pausing a task identified by its list index.
+        """Try pausing a task identified by its list index.
 
         @param int index: index of task in task list
         """
@@ -305,7 +309,7 @@ class TaskRunner(GenericLogic):
         self.pauseTask(task)
 
     def pauseTaskByName(self, taskname):
-        """ Try pausing a task identified by its configured name.
+        """Try pausing a task identified by its configured name.
 
         @param str name: name assigned to task
         """
@@ -313,18 +317,18 @@ class TaskRunner(GenericLogic):
         self.pauseTask(task)
 
     def pauseTask(self, task):
-        """ Actually Pause the Task.
+        """Actually Pause the Task.
 
         @param obj task: Reference to the task object
         """
         # print('runner', QtCore.QThread.currentThreadId())
-        if task['object'].can('pause'):
-            task['object'].pause()
+        if task["object"].can("pause"):
+            task["object"].pause()
         else:
-            self.log.error('Task cannot be paused:  {0}'.format(task['name']))
+            self.log.error("Task cannot be paused:  {0}".format(task["name"]))
 
     def stopTaskByIndex(self, index):
-        """ Try stopping a task identified by its list index.
+        """Try stopping a task identified by its list index.
 
         @param int index: index of task in task list
         """
@@ -332,7 +336,7 @@ class TaskRunner(GenericLogic):
         self.stopTask(task)
 
     def stopTaskByName(self, taskname):
-        """ Try stopping a task identified by its configured name.
+        """Try stopping a task identified by its configured name.
 
         @param str name: name assigned to task
         """
@@ -341,36 +345,36 @@ class TaskRunner(GenericLogic):
 
     def stopTask(self, task):
         # print('runner', QtCore.QThread.currentThreadId())
-        if task['object'].can('finish'):
-            task['object'].finish()
+        if task["object"].can("finish"):
+            task["object"].finish()
         else:
-            self.log.error('Task cannot be stopped: {0}'.format(task['name']))
+            self.log.error("Task cannot be stopped: {0}".format(task["name"]))
 
     def getTaskByName(self, taskname):
-        """ Get task dictionary for a given task name.
+        """Get task dictionary for a given task name.
 
         @param str name: name of the task
 
         @return dict: task dictionary
         """
         for task in self.model.storage:
-            if task['name'] == taskname:
+            if task["name"] == taskname:
                 return task
         raise KeyError(taskname)
 
     def getTaskByReference(self, ref):
-        """ Get task dictionary by the identity of its task object.
+        """Get task dictionary by the identity of its task object.
         @param str ref: task object
 
         @return dict: task dictionary
         """
         for task in self.model.storage:
-            if task['object'] is ref:
+            if task["object"] is ref:
                 return task
         raise KeyError(ref)
 
     def getModule(self, taskname, modname):
-        """ Get a reference to a module that is in a task's requied module list.
+        """Get a reference to a module that is in a task's requied module list.
 
         @param str taskname: name of task
         @param str modname: name of module
@@ -378,13 +382,13 @@ class TaskRunner(GenericLogic):
         @return object: module
         """
         task = self.getTaskByName(taskname)
-        if modname in task['needsmodules']:
-            return self._manager.tree['loaded']['logic'][modname]
+        if modname in task["needsmodules"]:
+            return self._manager.tree["loaded"]["logic"][modname]
         else:
             raise KeyError(modname)
 
     def resumePauseTasks(self, ref):
-        """ Try resuming all tasks paused by the given task.
+        """Try resuming all tasks paused by the given task.
 
         @param task ref: task object for which tasks should be resumed
 
@@ -393,34 +397,37 @@ class TaskRunner(GenericLogic):
         return self._resumePauseTasks(self.getTaskByReference(ref))
 
     def _resumePauseTasks(self, task):
-        """ Try resuming all tasks paused by the given task.
+        """Try resuming all tasks paused by the given task.
 
         @param dict task: dict for task that should be resumed
 
         @return bool: whether resuming was successful
         """
-        for ptask in task['pausetasks']:
+        for ptask in task["pausetasks"]:
             # print(ptask)
             try:
                 for t in self.model.storage:
-                    if t['name'] == ptask:
-                        if t['object'].can('resume'):
-                            t['object'].resume()
-                        elif t['object'].isstate('stopped'):
+                    if t["name"] == ptask:
+                        if t["object"].can("resume"):
+                            t["object"].resume()
+                        elif t["object"].isstate("stopped"):
                             pass
                         else:
-                            self.log.error('Pausetask {} failed while '
-                                    'resuming after stop: {}'.format(
-                                        ptask, task['name']))
+                            self.log.error(
+                                "Pausetask {} failed while resuming after stop: {}".format(
+                                    ptask, task["name"]
+                                )
+                            )
                             return False
             except:
-                self.log.exception('This pausetask {} failed while '
-                        'preparing: {}'.format(ptask, task['name']))
+                self.log.exception(
+                    "This pausetask {} failed while preparing: {}".format(ptask, task["name"])
+                )
                 return False
         return True
 
     def postRunPPTasks(self, ref):
-        """ Try executing post action for preposttasks associated with a given task.
+        """Try executing post action for preposttasks associated with a given task.
 
         @param task ref: task object
 
@@ -429,32 +436,37 @@ class TaskRunner(GenericLogic):
         return self._postRunPPTasks(self.getTaskByReference(ref))
 
     def _postRunPPTasks(self, task):
-        """ Try executing post action for preposttasks associated with a given task.
+        """Try executing post action for preposttasks associated with a given task.
 
         @param dict task: task dictionary
 
         @return bool: whether post actions were successful
         """
-        for pptask in task['preposttasks']:
+        for pptask in task["preposttasks"]:
             # print(pptask)
             try:
                 for t in self.model.storage:
-                    if t['name'] == pptask:
-                        if t['object'].can('postrun'):
-                            t['object'].postrun()
+                    if t["name"] == pptask:
+                        if t["object"].can("postrun"):
+                            t["object"].postrun()
                         else:
-                            self.log.error('Preposttask {} failed while '
-                                    'postrunning in: {}'.format(
-                                        pptask, task['name']))
+                            self.log.error(
+                                "Preposttask {} failed while postrunning in: {}".format(
+                                    pptask, task["name"]
+                                )
+                            )
                             return False
             except:
-                self.log.exception('This preposttask {} failed while '
-                        'postrunning in: {}'.format(pptask, task['name']))
+                self.log.exception(
+                    "This preposttask {} failed while postrunning in: {}".format(
+                        pptask, task["name"]
+                    )
+                )
                 return False
         return True
 
     def preRunPPTasks(self, ref):
-        """ Try running pre action of preposttask associated with given task.
+        """Try running pre action of preposttask associated with given task.
 
         @param task ref: task object
 
@@ -463,33 +475,36 @@ class TaskRunner(GenericLogic):
         return self._preRunPPTasks(self.getTaskByReference(ref))
 
     def _preRunPPTasks(self, task):
-        """ Try running pre action of preposttask associated with given task.
+        """Try running pre action of preposttask associated with given task.
 
         @param dict task: task dictionary
 
         @return bool: whether pre tasks were successful
         """
-        for pptask in task['preposttasks']:
-            #print(pptask)
+        for pptask in task["preposttasks"]:
+            # print(pptask)
             try:
                 for t in self.model.storage:
-                    if t['name'] == pptask:
-                        if t['object'].can('prerun'):
-                            t['object'].prerun()
-                        elif  t['object'].isstate('paused'):
+                    if t["name"] == pptask:
+                        if t["object"].can("prerun"):
+                            t["object"].prerun()
+                        elif t["object"].isstate("paused"):
                             pass
                         else:
-                            self.log.error('Preposttask {} failed while '
-                                    'preparing: {}'.format(
-                                        pptask, task['name']))
+                            self.log.error(
+                                "Preposttask {} failed while preparing: {}".format(
+                                    pptask, task["name"]
+                                )
+                            )
                             return False
             except:
-                self.log.exception('This preposttask {} failed while '
-                        'preparing: {}'.format(pptask, task['name']))
+                self.log.exception(
+                    "This preposttask {} failed while preparing: {}".format(pptask, task["name"])
+                )
                 return False
 
     def pausePauseTasks(self, ref):
-        """ Try pausing tasks required for starting a given task.
+        """Try pausing tasks required for starting a given task.
 
         @param task ref: task object
 
@@ -498,29 +513,31 @@ class TaskRunner(GenericLogic):
         return self._pausePauseTasks(self.getTaskByReference(ref))
 
     def _pausePauseTasks(self, task):
-        """ Try pausing tasks required for starting a given task.
+        """Try pausing tasks required for starting a given task.
 
         @param dict task: task dictionary
 
         @return bool: whether pausing tasks was successful
         """
-        for ptask in task['pausetasks']:
-            #print(ptask)
+        for ptask in task["pausetasks"]:
+            # print(ptask)
             try:
                 for t in self.model.storage:
-                    if t['name'] == ptask:
-                        if t['object'].can('pause'):
-                            t['object'].pause()
-                        elif t['object'].isstate('stopped') or t['object'].isstate('paused'):
+                    if t["name"] == ptask:
+                        if t["object"].can("pause"):
+                            t["object"].pause()
+                        elif t["object"].isstate("stopped") or t["object"].isstate("paused"):
                             pass
                         else:
-                            self.log.error('Pausetask {} failed while '
-                                    'preparing: {}'.format(
-                                        ptask, task['name']))
+                            self.log.error(
+                                "Pausetask {} failed while preparing: {}".format(
+                                    ptask, task["name"]
+                                )
+                            )
                             return False
             except:
-                self.log.exception('This pausetask {} failed while '
-                        'preparing: {}'.format(ptask, task['name']))
+                self.log.exception(
+                    "This pausetask {} failed while preparing: {}".format(ptask, task["name"])
+                )
                 return False
         return True
-

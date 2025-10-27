@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains a gui for the laser controller logic.
 
@@ -20,23 +18,21 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import os
-import pyqtgraph as pg
 import time
+
+import pyqtgraph as pg
+from qtpy import QtCore, QtWidgets, uic
 
 from core.connector import Connector
 from gui.colordefs import QudiPalettePale as palette
 from gui.guibase import GUIBase
-from interface.simple_laser_interface import ControlMode, ShutterState, LaserState
-from qtpy import QtCore
-from qtpy import QtWidgets
-from qtpy import uic
+from interface.simple_laser_interface import ControlMode, LaserState, ShutterState
 
 
 class TimeAxisItem(pg.AxisItem):
-    """ pyqtgraph AxisItem that shows a HH:MM:SS timestamp on ticks.
-        X-Axis must be formatted as (floating point) Unix time.
+    """pyqtgraph AxisItem that shows a HH:MM:SS timestamp on ticks.
+    X-Axis must be formatted as (floating point) Unix time.
     """
 
     def __init__(self, *args, **kwargs):
@@ -44,17 +40,17 @@ class TimeAxisItem(pg.AxisItem):
         self.enableAutoSIPrefix(False)
 
     def tickStrings(self, values, scale, spacing):
-        """ Hours:Minutes:Seconds string from float unix timestamp. """
+        """Hours:Minutes:Seconds string from float unix timestamp."""
         return [time.strftime("%H:%M:%S", time.localtime(value)) for value in values]
 
 
 class LaserWindow(QtWidgets.QMainWindow):
-    """ Create the Main Window based on the *.ui file. """
+    """Create the Main Window based on the *.ui file."""
 
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_laser.ui')
+        ui_file = os.path.join(this_dir, "ui_laser.ui")
 
         # Load it
         super().__init__()
@@ -63,11 +59,10 @@ class LaserWindow(QtWidgets.QMainWindow):
 
 
 class LaserGUI(GUIBase):
-    """ FIXME: Please document
-    """
+    """FIXME: Please document"""
 
     ## declare connectors
-    laserlogic = Connector(interface='LaserLogic')
+    laserlogic = Connector(interface="LaserLogic")
 
     sigLaser = QtCore.Signal(bool)
     sigShutter = QtCore.Signal(bool)
@@ -79,8 +74,7 @@ class LaserGUI(GUIBase):
         super().__init__(config=config, **kwargs)
 
     def on_activate(self):
-        """ Definition and initialisation of the GUI plus staring the measurement.
-        """
+        """Definition and initialisation of the GUI plus staring the measurement."""
         self._laser_logic = self.laserlogic()
 
         #####################
@@ -94,30 +88,31 @@ class LaserGUI(GUIBase):
 
         # set up plot
         self._mw.plotWidget = pg.PlotWidget(
-            axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+            axisItems={"bottom": TimeAxisItem(orientation="bottom")}
+        )
         self._mw.pwContainer.layout().addWidget(self._mw.plotWidget)
 
         plot1 = self._mw.plotWidget.getPlotItem()
-        plot1.setLabel('left', 'power', units='W', color=palette.c1.name())
-        plot1.setLabel('bottom', 'Time', units=None)
-        plot1.setLabel('right', 'Temperature', units='°C', color=palette.c3.name())
+        plot1.setLabel("left", "power", units="W", color=palette.c1.name())
+        plot1.setLabel("bottom", "Time", units=None)
+        plot1.setLabel("right", "Temperature", units="°C", color=palette.c3.name())
 
         plot2 = pg.ViewBox()
         plot1.scene().addItem(plot2)
-        plot1.getAxis('right').linkToView(plot2)
+        plot1.getAxis("right").linkToView(plot2)
         plot2.setXLink(plot1)
 
         self.curves = {}
         colorlist = (palette.c2, palette.c3, palette.c4, palette.c5, palette.c6)
         i = 0
         for name in self._laser_logic.data:
-            if name != 'time':
+            if name != "time":
                 curve = pg.PlotDataItem()
-                if name == 'power':
+                if name == "power":
                     curve.setPen(palette.c1)
                     plot1.addItem(curve)
                 else:
-                    curve.setPen(colorlist[(2*i) % len(colorlist)])
+                    curve.setPen(colorlist[(2 * i) % len(colorlist)])
                     plot2.addItem(curve)
                 self.curves[name] = curve
                 i += 1
@@ -136,25 +131,24 @@ class LaserGUI(GUIBase):
         self.sigPower.connect(self._laser_logic.set_power)
         self.sigCtrlMode.connect(self._laser_logic.set_control_mode)
         self._mw.controlModeButtonGroup.buttonClicked.connect(self.changeControlMode)
-        self.sliderProxy = pg.SignalProxy(self._mw.setValueVerticalSlider.valueChanged, 0.1, 5, self.updateFromSlider)
+        self.sliderProxy = pg.SignalProxy(
+            self._mw.setValueVerticalSlider.valueChanged, 0.1, 5, self.updateFromSlider
+        )
         self._mw.setValueDoubleSpinBox.editingFinished.connect(self.updateFromSpinBox)
         self._laser_logic.sigUpdate.connect(self.updateGui)
 
     def on_deactivate(self):
-        """ Deactivate the module properly.
-        """
+        """Deactivate the module properly."""
         self._mw.close()
 
     def show(self):
-        """Make window visible and put it above all other windows.
-        """
+        """Make window visible and put it above all other windows."""
         QtWidgets.QMainWindow.show(self._mw)
         self._mw.activateWindow()
         self._mw.raise_()
 
     def restoreDefaultView(self):
-        """ Restore the arrangement of DockWidgets to the default
-        """
+        """Restore the arrangement of DockWidgets to the default"""
         # Show any hidden dock widgets
         self._mw.adjustDockWidget.show()
         self._mw.plotDockWidget.show()
@@ -169,7 +163,7 @@ class LaserGUI(GUIBase):
 
     @QtCore.Slot()
     def updateViews(self):
-        """ Keep plot views for left and right axis identical when resizing the plot widget. """
+        """Keep plot views for left and right axis identical when resizing the plot widget."""
         # view has resized; update auxiliary views to match
         self.plot2.setGeometry(self.plot1.vb.sceneBoundingRect())
 
@@ -179,92 +173,93 @@ class LaserGUI(GUIBase):
 
     @QtCore.Slot(bool)
     def changeLaserState(self, on):
-        """ Disable laser power button and give logic signal.
-            Logic reaction to that signal will enable the button again.
+        """Disable laser power button and give logic signal.
+        Logic reaction to that signal will enable the button again.
         """
         self._mw.laserButton.setEnabled(False)
         self.sigLaser.emit(on)
 
     @QtCore.Slot(bool)
     def changeShutterState(self, on):
-        """ Disable laser shutter button and give logic signal.
-            Logic reaction to that signal will enable the button again.
+        """Disable laser shutter button and give logic signal.
+        Logic reaction to that signal will enable the button again.
         """
         self._mw.shutterButton.setEnabled(False)
         self.sigShutter.emit(on)
 
     @QtCore.Slot(QtWidgets.QAbstractButton)
     def changeControlMode(self, buttonId):
-        """ Process signal from laser control mode radio button group. """
+        """Process signal from laser control mode radio button group."""
         cur = self._mw.currentRadioButton.isChecked() and self._mw.currentRadioButton.isEnabled()
         pwr = self._mw.powerRadioButton.isChecked() and self._mw.powerRadioButton.isEnabled()
         if pwr and not cur:
             lpr = self._laser_logic.laser_power_range
             self._mw.setValueDoubleSpinBox.setRange(lpr[0], lpr[1])
             self._mw.setValueDoubleSpinBox.setValue(self._laser_logic.laser_power_setpoint)
-            self._mw.setValueDoubleSpinBox.setSuffix('W')
+            self._mw.setValueDoubleSpinBox.setSuffix("W")
             self._mw.setValueVerticalSlider.setValue(
-                self._laser_logic.laser_power_setpoint / (lpr[1] - lpr[0]) * 100 - lpr[0])
+                self._laser_logic.laser_power_setpoint / (lpr[1] - lpr[0]) * 100 - lpr[0]
+            )
             self.sigCtrlMode.emit(ControlMode.POWER)
         elif cur and not pwr:
             lcr = self._laser_logic.laser_current_range
             self._mw.setValueDoubleSpinBox.setRange(lcr[0], lcr[1])
             self._mw.setValueDoubleSpinBox.setValue(self._laser_logic.laser_current_setpoint)
-            self._mw.setValueDoubleSpinBox.setSuffix('%')
+            self._mw.setValueDoubleSpinBox.setSuffix("%")
             self._mw.setValueVerticalSlider.setValue(
-                self._laser_logic.laser_current_setpoint / (lcr[1] - lcr[0]) * 100 - lcr[0])
+                self._laser_logic.laser_current_setpoint / (lcr[1] - lcr[0]) * 100 - lcr[0]
+            )
             self.sigCtrlMode.emit(ControlMode.CURRENT)
         else:
-            self.log.error('How did you mess up the radio button group?')
+            self.log.error("How did you mess up the radio button group?")
 
     @QtCore.Slot()
     def updateButtonsEnabled(self):
-        """ Logic told us to update our button states, so set the buttons accordingly. """
+        """Logic told us to update our button states, so set the buttons accordingly."""
         self._mw.laserButton.setEnabled(self._laser_logic.laser_can_turn_on)
         if self._laser_logic.laser_state == LaserState.ON:
-            self._mw.laserButton.setText('Laser: ON')
+            self._mw.laserButton.setText("Laser: ON")
             self._mw.laserButton.setChecked(True)
-            self._mw.laserButton.setStyleSheet('')
+            self._mw.laserButton.setStyleSheet("")
         elif self._laser_logic.laser_state == LaserState.OFF:
-            self._mw.laserButton.setText('Laser: OFF')
+            self._mw.laserButton.setText("Laser: OFF")
             self._mw.laserButton.setChecked(False)
         elif self._laser_logic.laser_state == LaserState.LOCKED:
-            self._mw.laserButton.setText('INTERLOCK')
+            self._mw.laserButton.setText("INTERLOCK")
         else:
-            self._mw.laserButton.setText('Laser: ?')
+            self._mw.laserButton.setText("Laser: ?")
 
         self._mw.shutterButton.setEnabled(self._laser_logic.has_shutter)
         if self._laser_logic.laser_shutter == ShutterState.OPEN:
-            self._mw.shutterButton.setText('Shutter: OPEN')
+            self._mw.shutterButton.setText("Shutter: OPEN")
         elif self._laser_logic.laser_shutter == ShutterState.CLOSED:
-            self._mw.shutterButton.setText('Shutter: CLOSED')
+            self._mw.shutterButton.setText("Shutter: CLOSED")
         elif self._laser_logic.laser_shutter == ShutterState.NOSHUTTER:
-            self._mw.shutterButton.setText('No shutter.')
+            self._mw.shutterButton.setText("No shutter.")
         else:
-            self._mw.shutterButton.setText('Shutter: ?')
+            self._mw.shutterButton.setText("Shutter: ?")
 
         self._mw.currentRadioButton.setEnabled(self._laser_logic.laser_can_current)
         self._mw.powerRadioButton.setEnabled(self._laser_logic.laser_can_power)
 
     @QtCore.Slot()
     def updateGui(self):
-        """ Update labels, the plot and button states with new data. """
+        """Update labels, the plot and button states with new data."""
         self._mw.currentLabel.setText(
-            '{0:6.3f} {1}'.format(
-                self._laser_logic.laser_current,
-                self._laser_logic.laser_current_unit))
-        self._mw.powerLabel.setText('{0:6.3f} W'.format(self._laser_logic.laser_power))
+            f"{self._laser_logic.laser_current:6.3f} {self._laser_logic.laser_current_unit}"
+        )
+        self._mw.powerLabel.setText(f"{self._laser_logic.laser_power:6.3f} W")
         self._mw.extraLabel.setText(self._laser_logic.laser_extra)
         self.updateButtonsEnabled()
         for name, curve in self.curves.items():
-            curve.setData(x=self._laser_logic.data['time'], y=self._laser_logic.data[name])
+            curve.setData(x=self._laser_logic.data["time"], y=self._laser_logic.data[name])
 
     @QtCore.Slot()
     def updateFromSpinBox(self):
-        """ The user has changed the spinbox, update all other values from that. """
+        """The user has changed the spinbox, update all other values from that."""
         self._mw.setValueVerticalSlider.setValue(self._mw.setValueDoubleSpinBox.value())
         cur = self._mw.currentRadioButton.isChecked() and self._mw.currentRadioButton.isEnabled()
-        pwr = self._mw.powerRadioButton.isChecked() and  self._mw.powerRadioButton.isEnabled()
+        pwr = self._mw.powerRadioButton.isChecked() and self._mw.powerRadioButton.isEnabled()
         if pwr and not cur:
             self.sigPower.emit(self._mw.setValueDoubleSpinBox.value())
         elif cur and not pwr:
@@ -272,16 +267,17 @@ class LaserGUI(GUIBase):
 
     @QtCore.Slot()
     def updateFromSlider(self):
-        """ The user has changed the slider, update all other values from that. """
+        """The user has changed the slider, update all other values from that."""
         cur = self._mw.currentRadioButton.isChecked() and self._mw.currentRadioButton.isEnabled()
         pwr = self._mw.powerRadioButton.isChecked() and self._mw.powerRadioButton.isEnabled()
         if pwr and not cur:
             lpr = self._laser_logic.laser_power_range
             self._mw.setValueDoubleSpinBox.setValue(
-                lpr[0] + self._mw.setValueVerticalSlider.value() / 100 * (lpr[1] - lpr[0]))
+                lpr[0] + self._mw.setValueVerticalSlider.value() / 100 * (lpr[1] - lpr[0])
+            )
             self.sigPower.emit(
-                lpr[0] + self._mw.setValueVerticalSlider.value() / 100 * (lpr[1] - lpr[0]))
+                lpr[0] + self._mw.setValueVerticalSlider.value() / 100 * (lpr[1] - lpr[0])
+            )
         elif cur and not pwr:
             self._mw.setValueDoubleSpinBox.setValue(self._mw.setValueVerticalSlider.value())
             self.sigCurrent.emit(self._mw.setValueDoubleSpinBox.value())
-

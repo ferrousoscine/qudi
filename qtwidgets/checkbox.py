@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 QCheckBox with a callback function for acceptance or denial of state change.
 
@@ -47,6 +45,7 @@ class CheckBox(QCheckBox):
             return result == QMessageBox.Yes
     checkbox.accept_state_change_callback = on_accept_state_change
     """
+
     def __init__(self, *args, **kwargs):
         """
         Constructor. See QCheckBox for details.

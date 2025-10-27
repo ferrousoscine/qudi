@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface for a generic input stream of data points with fixed sampling rate and data type.
 
@@ -20,11 +18,12 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 from enum import Enum
-from core.interface import abstract_interface_method
+
+import numpy as np
+
+from core.interface import ScalarConstraint, abstract_interface_method
 from core.meta import InterfaceMetaclass
-from core.interface import ScalarConstraint
 
 
 class DataInStreamInterface(metaclass=InterfaceMetaclass):
@@ -34,6 +33,7 @@ class DataInStreamInterface(metaclass=InterfaceMetaclass):
     You can choose if a preset number of samples is recorded and buffered for read or if samples
     are acquired continuously into a (circular) read buffer.
     """
+
     @property
     @abstract_interface_method
     def sample_rate(self):
@@ -183,8 +183,15 @@ class DataInStreamInterface(metaclass=InterfaceMetaclass):
         pass
 
     @abstract_interface_method
-    def configure(self, sample_rate=None, streaming_mode=None, active_channels=None,
-                  total_number_of_samples=None, buffer_size=None, use_circular_buffer=None):
+    def configure(
+        self,
+        sample_rate=None,
+        streaming_mode=None,
+        active_channels=None,
+        total_number_of_samples=None,
+        buffer_size=None,
+        use_circular_buffer=None,
+    ):
         """
         Method to configure all possible settings of the data input stream.
 
@@ -324,9 +331,9 @@ class StreamChannel:
         self._type = StreamChannelType(type)
         if unit is None:
             if self._type == StreamChannelType.ANALOG:
-                self._unit = 'V'
+                self._unit = "V"
             elif self._type == StreamChannelType.DIGITAL:
-                self._unit = 'counts'
+                self._unit = "counts"
         else:
             self._unit = str(unit)
 
@@ -347,7 +354,7 @@ class StreamChannel:
         if isinstance(new_unit, str):
             self._unit = str(new_unit)
         else:
-            raise TypeError('StreamChannel unit property must be str.')
+            raise TypeError("StreamChannel unit property must be str.")
         return
 
     def copy(self):
@@ -358,9 +365,19 @@ class DataInStreamConstraints:
     """
     Collection of constraints for hardware modules implementing SimpleDataInterface.
     """
-    def __init__(self, digital_channels=None, analog_channels=None, analog_sample_rate=None,
-                 digital_sample_rate=None, combined_sample_rate=None, read_block_size=None,
-                 streaming_modes=None, data_type=None, allow_circular_buffer=None):
+
+    def __init__(
+        self,
+        digital_channels=None,
+        analog_channels=None,
+        analog_sample_rate=None,
+        digital_sample_rate=None,
+        combined_sample_rate=None,
+        read_block_size=None,
+        streaming_modes=None,
+        data_type=None,
+        allow_circular_buffer=None,
+    ):
         if digital_channels is None:
             self.digital_channels = dict()
         else:

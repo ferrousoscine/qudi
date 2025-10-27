@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the qudi switch state QWidgets for the GUI module SwitchGui.
 
@@ -19,20 +18,21 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtWidgets, QtCore, QtGui
+from qtpy import QtCore, QtGui, QtWidgets
+
 from qtwidgets.toggle_switch import ToggleSwitch
 
 
 class SwitchRadioButtonWidget(QtWidgets.QWidget):
-    """
-    """
+    """ """
 
     sigStateChanged = QtCore.Signal(str)
 
-    def __init__(self, parent=None, switch_states=('Off', 'On')):
-        assert len(switch_states) >= 2, 'switch_states must be tuple of at least 2 strings'
-        assert all(isinstance(s, str) and s for s in switch_states), \
-            'switch state must be non-empty str'
+    def __init__(self, parent=None, switch_states=("Off", "On")):
+        assert len(switch_states) >= 2, "switch_states must be tuple of at least 2 strings"
+        assert all(isinstance(s, str) and s for s in switch_states), (
+            "switch state must be non-empty str"
+        )
         super().__init__(parent=parent)
         layout = QtWidgets.QHBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignCenter)
@@ -88,10 +88,12 @@ class SwitchRadioButtonWidget(QtWidgets.QWidget):
             self._update_colors()
 
     def set_state_colors(self, unchecked=None, checked=None):
-        assert unchecked is None or isinstance(unchecked, QtGui.QColor), \
-            'arguments must be QColor object or None'
-        assert checked is None or isinstance(checked, QtGui.QColor), \
-            'arguments must be QColor object or None'
+        assert unchecked is None or isinstance(unchecked, QtGui.QColor), (
+            "arguments must be QColor object or None"
+        )
+        assert checked is None or isinstance(checked, QtGui.QColor), (
+            "arguments must be QColor object or None"
+        )
         self._state_colors = (unchecked, checked)
         self._update_colors()
 
@@ -102,20 +104,20 @@ class SwitchRadioButtonWidget(QtWidgets.QWidget):
             if color is None:
                 label.setText(state)
             else:
-                label.setText(f'<font color={color.name()}>{state}</font>')
+                label.setText(f"<font color={color.name()}>{state}</font>")
 
 
 class ToggleSwitchWidget(QtWidgets.QWidget):
-    """
-    """
+    """ """
 
     sigStateChanged = QtCore.Signal(str)
 
-    def __init__(self, parent=None, switch_states=('Off', 'On'), thumb_track_ratio=1):
+    def __init__(self, parent=None, switch_states=("Off", "On"), thumb_track_ratio=1):
         super().__init__(parent=parent)
-        assert len(switch_states) == 2, 'switch_states must be tuple of exactly 2 strings'
-        assert all(isinstance(s, str) and s for s in switch_states), \
-            'switch state must be non-empty str'
+        assert len(switch_states) == 2, "switch_states must be tuple of exactly 2 strings"
+        assert all(isinstance(s, str) and s for s in switch_states), (
+            "switch state must be non-empty str"
+        )
         self.switch_states = tuple(switch_states)
         self._state_colors = (None, None)
 
@@ -154,10 +156,12 @@ class ToggleSwitchWidget(QtWidgets.QWidget):
         self._update_colors()
 
     def set_state_colors(self, unchecked=None, checked=None):
-        assert unchecked is None or isinstance(unchecked, QtGui.QColor), \
-            'arguments must be QColor object or None'
-        assert checked is None or isinstance(checked, QtGui.QColor), \
-            'arguments must be QColor object or None'
+        assert unchecked is None or isinstance(unchecked, QtGui.QColor), (
+            "arguments must be QColor object or None"
+        )
+        assert checked is None or isinstance(checked, QtGui.QColor), (
+            "arguments must be QColor object or None"
+        )
         self._state_colors = (unchecked, checked)
         self._update_colors()
 
@@ -168,12 +172,12 @@ class ToggleSwitchWidget(QtWidgets.QWidget):
             if color is None:
                 self.labels[0].setText(self.switch_states[0])
             else:
-                self.labels[0].setText(f'<font color={color.name()}>{self.switch_states[0]}</font>')
+                self.labels[0].setText(f"<font color={color.name()}>{self.switch_states[0]}</font>")
             color = self._state_colors[int(checked)]
             if color is None:
                 self.labels[1].setText(self.switch_states[1])
             else:
-                self.labels[1].setText(f'<font color={color.name()}>{self.switch_states[1]}</font>')
+                self.labels[1].setText(f"<font color={color.name()}>{self.switch_states[1]}</font>")
 
     @QtCore.Slot()
     @QtCore.Slot(bool)

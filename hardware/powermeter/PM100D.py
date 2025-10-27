@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 
 Qudi is free software: you can redistribute it and/or modify
@@ -17,23 +16,25 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
+
 import numpy as np
 import visa
 
-from core.module import Base
 from core.configoption import ConfigOption
-
-from interface.simple_data_interface import SimpleDataInterface
+from core.module import Base
 from interface.process_interface import ProcessInterface
+from interface.simple_data_interface import SimpleDataInterface
 
 try:
     from ThorlabsPM100 import ThorlabsPM100
 except ImportError:
-    raise ImportError('ThorlabsPM100 module not found. Please install it by typing command "pip install ThorlabsPM100"')
+    raise ImportError(
+        'ThorlabsPM100 module not found. Please install it by typing command "pip install ThorlabsPM100"'
+    )
 
 
 class PM100D(Base, SimpleDataInterface, ProcessInterface):
-    """ Hardware module for Thorlabs PM100D powermeter.
+    """Hardware module for Thorlabs PM100D powermeter.
 
     Example config :
     powermeter:
@@ -46,63 +47,62 @@ class PM100D(Base, SimpleDataInterface, ProcessInterface):
     in the Anaconda prompt after having activated qudi environment
     """
 
-    _address = ConfigOption('address', missing='error')
-    _timeout = ConfigOption('timeout', 1)
+    _address = ConfigOption("address", missing="error")
+    _timeout = ConfigOption("timeout", 1)
     _power_meter = None
 
     def on_activate(self):
-        """ Startup the module """
+        """Startup the module"""
 
         rm = visa.ResourceManager()
         try:
             self._inst = rm.open_resource(self._address, timeout=self._timeout)
         except:
-            self.log.error('Could not connect to hardware. Please check the wires and the address.')
+            self.log.error("Could not connect to hardware. Please check the wires and the address.")
 
         self._power_meter = ThorlabsPM100(inst=self._inst)
 
     def on_deactivate(self):
-        """ Stops the module """
+        """Stops the module"""
         self._inst.close()
 
     def getData(self):
-        """ SimpleDataInterface function to get the power from the powermeter """
+        """SimpleDataInterface function to get the power from the powermeter"""
         return np.array([self.get_power()])
 
     def getChannels(self):
-        """ SimpleDataInterface function to know how many data channel the device has, here 1. """
+        """SimpleDataInterface function to know how many data channel the device has, here 1."""
         return 1
 
     def get_power(self):
-        """ Return the power read from the ThorlabsPM100 package """
+        """Return the power read from the ThorlabsPM100 package"""
         return self._power_meter.read
 
     def get_process_value(self):
-        """ Return a measured value """
+        """Return a measured value"""
         return self.get_power()
 
     def get_process_unit(self):
-        """ Return the unit that hte value is measured in as a tuple of ('abreviation', 'full unit name') """
-        return ('W', 'watt')
+        """Return the unit that hte value is measured in as a tuple of ('abreviation', 'full unit name')"""
+        return ("W", "watt")
 
     def get_wavelength(self):
-        """ Return the current wavelength in nanometers """
+        """Return the current wavelength in nanometers"""
         return self._power_meter.sense.correction.wavelength
 
     def set_wavelength(self, value=None):
-        """ Set the new wavelength in nanometers """
+        """Set the new wavelength in nanometers"""
         mini, maxi = self.get_wavelength_range()
         if value is not None:
             if mini <= value <= maxi:
                 self._power_meter.sense.correction.wavelength = value
             else:
-                self.log.error('Wavelength {} is out of the range [{}, {}].'.format(
-                    value, mini, maxi
-                ))
+                self.log.error(f"Wavelength {value} is out of the range [{mini}, {maxi}].")
         return self.get_wavelength()
 
     def get_wavelength_range(self):
-        """ Return the wavelength range of the power meter in nanometers """
-        return self._power_meter.sense.correction.minimum_beamdiameter,\
-               self._power_meter.sense.correction.maximum_wavelength
-
+        """Return the wavelength range of the power meter in nanometers"""
+        return (
+            self._power_meter.sense.correction.minimum_beamdiameter,
+            self._power_meter.sense.correction.maximum_wavelength,
+        )

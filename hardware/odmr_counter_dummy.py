@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi Dummy file for ODMRCounter.
 
@@ -19,17 +18,18 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import time
 
-from core.module import Base
-from core.connector import Connector
+import numpy as np
+
 from core.configoption import ConfigOption
+from core.connector import Connector
+from core.module import Base
 from interface.odmr_counter_interface import ODMRCounterInterface
 
 
 class ODMRCounterDummy(Base, ODMRCounterInterface):
-    """ Dummy hardware class to simulate the controls for a simple ODMR.
+    """Dummy hardware class to simulate the controls for a simple ODMR.
 
     Example config for copy-paste:
 
@@ -42,33 +42,31 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
     """
 
     # connectors
-    fitlogic = Connector(interface='FitLogic')
+    fitlogic = Connector(interface="FitLogic")
 
     # config options
-    _clock_frequency = ConfigOption('clock_frequency', 100, missing='warn')
-    _number_of_channels = ConfigOption('number_of_channels', 2, missing='warn')
+    _clock_frequency = ConfigOption("clock_frequency", 100, missing="warn")
+    _number_of_channels = ConfigOption("number_of_channels", 2, missing="warn")
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
 
         self._scanner_counter_daq_task = None
         self._odmr_length = None
-        self._pulse_out_channel = 'dummy'
+        self._pulse_out_channel = "dummy"
         self._lock_in_active = False
         self._oversampling = 10
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self._fit_logic = self.fitlogic()
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
-        self.log.debug('ODMR counter is shutting down.')
+        """Deinitialisation performed during deactivation of the module."""
+        self.log.debug("ODMR counter is shutting down.")
 
     def set_up_odmr_clock(self, clock_frequency=None, clock_channel=None):
-        """ Configures the hardware clock of the NiDAQ card to give the timing.
+        """Configures the hardware clock of the NiDAQ card to give the timing.
 
         @param float clock_frequency: if defined, this sets the frequency of the clock
         @param str clock_channel: if defined, this is the physical channel of the clock
@@ -79,16 +77,20 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
         if clock_frequency is not None:
             self._clock_frequency = float(clock_frequency)
 
-        self.log.info('ODMRCounterDummy>set_up_odmr_clock')
+        self.log.info("ODMRCounterDummy>set_up_odmr_clock")
 
         time.sleep(0.2)
 
         return 0
 
-
-    def set_up_odmr(self, counter_channel=None, photon_source=None,
-                    clock_channel=None, odmr_trigger_channel=None):
-        """ Configures the actual counter with a given clock.
+    def set_up_odmr(
+        self,
+        counter_channel=None,
+        photon_source=None,
+        clock_channel=None,
+        odmr_trigger_channel=None,
+    ):
+        """Configures the actual counter with a given clock.
 
         @param str counter_channel: if defined, this is the physical channel of the counter
         @param str photon_source: if defined, this is the physical channel where the photons are to count from
@@ -98,11 +100,10 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.info('ODMRCounterDummy>set_up_odmr')
+        self.log.info("ODMRCounterDummy>set_up_odmr")
 
-        if self.module_state() == 'locked' or self._scanner_counter_daq_task is not None:
-            self.log.error('Another odmr is already running, close this one '
-                    'first.')
+        if self.module_state() == "locked" or self._scanner_counter_daq_task is not None:
+            self.log.error("Another odmr is already running, close this one first.")
             return -1
 
         time.sleep(0.2)
@@ -110,7 +111,7 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
         return 0
 
     def set_odmr_length(self, length=100):
-        """ Sets up the trigger sequence for the ODMR and the triggered microwave.
+        """Sets up the trigger sequence for the ODMR and the triggered microwave.
 
         @param int length: length of microwave sweep in pixel
 
@@ -121,16 +122,15 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
         return 0
 
     def count_odmr(self, length=100):
-        """ Sweeps the microwave and returns the counts on that sweep.
+        """Sweeps the microwave and returns the counts on that sweep.
 
         @param int length: length of microwave sweep in pixel
 
         @return float[]: the photon counts per second
         """
 
-        if self.module_state() == 'locked':
-            self.log.error('A scan_line is already running, close this one '
-                           'first.')
+        if self.module_state() == "locked":
+            self.log.error("A scan_line is already running, close this one first.")
             return -1
 
         self.module_state.lock()
@@ -139,58 +139,58 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
 
         lorentians, params = self._fit_logic.make_lorentziandouble_model()
 
-        sigma = 3.
+        sigma = 3.0
 
-        params.add('l0_amplitude', value=-30000)
-        params.add('l0_center', value=length/3)
-        params.add('l0_sigma', value=sigma)
-        params.add('l1_amplitude', value=-30000)
-        params.add('l1_center', value=2*length/3)
-        params.add('l1_sigma', value=sigma)
-        params.add('offset', value=50000.)
+        params.add("l0_amplitude", value=-30000)
+        params.add("l0_center", value=length / 3)
+        params.add("l0_sigma", value=sigma)
+        params.add("l1_amplitude", value=-30000)
+        params.add("l1_center", value=2 * length / 3)
+        params.add("l1_sigma", value=sigma)
+        params.add("offset", value=50000.0)
 
         ret = np.empty((self._number_of_channels, length))
 
         for chnl_index in range(self._number_of_channels):
             count_data = np.random.uniform(0, 5e4, length)
-            count_data += (chnl_index + 1) * lorentians.eval(x=np.arange(1, length + 1, 1),
-                                                             params=params)
+            count_data += (chnl_index + 1) * lorentians.eval(
+                x=np.arange(1, length + 1, 1), params=params
+            )
             ret[chnl_index] = count_data
 
-        time.sleep(self._odmr_length*1./self._clock_frequency)
+        time.sleep(self._odmr_length * 1.0 / self._clock_frequency)
 
         self.module_state.unlock()
         return False, ret
 
-
     def close_odmr(self):
-        """ Closes the odmr and cleans up afterwards.
+        """Closes the odmr and cleans up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.info('ODMRCounterDummy>close_odmr')
+        self.log.info("ODMRCounterDummy>close_odmr")
 
         self._scanner_counter_daq_task = None
 
         return 0
 
     def close_odmr_clock(self):
-        """ Closes the odmr and cleans up afterwards.
+        """Closes the odmr and cleans up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.info('ODMRCounterDummy>close_odmr_clock')
+        self.log.info("ODMRCounterDummy>close_odmr_clock")
 
         return 0
 
     def get_odmr_channels(self):
-        """ Return a list of channel names.
+        """Return a list of channel names.
 
         @return list(str): channels recorded during ODMR measurement
         """
-        return ['ch{0:d}'.format(i) for i in range(1, self._number_of_channels + 1)]
+        return [f"ch{i:d}" for i in range(1, self._number_of_channels + 1)]
 
     @property
     def oversampling(self):
@@ -199,7 +199,7 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
     @oversampling.setter
     def oversampling(self, val):
         if not isinstance(val, (int, float)):
-            self.log.error('oversampling has to be int of float.')
+            self.log.error("oversampling has to be int of float.")
         else:
             self._oversampling = int(val)
 
@@ -210,8 +210,8 @@ class ODMRCounterDummy(Base, ODMRCounterInterface):
     @lock_in_active.setter
     def lock_in_active(self, val):
         if not isinstance(val, bool):
-            self.log.error('lock_in_active has to be boolean.')
+            self.log.error("lock_in_active has to be boolean.")
         else:
             self._lock_in_active = val
             if self._lock_in_active:
-                self.log.warn('Lock-In is not implemented')
+                self.log.warn("Lock-In is not implemented")

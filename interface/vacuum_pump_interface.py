@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Interface file for vacuum turbopumps with prepumps and pressure sensors.
 
@@ -24,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class VacuumPumpInterface(metaclass=InterfaceMetaclass):
-    """ This interface can be used to control a vacuum pump.
+    """This interface can be used to control a vacuum pump.
 
     This interface, while functional, is not used by any hardware nor logic at the moment.
     Also it has no dummy associated with it.
@@ -35,9 +34,9 @@ class VacuumPumpInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_extra_info(self):
-        """ Present extra information about pump controller/device.
+        """Present extra information about pump controller/device.
 
-          @return str: arbitrary information about pump, like model nr, hardware version, firmware version
+        @return str: arbitrary information about pump, like model nr, hardware version, firmware version
         """
         pass
 
@@ -45,7 +44,7 @@ class VacuumPumpInterface(metaclass=InterfaceMetaclass):
     def get_pressures(self):
         """All available pressures in Pascal.
 
-          @return dict: dict of gauge name and pressure
+        @return dict: dict of gauge name and pressure
         """
         pass
 
@@ -55,9 +54,9 @@ class VacuumPumpInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_pump_powers(self):
-        """ All available pump powers in watts.
+        """All available pump powers in watts.
 
-          @return dict: dict of pump name and pump power
+        @return dict: dict of pump name and pump power
         """
         pass
 
@@ -65,26 +64,23 @@ class VacuumPumpInterface(metaclass=InterfaceMetaclass):
     def get_pump_states(self):
         """All available pump states.
 
-          @return dict: dict of pump name and pump state
+        @return dict: dict of pump name and pump state
         """
         pass
 
     @abstract_interface_method
     def set_pump_states(self, states):
         """Control the pump state.
-          @param dict states: dict of pump name and desired state
+        @param dict states: dict of pump name and desired state
         """
         pass
 
     @abstract_interface_method
     def get_system_state(self):
-        """Get overall system state.
-        """
+        """Get overall system state."""
         pass
 
     @abstract_interface_method
     def set_system_state(self, state):
-        """Control the system state.
-        """
+        """Control the system state."""
         pass
-

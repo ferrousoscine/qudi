@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Interface for a spectrometer.
 
@@ -24,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class SpectrometerInterface(metaclass=InterfaceMetaclass):
-    """ This is the interface class to define the controls for the simple optical spectrometer.
+    """This is the interface class to define the controls for the simple optical spectrometer.
 
     This is interface is very basic, a more advanced one is in progress.
 
@@ -32,9 +31,10 @@ class SpectrometerInterface(metaclass=InterfaceMetaclass):
     documentation/programming_style.md
 
     """
+
     @abstract_interface_method
     def recordSpectrum(self):
-        """ Launch an acquisition a wait for a response
+        """Launch an acquisition a wait for a response
 
         @return (2, N) float array: The acquired array with the wavelength in meter in the first row and measured value
                                     int the second
@@ -43,7 +43,7 @@ class SpectrometerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def setExposure(self, exposureTime):
-        """ Set the acquisition exposure time
+        """Set the acquisition exposure time
 
         @param (float) exposureTime: Exposure time to set in second
         """
@@ -51,7 +51,7 @@ class SpectrometerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def getExposure(self):
-        """ Get the acquisition exposure time
+        """Get the acquisition exposure time
 
         @return (float): Exposure time in second
         """

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi hardware module for the Tektronix DTG 5334.
 
@@ -20,21 +18,20 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import ctypes
-from collections import OrderedDict
-import numpy as np
-import os
 import time
-import visa
-from core.util.helpers import natural_sort
+from collections import OrderedDict
 
-from interface.pulser_interface import PulserInterface, PulserConstraints, SequenceOption
-from core.module import Base
+import numpy as np
+import visa
+
 from core.configoption import ConfigOption
+from core.module import Base
+from core.util.helpers import natural_sort
+from interface.pulser_interface import PulserConstraints, PulserInterface, SequenceOption
 
 
 class DTG5334(Base, PulserInterface):
-    """ Tektronix DTG 5334
+    """Tektronix DTG 5334
 
     Example config for copy-paste:
 
@@ -44,68 +41,65 @@ class DTG5334(Base, PulserInterface):
 
     """
 
-    visa_address = ConfigOption('visa_address', missing='error')
+    visa_address = ConfigOption("visa_address", missing="error")
 
     ch_map = {
-        'd_ch1': ('A', 1),
-        'd_ch2': ('A', 2),
-        'd_ch3': ('B', 1),
-        'd_ch4': ('B', 2),
-        'd_ch5': ('C', 1),
-        'd_ch6': ('C', 2),
-        'd_ch7': ('D', 1),
-        'd_ch8': ('D', 2)
+        "d_ch1": ("A", 1),
+        "d_ch2": ("A", 2),
+        "d_ch3": ("B", 1),
+        "d_ch4": ("B", 2),
+        "d_ch5": ("C", 1),
+        "d_ch6": ("C", 2),
+        "d_ch7": ("D", 1),
+        "d_ch8": ("D", 2),
     }
 
     modules_map = {
-        -1: 'No module',
-        1: 'DTGM10',
-        2: 'DTGM20',
-        3: 'DTGM30',
-        4: 'DTGM31',
-        5: 'DTGM31',
-        6: 'DTGM32'
+        -1: "No module",
+        1: "DTGM10",
+        2: "DTGM20",
+        3: "DTGM30",
+        4: "DTGM31",
+        5: "DTGM31",
+        6: "DTGM32",
     }
 
-    stb_values = {
-        0: 'Wat'
-    }
+    stb_values = {0: "Wat"}
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self.current_loaded_assets = {}
 
         # connect to DTG
-        self._rm = visa.ResourceManager('@py')
+        self._rm = visa.ResourceManager("@py")
 
-        self.dtg = self._rm.open_resource(self.visa_address, read_termination='\n\x00')
+        self.dtg = self._rm.open_resource(self.visa_address, read_termination="\n\x00")
 
         # set timeout by default to 15 sec
         self.dtg.timeout = 15000
 
         self.connected = True
 
-        self._mfg, self._model, self._serial, self._fw , self._version = self._get_id()
-        self.log.debug('Found the following model: {0} {1} {2} {3} {4}'.format(
-            self._mfg, self._model, self._serial, self._fw, self._version))
+        self._mfg, self._model, self._serial, self._fw, self._version = self._get_id()
+        self.log.debug(
+            f"Found the following model: {self._mfg} {self._model} {self._serial} {self._fw} {self._version}"
+        )
         self._modules = self._get_modules()
-        self.log.debug('Found the following modules: {0}'.format(self._modules))
+        self.log.debug(f"Found the following modules: {self._modules}")
 
         self.current_loaded_assets = {}
-        self.current_loaded_asset_type = ''
+        self.current_loaded_asset_type = ""
         self.waveform_names = set()
         self.sequence_names = set()
 
     def on_deactivate(self):
-        """ Required tasks to be performed during deactivation of the module.
-        """
+        """Required tasks to be performed during deactivation of the module."""
         # Closes the connection to the DTG
         try:
             self.dtg.close()
         except:
-            self.log.debug('Closing DTG connection using pyvisa failed.')
-        self.log.info('Closed connection to DTG')
+            self.log.debug("Closing DTG connection using pyvisa failed.")
+        self.log.info("Closed connection to DTG")
         self.connected = False
         return
 
@@ -191,7 +185,7 @@ class DTG5334(Base, PulserInterface):
         constraints.repetitions.step = 1
         constraints.repetitions.default = 0
 
-        constraints.event_triggers = ['A', 'B']
+        constraints.event_triggers = ["A", "B"]
         constraints.flags = list()
 
         constraints.sequence_steps.min = 0
@@ -203,40 +197,41 @@ class DTG5334(Base, PulserInterface):
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
         activation_conf = OrderedDict()
-        activation_conf['A'] = frozenset({'d_ch1', 'd_ch2'})
-        activation_conf['B'] = frozenset({'d_ch3', 'd_ch4'})
-        activation_conf['C'] = frozenset({'d_ch5', 'd_ch6'})
-        activation_conf['D'] = frozenset({'d_ch7', 'd_ch8'})
-        activation_conf['AB'] = frozenset({'d_ch1', 'd_ch2', 'd_ch3', 'd_ch4'})
-        activation_conf['ABC'] = frozenset({'d_ch1', 'd_ch2', 'd_ch3', 'd_ch4', 'd_ch5', 'd_ch6'})
-        activation_conf['all'] = frozenset(
-            {'d_ch1', 'd_ch2', 'd_ch3', 'd_ch4', 'd_ch5', 'd_ch6', 'd_ch7', 'd_ch8'})
+        activation_conf["A"] = frozenset({"d_ch1", "d_ch2"})
+        activation_conf["B"] = frozenset({"d_ch3", "d_ch4"})
+        activation_conf["C"] = frozenset({"d_ch5", "d_ch6"})
+        activation_conf["D"] = frozenset({"d_ch7", "d_ch8"})
+        activation_conf["AB"] = frozenset({"d_ch1", "d_ch2", "d_ch3", "d_ch4"})
+        activation_conf["ABC"] = frozenset({"d_ch1", "d_ch2", "d_ch3", "d_ch4", "d_ch5", "d_ch6"})
+        activation_conf["all"] = frozenset(
+            {"d_ch1", "d_ch2", "d_ch3", "d_ch4", "d_ch5", "d_ch6", "d_ch7", "d_ch8"}
+        )
         constraints.activation_config = activation_conf
         constraints.sequence_option = SequenceOption.FORCED
         return constraints
 
     def pulser_on(self):
-        """ Switches the pulsing device on.
+        """Switches the pulsing device on.
 
         @return int: error code (0:OK, -1:error)
         """
-        self.dtg.write('OUTP:STAT:ALL ON;*WAI')
-        self.dtg.write('TBAS:RUN ON')
-        state = 0 if int(self.dtg.query('TBAS:RUN?')) == 1 else -1
+        self.dtg.write("OUTP:STAT:ALL ON;*WAI")
+        self.dtg.write("TBAS:RUN ON")
+        state = 0 if int(self.dtg.query("TBAS:RUN?")) == 1 else -1
         return state
 
     def pulser_off(self):
-        """ Switches the pulsing device off.
+        """Switches the pulsing device off.
 
         @return int: error code (0:OK, -1:error)
         """
-        self.dtg.write('OUTP:STAT:ALL OFF;*WAI')
-        self.dtg.write('TBAS:RUN OFF')
-        state = 0 if int(self.dtg.query('TBAS:RUN?')) == 0 else -1
+        self.dtg.write("OUTP:STAT:ALL OFF;*WAI")
+        self.dtg.write("TBAS:RUN OFF")
+        state = 0 if int(self.dtg.query("TBAS:RUN?")) == 0 else -1
         return state
 
     def load_waveform(self, load_dict):
-        """ Loads a waveform to the specified channel of the pulsing device.
+        """Loads a waveform to the specified channel of the pulsing device.
         For devices that have a workspace (i.e. AWG) this will load the waveform from the device
         workspace into the channel.
         For a device without mass memory this will make the waveform/pattern that has been
@@ -256,7 +251,7 @@ class DTG5334(Base, PulserInterface):
         pass
 
     def load_sequence(self, sequence_name):
-        """ Loads a sequence to the channels of the device in order to be ready for playback.
+        """Loads a sequence to the channels of the device in order to be ready for playback.
         For devices that have a workspace (i.e. AWG) this will load the sequence from the device
         workspace into the channels.
         For a device without mass memory this will make the waveform/pattern that has been
@@ -286,17 +281,17 @@ class DTG5334(Base, PulserInterface):
         return self.current_loaded_assets, self.current_loaded_asset_type
 
     def clear_all(self):
-        """ Clears all loaded waveforms from the pulse generators RAM/workspace.
+        """Clears all loaded waveforms from the pulse generators RAM/workspace.
 
         @return int: error code (0:OK, -1:error)
         """
-        self.dtg.write('GROUP:DEL:ALL;*WAI')
-        self.dtg.write('BLOC:DEL:ALL;*WAI')
+        self.dtg.write("GROUP:DEL:ALL;*WAI")
+        self.dtg.write("BLOC:DEL:ALL;*WAI")
         self.current_loaded_assets = {}
         return 0
 
     def get_status(self):
-        """ Retrieves the status of the pulsing hardware
+        """Retrieves the status of the pulsing hardware
 
         @return (int, dict): tuple with an integer value of the current status and a corresponding
                              dictionary containing status description for all the possible status
@@ -306,17 +301,17 @@ class DTG5334(Base, PulserInterface):
         return status, self.stb_values
 
     def get_sample_rate(self):
-        """ Get the sample rate of the pulse generator hardware
+        """Get the sample rate of the pulse generator hardware
 
         @return float: The current sample rate of the device (in Hz)
 
         Do not return a saved sample rate from an attribute, but instead retrieve the current
         sample rate directly from the device.
         """
-        return float(self.dtg.query('TBAS:FREQ?'))
+        return float(self.dtg.query("TBAS:FREQ?"))
 
     def set_sample_rate(self, sample_rate):
-        """ Set the sample rate of the pulse generator hardware.
+        """Set the sample rate of the pulse generator hardware.
 
         @param float sample_rate: The sampling rate to be set (in Hz)
 
@@ -325,21 +320,19 @@ class DTG5334(Base, PulserInterface):
         Note: After setting the sampling rate of the device, use the actually set return value for
               further processing.
         """
-        self.dtg.write('TBAS:FREQ {0:e}'.format(sample_rate))
+        self.dtg.write(f"TBAS:FREQ {sample_rate:e}")
         return self.get_sample_rate()
 
     def get_analog_level(self, amplitude=None, offset=None):
-        """ Device has no analog channels.
-        """
+        """Device has no analog channels."""
         return {}, {}
 
     def set_analog_level(self, amplitude=None, offset=None):
-        """ Device has no analog channels.
-        """
+        """Device has no analog channels."""
         return {}, {}
 
     def get_digital_level(self, low=None, high=None):
-        """ Retrieve the digital low and high level of the provided/all channels.
+        """Retrieve the digital low and high level of the provided/all channels.
 
         @param list low: optional, if the low value (in Volt) of a specific channel is desired.
         @param list high: optional, if the high value (in Volt) of a specific channel is desired.
@@ -352,34 +345,24 @@ class DTG5334(Base, PulserInterface):
               the current low and/or high value directly from the device.
         """
         if low is None:
-            low = self.get_constraints().activation_config['all']
+            low = self.get_constraints().activation_config["all"]
         if high is None:
-            high = self.get_constraints().activation_config['all']
+            high = self.get_constraints().activation_config["all"]
 
         ch_low = {
-            chan:
-                float(
-                    self.dtg.query('PGEN{0}:CH{1}:LOW?'.format(
-                        *(self.ch_map[chan])
-                    ))
-                )
+            chan: float(self.dtg.query("PGEN{0}:CH{1}:LOW?".format(*(self.ch_map[chan]))))
             for chan in low
         }
 
         ch_high = {
-            chan:
-                float(
-                    self.dtg.query('PGEN{0}:CH{1}:HIGH?'.format(
-                        *(self.ch_map[chan])
-                    ))
-                )
+            chan: float(self.dtg.query("PGEN{0}:CH{1}:HIGH?".format(*(self.ch_map[chan]))))
             for chan in high
         }
 
         return ch_high, ch_low
 
     def set_digital_level(self, low=None, high=None):
-        """ Set low and/or high value of the provided digital channel.
+        """Set low and/or high value of the provided digital channel.
 
         @param dict low: dictionary, with key being the channel descriptor string
                          (i.e. 'd_ch1', 'd_ch2') and items being the low values (in volt) for the
@@ -404,16 +387,16 @@ class DTG5334(Base, PulserInterface):
 
         for chan, level in low.items():
             gen, gen_ch = self.ch_map[chan]
-            self.dtg.write('PGEN{0}:CH{1}:LOW {2}'.format(gen, gen_ch, level))
+            self.dtg.write(f"PGEN{gen}:CH{gen_ch}:LOW {level}")
 
         for chan, level in high.items():
             gen, gen_ch = self.ch_map[chan]
-            self.dtg.write('PGEN{0}:CH{1}:HIGH {2}'.format(gen, gen_ch, level))
+            self.dtg.write(f"PGEN{gen}:CH{gen_ch}:HIGH {level}")
 
         return self.get_digital_level()
 
     def get_active_channels(self, ch=None):
-        """ Get the active channels of the pulse generator hardware.
+        """Get the active channels of the pulse generator hardware.
 
         @param list ch: optional, if specific analog or digital channels are needed to be asked
                         without obtaining all the channels.
@@ -424,7 +407,7 @@ class DTG5334(Base, PulserInterface):
         If no parameter (or None) is passed to this method all channel states will be returned.
         """
         if ch is None:
-            chan_list = self.get_constraints().activation_config['all']
+            chan_list = self.get_constraints().activation_config["all"]
         active_ch = {chan: 1 for chan in chan_list}
 
         return active_ch
@@ -460,12 +443,19 @@ class DTG5334(Base, PulserInterface):
         for chan, state in ch.items():
             gen, gen_ch = self.ch_map[chan]
             b_state = 1 if state else 0
-            self.dtg.write('PGEN{0}:CH{1}:OUTP {2}'.format(gen, gen_ch, b_state))
+            self.dtg.write(f"PGEN{gen}:CH{gen_ch}:OUTP {b_state}")
 
         return self.get_active_channels()
 
-    def write_waveform(self, name, analog_samples, digital_samples, is_first_chunk, is_last_chunk,
-                       total_number_of_samples):
+    def write_waveform(
+        self,
+        name,
+        analog_samples,
+        digital_samples,
+        is_first_chunk,
+        is_last_chunk,
+        total_number_of_samples,
+    ):
         """
         Write a new waveform or append samples to an already existing waveform on the device memory.
         The flags is_first_chunk and is_last_chunk can be used as indicator if a new waveform should
@@ -493,39 +483,41 @@ class DTG5334(Base, PulserInterface):
         """
         # check input
         if not name:
-            self.log.error('Please specify a name for waveform creation.')
+            self.log.error("Please specify a name for waveform creation.")
             return -1
 
         min_samples = 960
         longest_channel = max([len(v) for k, v in digital_samples.items()])
-        print('Loading block with', longest_channel, 'samples')
+        print("Loading block with", longest_channel, "samples")
         if longest_channel < min_samples:
-            self.log.error('Minimum waveform length for DTG5334 series is {0} samples.\n'
-                           'Direct waveform creation for {1} failed.'.format(min_samples, name))
+            self.log.error(
+                f"Minimum waveform length for DTG5334 series is {min_samples} samples.\n"
+                f"Direct waveform creation for {name} failed."
+            )
             return -1
 
         # determine active channels
         activation_dict = self.get_active_channels()
         active_chnl = [chnl for chnl in activation_dict if activation_dict[chnl]]
-        active_digital = [chnl for chnl in active_chnl if 'd_ch' in chnl]
+        active_digital = [chnl for chnl in active_chnl if "d_ch" in chnl]
         active_digital.sort()
         print(active_digital)
 
         # Sanity check of channel numbers
         if set(active_digital) != set(digital_samples.keys()):
             self.log.error(
-                'Mismatch of channel activation and sample array dimensions for direct '
-                'write.\nChannel activation is: {}.\n'
-                'Sample arrays have: {}.'
-                ''.format(active_digital, list(digital_samples.keys())))
+                "Mismatch of channel activation and sample array dimensions for direct "
+                f"write.\nChannel activation is: {active_digital}.\n"
+                f"Sample arrays have: {list(digital_samples.keys())}."
+            )
             return -1
 
         self._block_new(name, longest_channel)
-        self.log.debug(self.dtg.query('BLOC:SEL?'))
+        self.log.debug(self.dtg.query("BLOC:SEL?"))
         written = self._block_write(name, digital_samples)
         print(written)
-        self.current_loaded_assets = {int(ch.split('_ch')[1]): name for ch in active_digital}
-        self.current_loaded_asset_type = 'waveform'
+        self.current_loaded_assets = {int(ch.split("_ch")[1]): name for ch in active_digital}
+        self.current_loaded_asset_type = "waveform"
         self.waveform_names.add(name)
         return max(written), [name]
 
@@ -541,47 +533,47 @@ class DTG5334(Base, PulserInterface):
         num_steps = len(sequence_parameters)
 
         # Check if sequence already exists and delete if necessary.
-        #if sequence_name in self._get_sequence_names_memory():
+        # if sequence_name in self._get_sequence_names_memory():
         #    self.dtg.write('BLOC:DEL "{0}"'.format(sequence_name))
         self._set_sequence_length(num_steps)
         for line_nr, (wfms, params) in enumerate(sequence_parameters):
             print(line_nr, params)
-            go_to = '' if params['go_to'] <= 0 else params['go_to']
-            jump_to = '' if params['event_jump_to'] <= 0 else params['event_jump_to']
-            reps = 0 if params['repetitions'] <= 0 else params['repetitions']
+            go_to = "" if params["go_to"] <= 0 else params["go_to"]
+            jump_to = "" if params["event_jump_to"] <= 0 else params["event_jump_to"]
+            reps = 0 if params["repetitions"] <= 0 else params["repetitions"]
             self._set_sequence_line(
                 line_nr,
-                '{0}'.format(line_nr + 1),
+                f"{line_nr + 1}",
                 0,
-                params['name'][0].rsplit('.')[0],
+                params["name"][0].rsplit(".")[0],
                 reps,
                 jump_to,
-                go_to
+                go_to,
             )
 
         # Wait for everything to complete
-        while int(self.dtg.query('*OPC?')) != 1:
+        while int(self.dtg.query("*OPC?")) != 1:
             time.sleep(0.2)
 
         self.sequence_names.add(name)
         return 0
 
     def get_waveform_names(self):
-        """ Retrieve the names of all uploaded waveforms on the device.
+        """Retrieve the names of all uploaded waveforms on the device.
 
         @return list: List of all uploaded waveform name strings in the device workspace.
         """
         return list(natural_sort(self.waveform_names))
 
     def get_sequence_names(self):
-        """ Retrieve the names of all uploaded sequence on the device.
+        """Retrieve the names of all uploaded sequence on the device.
 
         @return list: List of all uploaded sequence name strings in the device workspace.
         """
         return list(natural_sort(self.sequence_names))
 
     def delete_waveform(self, waveform_name):
-        """ Delete the waveform with name "waveform_name" from the device memory.
+        """Delete the waveform with name "waveform_name" from the device memory.
 
         @param str waveform_name: The name of the waveform to be deleted
                                   Optionally a list of waveform names can be passed.
@@ -591,7 +583,7 @@ class DTG5334(Base, PulserInterface):
         return []
 
     def delete_sequence(self, sequence_name):
-        """ Delete the sequence with name "sequence_name" from the device memory.
+        """Delete the sequence with name "sequence_name" from the device memory.
 
         @param str sequence_name: The name of the sequence to be deleted
                                   Optionally a list of sequence names can be passed.
@@ -601,7 +593,7 @@ class DTG5334(Base, PulserInterface):
         return []
 
     def get_interleave(self):
-        """ Check whether Interleave is ON or OFF in AWG.
+        """Check whether Interleave is ON or OFF in AWG.
 
         @return bool: True: ON, False: OFF
 
@@ -610,7 +602,7 @@ class DTG5334(Base, PulserInterface):
         return False
 
     def set_interleave(self, state=False):
-        """ Turns the interleave of an AWG on or off.
+        """Turns the interleave of an AWG on or off.
 
         @param bool state: The state the interleave should be set to
                            (True: ON, False: OFF)
@@ -622,7 +614,7 @@ class DTG5334(Base, PulserInterface):
         return False
 
     def write(self, command):
-        """ Sends a command string to the device.
+        """Sends a command string to the device.
 
         @param string command: string containing the command
 
@@ -631,7 +623,7 @@ class DTG5334(Base, PulserInterface):
         self.dtg.write(command)
 
     def query(self, question):
-        """ Asks the device a 'question' and receive and return an answer from it.
+        """Asks the device a 'question' and receive and return an answer from it.
 
         @param string question: string containing the command
 
@@ -640,55 +632,55 @@ class DTG5334(Base, PulserInterface):
         return self.dtg.query(question)
 
     def reset(self):
-        """ Reset the device.
+        """Reset the device.
 
         @return int: error code (0:OK, -1:error)
         """
-        self.dtg.write('*RST')
+        self.dtg.write("*RST")
 
     def _get_id(self):
-        result = self.dtg.query('*IDN?')
-        version = self.dtg.query('SYSTEM:VERSION?')
-        ret = result.replace('\n', '').split(',')
-        ret.append(version.replace('\n', ''))
+        result = self.dtg.query("*IDN?")
+        version = self.dtg.query("SYSTEM:VERSION?")
+        ret = result.replace("\n", "").split(",")
+        ret.append(version.replace("\n", ""))
         return ret
 
     def _get_modules(self):
-        a = self.modules_map[int(self.dtg.query('PGENA:ID?'))]
-        b = self.modules_map[int(self.dtg.query('PGENB:ID?'))]
-        c = self.modules_map[int(self.dtg.query('PGENC:ID?'))]
-        d = self.modules_map[int(self.dtg.query('PGEND:ID?'))]
+        a = self.modules_map[int(self.dtg.query("PGENA:ID?"))]
+        b = self.modules_map[int(self.dtg.query("PGENB:ID?"))]
+        c = self.modules_map[int(self.dtg.query("PGENC:ID?"))]
+        d = self.modules_map[int(self.dtg.query("PGEND:ID?"))]
         return [a, b, c, d]
 
     def _is_output_on(self):
-        return int(self.dtg.query('TBAS:RUN?')) == 1
+        return int(self.dtg.query("TBAS:RUN?")) == 1
 
     def _block_length(self, name):
-        return int(self.dtg.query('BLOC:LENG? "{0}"'.format(name)))
+        return int(self.dtg.query(f'BLOC:LENG? "{name}"'))
 
     def _block_exists(self, name):
         return self._block_length(name) != -1
 
     def _block_delete(self, name):
-        self.dtg.write('BLOC:DEL "{0}"'.format(name))
+        self.dtg.write(f'BLOC:DEL "{name}"')
 
     def _block_new(self, name, length):
         if self._block_exists(name):
             self._block_delete(name)
 
-        self.dtg.write('BLOC:NEW "{0}", {1}'.format(name, length))
-        self.dtg.query('*OPC?')
-        self.dtg.write('BLOC:SEL "{0}"'.format(name))
-        self.dtg.query('*OPC?')
+        self.dtg.write(f'BLOC:NEW "{name}", {length}')
+        self.dtg.query("*OPC?")
+        self.dtg.write(f'BLOC:SEL "{name}"')
+        self.dtg.query("*OPC?")
 
     def _block_write(self, name, digital_samples):
         written = []
-        self.dtg.write('BLOC:SEL "{0}"'.format(name))
+        self.dtg.write(f'BLOC:SEL "{name}"')
 
         for ch, data in sorted(digital_samples.items()):
             written.append(self._channel_write_binary(ch, data))
 
-        self.dtg.query('*OPC?')
+        self.dtg.query("*OPC?")
         return written
 
     def _channel_write(self, channel, data):
@@ -699,27 +691,23 @@ class DTG5334(Base, PulserInterface):
         start = 0
 
         # when there is more than 1MB of data to transfer, split it up
-        print('Starting chunked transfer')
+        print("Starting chunked transfer")
         while dlen >= max_blocksize:
             end = start + max_blocksize
-            datstr = ''.join(map(lambda x: str(int(x)), data[start:end]))
-            print(channel, 'loop', dlen, len(datstr))
-            self.dtg.write('PGEN{0}:CH{1}:DATA {2},{3},"{4}"'.format(
-                c[0], c[1], start, end - start, datstr))
-            self.dtg.query('*OPC?')
+            datstr = "".join(map(lambda x: str(int(x)), data[start:end]))
+            print(channel, "loop", dlen, len(datstr))
+            self.dtg.write(f'PGEN{c[0]}:CH{c[1]}:DATA {start},{end - start},"{datstr}"')
+            self.dtg.query("*OPC?")
             written += end - start
             dlen -= end - start
             start = end
 
         end = start + dlen
         if dlen > 0:
-            datstr = ''.join(map(lambda x: str(int(x)), data[start:end]))
-            print(channel, 'last', len(datstr))
-            self.dtg.write(
-                'PGEN{0}:CH{1}:DATA {2},{3},"{4}"'.format(
-                    c[0], c[1], start, end - start, datstr)
-            )
-            self.dtg.query('*OPC?')
+            datstr = "".join(map(lambda x: str(int(x)), data[start:end]))
+            print(channel, "last", len(datstr))
+            self.dtg.write(f'PGEN{c[0]}:CH{c[1]}:DATA {start},{end - start},"{datstr}"')
+            self.dtg.query("*OPC?")
             written += end - start
         return written
 
@@ -734,14 +722,14 @@ class DTG5334(Base, PulserInterface):
         while dlen >= max_blocksize - 8:
             end = start + max_blocksize
             bytestr = np.packbits(np.fliplr(np.reshape(data[start:end], (-1, 8))))
-            print(channel, '->', c, 'start', start, 'end', end, 'len', dlen, 'packed', len(bytestr))
-            #print(bytestr)
+            print(channel, "->", c, "start", start, "end", end, "len", dlen, "packed", len(bytestr))
+            # print(bytestr)
             self.dtg.write_binary_values(
-                'PGEN{0}:CH{1}:BDATA {2},{3},'.format(c[0], c[1], start, end - start),
+                f"PGEN{c[0]}:CH{c[1]}:BDATA {start},{end - start},",
                 bytestr,
-                datatype='B'
+                datatype="B",
             )
-            print(self.dtg.query('*OPC?'))
+            print(self.dtg.query("*OPC?"))
             written += end - start
             dlen -= end - start
             start = end
@@ -751,27 +739,33 @@ class DTG5334(Base, PulserInterface):
             to_pad = 8 - dlen % 8 if dlen % 8 != 0 else 0
 
             padded_bytes = np.packbits(
-                np.fliplr(
-                    np.reshape(
-                        np.pad(data[start:end], (0, to_pad), 'constant'),
-                        (-1, 8)
-                    )
-                )
+                np.fliplr(np.reshape(np.pad(data[start:end], (0, to_pad), "constant"), (-1, 8)))
             )
-            #print(padded_bytes)
-            print(channel, '-->', c, 'start', start, 'end', end,
-                  'len', dlen, 'padded', len(padded_bytes))
+            # print(padded_bytes)
+            print(
+                channel,
+                "-->",
+                c,
+                "start",
+                start,
+                "end",
+                end,
+                "len",
+                dlen,
+                "padded",
+                len(padded_bytes),
+            )
             self.dtg.write_binary_values(
-                'PGEN{0}:CH{1}:BDATA {2},{3},'.format(c[0], c[1], start, end - start),
+                f"PGEN{c[0]}:CH{c[1]}:BDATA {start},{end - start},",
                 padded_bytes,
-                datatype='B'
+                datatype="B",
             )
-            print(self.dtg.query('*OPC?'))
+            print(self.dtg.query("*OPC?"))
             written += end - start
         return written
 
     def _get_sequence_line(self, line_nr):
-        fields = self.dtg.query('SEQ:DATA? {0}'.format(line_nr)).split(', ')
+        fields = self.dtg.query(f"SEQ:DATA? {line_nr}").split(", ")
         print(fields)
         label, trigger, block, repeat, jump, goto = fields
         return (
@@ -780,20 +774,20 @@ class DTG5334(Base, PulserInterface):
             block.strip('"'),
             int(repeat),
             jump.strip('"'),
-            goto.strip('"')
+            goto.strip('"'),
         )
 
     def _set_sequence_line(self, line_nr, label, trigger, block, repeat, jump, goto):
         print(line_nr, label, trigger, block, repeat, jump, goto)
-        self.dtg.write('SEQ:DATA {0}, "{1}", {2}, "{3}", {4}, "{5}", "{6}"'.format(
-            line_nr, label, trigger, block, repeat, jump, goto
-        ))
+        self.dtg.write(
+            f'SEQ:DATA {line_nr}, "{label}", {trigger}, "{block}", {repeat}, "{jump}", "{goto}"'
+        )
 
     def _get_sequence_length(self):
-        return int(self.dtg.query('SEQ:LENG?'))
+        return int(self.dtg.query("SEQ:LENG?"))
 
     def _set_sequence_length(self, length):
-        self.dtg.write('SEQ:LENG {0}'.format(length))
+        self.dtg.write(f"SEQ:LENG {length}")
 
     def _get_sequencer_mode(self):
-        return self.dtg.query('TBAS:SMODE?')
+        return self.dtg.query("TBAS:SMODE?")

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interfuse between Magnet Logic and Motor Hardware.
 
@@ -20,7 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-
 """
 An interfuse file is indented to fuse/combine a logic with a hardware, which
 was not indented to be used with the logic. The interfuse file extend the
@@ -36,19 +33,18 @@ command to talk to a xyz motor hardware and a rotational motor hardware.
 """
 
 from core.connector import Connector
-from logic.generic_logic import GenericLogic
 from interface.magnet_interface import MagnetInterface
+from logic.generic_logic import GenericLogic
 
 
 class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
-    """
-    """
+    """ """
 
     # declare connectors, here you can see the interfuse action: the in
     # connector will cope a motor hardware, that means a motor device can
     # connect to the in connector of the logic.
-    motorstage_xyz = Connector(interface='MotorInterface')
-    motorstage_rot = Connector(interface='MotorInterface')
+    motorstage_xyz = Connector(interface="MotorInterface")
+    motorstage_rot = Connector(interface="MotorInterface")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -59,18 +55,16 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         self._magnet_idle = False
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self._motor_device_rot = self.motorstage_rot()
         self._motor_device_xyz = self.motorstage_xyz()
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         pass
 
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the magnet driving device.
+        """Retrieve the hardware constrains from the magnet driving device.
 
         @return dict: dict with constraints for the magnet hardware. These
                       constraints will be passed via the logic to the GUI so
@@ -82,9 +76,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         constraints_xyz.update(constraints_rot)
         return constraints_xyz
 
-
     def move_rel(self, param_dict):
-        """ Moves stage in given direction (relative movement)
+        """Moves stage in given direction (relative movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -103,15 +96,16 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             if move_rot != {}:
                 self._motor_device_rot.move_rel(move_rot)
         else:
-            self.log.warning('Motor Device is in Idle state and cannot '
-                    'perform "move_rel" commands. Couple the Motor to '
-                    'control via the command "set_magnet_idle_state(False)" '
-                    'to have control over its movement.')
+            self.log.warning(
+                "Motor Device is in Idle state and cannot "
+                'perform "move_rel" commands. Couple the Motor to '
+                'control via the command "set_magnet_idle_state(False)" '
+                "to have control over its movement."
+            )
         return self.get_pos(list(param_dict))
 
-
     def move_abs(self, param_dict):
-        """ Moves stage to absolute position (absolute movement)
+        """Moves stage to absolute position (absolute movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -127,24 +121,24 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             if move_rot != {}:
                 self._motor_device_rot.move_abs(move_rot)
         else:
-            self.log.warning('Motor Device is in Idle state and cannot '
-                    'perform "move_abs" commands. Couple the Motor to '
-                    'control via the command "set_magnet_idle_state (False)" '
-                    'to have control over its movement.')
+            self.log.warning(
+                "Motor Device is in Idle state and cannot "
+                'perform "move_abs" commands. Couple the Motor to '
+                'control via the command "set_magnet_idle_state (False)" '
+                "to have control over its movement."
+            )
         return self.get_pos(list(param_dict))
 
-
     def abort(self):
-        """ Stops movement of the stage
+        """Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
         self._motor_device_xyz.abort()
         self._motor_device_rot.abort()
 
-
     def get_pos(self, param_list=None):
-        """ Gets current position of the stage
+        """Gets current position of the stage
 
         @param list param_list: optional, if a specific position of an axis
                                 is desired, then the labels of the needed
@@ -172,9 +166,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         pos_xyz.update(pos_rot)
         return pos_xyz
 
-
     def get_status(self, param_list=None):
-        """ Get the status of the position
+        """Get the status of the position
 
         @param list param_list: optional, if a specific status of an axis
                                 is desired, then the labels of the needed
@@ -187,7 +180,7 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         if param_list is None:
             status_xyz = self._motor_device_xyz.get_status()
             status_rot = self._motor_device_rot.get_status()
-            #self.log.debug(status_rot)
+            # self.log.debug(status_rot)
         else:
             list_xyz, list_rot = self._split_list(param_list)
             if list_xyz:
@@ -201,9 +194,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         status_xyz.update(status_rot)
         return status_xyz
 
-
     def calibrate(self, param_list=None):
-        """ Calibrates the stage.
+        """Calibrates the stage.
 
         @param list param_list: param_list: optional, if a specific calibration
                                 of an axis is desired, then the labels of the
@@ -234,14 +226,16 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             pos_xyz.update(pos_rot)
             return pos_xyz
         else:
-            self.log.warning('Motor Device is in Idle state and cannot '
-                    'perform "calibrate" commands. Couple the Motor to '
-                    'control via the command "set_magnet_idle_state(False)" '
-                    'to have control over its movement.')
+            self.log.warning(
+                "Motor Device is in Idle state and cannot "
+                'perform "calibrate" commands. Couple the Motor to '
+                'control via the command "set_magnet_idle_state(False)" '
+                "to have control over its movement."
+            )
             return self.get_pos()
 
     def get_velocity(self, param_list=None):
-        """ Gets the current velocity for all connected axes.
+        """Gets the current velocity for all connected axes.
 
         @param list param_list: optional, if a specific velocity of an axis
                                 is desired, then the labels of the needed
@@ -269,11 +263,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         vel_xyz.update(vel_rot)
         return vel_xyz
 
-
-
-
     def set_velocity(self, param_dict=None):
-        """ Write new value for velocity.
+        """Write new value for velocity.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -292,15 +283,16 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
                 self._motor_device_rot.set_velocity(vel_rot)
 
         else:
-            self.log.warning('Motor Device is in Idle state and cannot '
-                    'perform "set_velocity" commands. Couple the Motor to '
-                    'control via the command "set_magnet_idle_state(False)" '
-                    'to have control over its movement.')
+            self.log.warning(
+                "Motor Device is in Idle state and cannot "
+                'perform "set_velocity" commands. Couple the Motor to '
+                'control via the command "set_magnet_idle_state(False)" '
+                "to have control over its movement."
+            )
         return self.get_velocity(list(param_dict))
 
-
     def tell(self, param_dict=None):
-        """ Send a command to the magnet.
+        """Send a command to the magnet.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -310,13 +302,15 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
 
         @return int: error code (0:OK, -1:error)
         """
-        self.log.info('You can tell the motor dummy as much as you want, it '
-                'has always an open ear for you. But do not expect an '
-                'answer, it is very shy!')
+        self.log.info(
+            "You can tell the motor dummy as much as you want, it "
+            "has always an open ear for you. But do not expect an "
+            "answer, it is very shy!"
+        )
         return -1
 
     def ask(self, param_dict=None):
-        """ Ask the magnet a question.
+        """Ask the magnet a question.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -329,18 +323,19 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
                       string answers of the axis.
         """
 
-        self.log.info('The Motor Hardware does not support an "ask" command '
-                'and is not be able to answer the questions "{0}" to the '
-                'axis "{1}"! If you want to talk to someone ask Siri, maybe '
-                'she will listen to you and answer your questions '
-                ':P.'.format(list(param_dict.values()), list(param_dict)))
+        self.log.info(
+            'The Motor Hardware does not support an "ask" command '
+            f'and is not be able to answer the questions "{list(param_dict.values())}" to the '
+            f'axis "{list(param_dict)}"! If you want to talk to someone ask Siri, maybe '
+            "she will listen to you and answer your questions "
+            ":P."
+        )
 
         return_val = {}
         for entry in param_dict:
-            return_val[entry] = 'Nothing to say, Motor is quite.'
+            return_val[entry] = "Nothing to say, Motor is quite."
 
         return return_val
-
 
     def initialize(self):
         """
@@ -348,13 +343,14 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         heated it cools them, else the coils get heated.
         @return int: (0: Ok, -1:error)
         """
-        self.log.info('Motor Hardware does not need initialization for '
-                'starting or ending a movement. Nothing will happen.')
+        self.log.info(
+            "Motor Hardware does not need initialization for "
+            "starting or ending a movement. Nothing will happen."
+        )
         return -1
 
-
     def set_magnet_idle_state(self, magnet_idle=True):
-        """ Set the magnet to couple/decouple to/from the control.
+        """Set the magnet to couple/decouple to/from the control.
 
         @param bool magnet_idle: if True then magnet will be set to idle and
                                  each movement command will be ignored from the
@@ -369,9 +365,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         self._magnet_idle = magnet_idle
         return self._magnet_idle
 
-
     def get_magnet_idle_state(self):
-        """ Retrieve the current state of the magnet, whether it is idle or not.
+        """Retrieve the current state of the magnet, whether it is idle or not.
 
         @return bool: the actual state which was set in the magnet hardware.
                         True = idle, decoupled from control
@@ -380,7 +375,7 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
 
         return self._magnet_idle
 
-    def _split_list(self,param_list):
+    def _split_list(self, param_list):
         """This function splits a param_list into one for the xyz motor and one for the rot motor
 
         @param list param_list: List with parameters
@@ -400,7 +395,6 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
 
         return list_xyz, list_rot
 
-
     def _split_dict(self, param_dict):
         """This function splits a param_dict into one for the xyz motor and one for the rot motor
 
@@ -415,14 +409,9 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
         keys_rot = self._motor_device_rot.get_constraints()
         for key in param_dict:
             if key in keys_xyz:
-                dict_xyz[key]=param_dict[key]
+                dict_xyz[key] = param_dict[key]
             if key in keys_rot:
-                dict_rot[key]=param_dict[key]
-        #self.log.debug(dict_xyz)
-        #self.log.debug(dict_rot)
+                dict_rot[key] = param_dict[key]
+        # self.log.debug(dict_xyz)
+        # self.log.debug(dict_rot)
         return dict_xyz, dict_rot
-
-
-
-
-

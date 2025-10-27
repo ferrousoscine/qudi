@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains Qudi module helper functions.
 
@@ -22,25 +21,25 @@ Derived form ACQ4:
 Copyright 2010  Luke Campagnola
 Originally distributed under MIT/X11 license. See documentation/MITLicense.txt for more infomation.
 """
+
 import os
 
 
 def get_main_dir():
-    """ Returns the absolut path to the directory of the main software.
+    """Returns the absolut path to the directory of the main software.
 
-         @return string: path to the main tree of the software
+    @return string: path to the main tree of the software
 
     """
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '../..'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
 def get_home_dir():
-    """ Returns the path to the home directory, which should definitely
-        exist.
-        @return string: absolute path to the home directory
+    """Returns the path to the home directory, which should definitely
+    exist.
+    @return string: absolute path to the home directory
     """
-    return os.path.abspath(os.path.expanduser('~'))
+    return os.path.abspath(os.path.expanduser("~"))
 
 
 def toposort(deps, cost=None):
@@ -101,8 +100,7 @@ def toposort(deps, cost=None):
             for n2 in deps.get(n, []):
                 allDeps[n2] |= allDeps.get(n, set())
 
-        totalCost = {n: sum([cost.get(x, 0)
-                             for x in allDeps[n]]) for n in allDeps}
+        totalCost = {n: sum([cost.get(x, 0) for x in allDeps[n]]) for n in allDeps}
         key = lambda x: totalCost.get(x, 0)
 
     # compute weighted order
@@ -114,8 +112,7 @@ def toposort(deps, cost=None):
         # If no nodes are ready, then there must be a cycle in the graph
         if len(ready) == 0:
             print(deps, deps0)
-            raise Exception(
-                'Cannot resolve requested device configure/start order.')
+            raise Exception("Cannot resolve requested device configure/start order.")
 
         # sort by branch cost
         if key is not None:
@@ -141,5 +138,4 @@ def is_base(base):
 
     @return bool: base is allowed
     """
-    return base in ('hardware', 'logic', 'gui')
-
+    return base in ("hardware", "logic", "gui")

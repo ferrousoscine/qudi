@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Qt-based ZMQ stream
 
@@ -18,28 +17,32 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
+
+import datetime
+import errno
+import json
+import logging
+import threading
+import time
+import uuid
+from io import StringIO
+from threading import Event, Lock, Thread
+
 import zmq
 from qtpy import QtCore
-import logging
-import json
-import uuid
-import errno
-import datetime
-from io import StringIO
-import threading
-from threading import Thread, Lock, Event
-import time
+
 from core.util.mutex import Mutex
 
 
 class QZMQStream(QtCore.QObject):
-    """ Qt based ZMQ stream.
-        QSignal based notifications about arriving ZMQ messages.
+    """Qt based ZMQ stream.
+    QSignal based notifications about arriving ZMQ messages.
     """
+
     sigMsgRecvd = QtCore.Signal(object)
 
     def __init__(self, zmqsocket):
-        """ Make a stream from a socket.
+        """Make a stream from a socket.
 
         @param zmqsocket: ZMQ socket
         """
@@ -47,27 +50,26 @@ class QZMQStream(QtCore.QObject):
         self.name = None
         self.socket = zmqsocket
         self.readnotifier = QtCore.QSocketNotifier(
-            self.socket.get(zmq.FD),
-            QtCore.QSocketNotifier.Read)
-        logging.debug("Notifier: {0!s} at filenumber {1!s} with socket {2!s} of class {3!s}".format(self.readnotifier.socket(),
-                                                                                                    self.socket.get(zmq.FD),
-                                                                                                    self.socket,
-                                                                                                    self.name))
+            self.socket.get(zmq.FD), QtCore.QSocketNotifier.Read
+        )
+        logging.debug(
+            f"Notifier: {self.readnotifier.socket()!s} at filenumber {self.socket.get(zmq.FD)!s} with socket {self.socket!s} of class {self.name!s}"
+        )
         self.readnotifier.activated.connect(self.checkForMessage)
 
     def checkForMessage(self, socket):
-        """ Check on socket activity if there is a complete ZMQ message.
+        """Check on socket activity if there is a complete ZMQ message.
 
-          @param socket: ZMQ socket
+        @param socket: ZMQ socket
         """
-        logging.debug("Check: {0!s}".format(self.readnotifier.socket()))
+        logging.debug(f"Check: {self.readnotifier.socket()!s}")
         self.readnotifier.setEnabled(False)
         check = True
         try:
             while check:
                 events = self.socket.get(zmq.EVENTS)
                 check = events & zmq.POLLIN
-                logging.debug("EVENTS: {0!s}".format(events))
+                logging.debug(f"EVENTS: {events!s}")
                 if check:
                     try:
                         msg = self.socket.recv_multipart(zmq.NOBLOCK)
@@ -77,9 +79,9 @@ class QZMQStream(QtCore.QObject):
                             # state changed since poll event
                             pass
                         else:
-                            logging.info("RECV Error: {0!s}".format(zmq.strerror(e.errno)))
+                            logging.info(f"RECV Error: {zmq.strerror(e.errno)!s}")
                     else:
-                        logging.debug("MSG: {0!s} {1!s}".format(self.readnotifier.socket(), msg))
+                        logging.debug(f"MSG: {self.readnotifier.socket()!s} {msg!s}")
                         self.sigMsgRecvd.emit(msg)
         except:
             logging.debug("Exception in QZMQStream::checkForMessages")
@@ -88,15 +90,14 @@ class QZMQStream(QtCore.QObject):
             self.readnotifier.setEnabled(True)
 
     def close(self):
-        """ Remove all notifiers from socket.
-        """
+        """Remove all notifiers from socket."""
         self.readnotifier.setEnabled(False)
         self.readnotifier.activated.disconnect()
         self.sigMsgRecvd.disconnect()
 
 
 class QZMQHeartbeat(QtCore.QObject):
-    """ Echo Messages on a ZMQ stream. """
+    """Echo Messages on a ZMQ stream."""
 
     def __init__(self, stream):
         super().__init__()
@@ -105,11 +106,11 @@ class QZMQHeartbeat(QtCore.QObject):
 
     @QtCore.Slot(bytes)
     def beat(self, msg):
-        """ Send a message back.
+        """Send a message back.
 
-          @param msg: message to be sent back
+        @param msg: message to be sent back
         """
-        logging.debug("HB: {}".format(msg))
+        logging.debug(f"HB: {msg}")
         if len(msg) > 0:
             retmsg = msg[0]
             try:
@@ -120,7 +121,6 @@ class QZMQHeartbeat(QtCore.QObject):
 
 
 class NetworkStream(QZMQStream):
-
     def __init__(self, context, zqm_type, connection, auth, engine_id, name=None, port=0):
         self.name = name if name is not None else self.msg_id()
         self._socket = context.socket(zqm_type)
@@ -160,7 +160,7 @@ class NetworkStream(QZMQStream):
 
     @staticmethod
     def msg_id():
-        """ Return a new uuid for message id """
+        """Return a new uuid for message id"""
         return str(uuid.uuid4())
 
     def sign(self, msg_lst):
@@ -170,7 +170,7 @@ class NetworkStream(QZMQStream):
         h = self._auth.copy()
         for m in msg_lst:
             h.update(m)
-        return h.hexdigest().encode('ascii')
+        return h.hexdigest().encode("ascii")
 
     def new_header(self, msg_type):
         """make a new header"""
@@ -194,7 +194,7 @@ class NetworkStream(QZMQStream):
                 metadata = dict()
 
             def jencode(msg):
-                return json.dumps(msg).encode('ascii')
+                return json.dumps(msg).encode("ascii")
 
             msg_lst = [
                 jencode(header),
@@ -203,15 +203,10 @@ class NetworkStream(QZMQStream):
                 jencode(content),
             ]
             signature = self.sign(msg_lst)
-            parts = [self.DELIM,
-                     signature,
-                     msg_lst[0],
-                     msg_lst[1],
-                     msg_lst[2],
-                     msg_lst[3]]
+            parts = [self.DELIM, signature, msg_lst[0], msg_lst[1], msg_lst[2], msg_lst[3]]
             if identities:
                 parts = identities + parts
-            logging.debug('{0!s} send parts: {1!s}'.format(self.name, parts))
+            logging.debug(f"{self.name!s} send parts: {parts!s}")
             self.socket.send_multipart(parts)
 
     def deserialize_wire_msg(self, wire_msg):
@@ -219,13 +214,17 @@ class NetworkStream(QZMQStream):
         delim_idx = wire_msg.index(self.DELIM)
         identities = wire_msg[:delim_idx]
         m_signature = wire_msg[delim_idx + 1]
-        msg_frames = wire_msg[delim_idx + 2:]
+        msg_frames = wire_msg[delim_idx + 2 :]
 
         def jdecode(msg):
-            return json.loads(msg.decode('ascii'))
+            return json.loads(msg.decode("ascii"))
 
-        m = {'header': jdecode(msg_frames[0]), 'parent_header': jdecode(msg_frames[1]),
-             'metadata': jdecode(msg_frames[2]), 'content': jdecode(msg_frames[3])}
+        m = {
+            "header": jdecode(msg_frames[0]),
+            "parent_header": jdecode(msg_frames[1]),
+            "metadata": jdecode(msg_frames[2]),
+            "content": jdecode(msg_frames[3]),
+        }
         check_sig = self.sign(msg_frames)
         if check_sig != m_signature:
             raise ValueError("Signatures do not match")
@@ -242,7 +241,7 @@ class IOStdoutNetworkStream(StringIO):
 
     def __init__(self, network_stream, old_stdout, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._output_channel = 'stdout'
+        self._output_channel = "stdout"
         self._network_stream = network_stream
         self._old_stdout = old_stdout
 
@@ -250,14 +249,16 @@ class IOStdoutNetworkStream(StringIO):
         self._stop = Event()
         self._stop.clear()
         # initialize the thread for the hardware query
-        self._network_thread = Thread(target=self._run_network_loop, name='redirect ' + self._output_channel)
+        self._network_thread = Thread(
+            target=self._run_network_loop, name="redirect " + self._output_channel
+        )
 
         # start the threads
         self._network_thread.start()
 
     def write(self, s):
         self._lock.acquire()
-        if hasattr(threading.current_thread(), 'notebook_thread'):
+        if hasattr(threading.current_thread(), "notebook_thread"):
             super().write(s)
         else:
             self._old_stdout.write(s)
@@ -284,10 +285,10 @@ class IOStdoutNetworkStream(StringIO):
 
             # send off the data
             content = {
-                'name': self._output_channel,
-                'text': s,
+                "name": self._output_channel,
+                "text": s,
             }
-            self._network_stream.send(msg_type='stream', content=content)
+            self._network_stream.send(msg_type="stream", content=content)
 
     def close(self):
         self._dump_stream_to_network()
@@ -295,7 +296,6 @@ class IOStdoutNetworkStream(StringIO):
 
 
 class IOStderrNetworkStream(IOStdoutNetworkStream):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._output_channel = 'stderr'
+        self._output_channel = "stderr"

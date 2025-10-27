@@ -19,38 +19,38 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 from qtpy import QtCore
 
-class ModuleConfigModel(QtCore.QAbstractTableModel):
 
+class ModuleConfigModel(QtCore.QAbstractTableModel):
     def __init__(self, module):
         super().__init__()
-        self.headers = ['Option', 'Value']
+        self.headers = ["Option", "Value"]
         self.storage = module.options
 
     def getKeyByNumber(self, n):
-        """ Get a dict key by index number
+        """Get a dict key by index number
 
-            @param n int: index number for element
+        @param n int: index number for element
 
-            @return key: key at index
+        @return key: key at index
         """
         i = 0
-        if not(0 <= n < len(self.storage)):
+        if not (0 <= n < len(self.storage)):
             raise IndexError
         it = iter(self.storage)
         key = next(it)
-        while i<n:
+        while i < n:
             key = next(it)
             i += 1
         return key
 
     def getNumberByKey(self, key):
-        """ Get index number for dict key.
+        """Get index number for dict key.
 
-            @param key: dict key
+        @param key: dict key
 
-            @return int: index numer for key
+        @return int: index numer for key
 
-            Warning: index number for a key changes when keys with lower numbers are removed.
+        Warning: index number for a key changes when keys with lower numbers are removed.
         """
         i = 0
         it = iter(self.storage)
@@ -60,36 +60,36 @@ class ModuleConfigModel(QtCore.QAbstractTableModel):
             i += 1
         return i
 
-    def rowCount(self, parent = QtCore.QModelIndex()):
-        """ Gives the number of stored items.
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        """Gives the number of stored items.
 
-          @return int: number of items
+        @return int: number of items
         """
         return len(self.storage)
 
-    def columnCount(self, parent = QtCore.QModelIndex()):
-        """ Gives the number of data fields.
+    def columnCount(self, parent=QtCore.QModelIndex()):
+        """Gives the number of data fields.
 
-          @return int: number of data fields
+        @return int: number of data fields
         """
         return len(self.headers)
 
     def flags(self, index):
-        """ Determines what can be done with entry cells in the table view.
+        """Determines what can be done with entry cells in the table view.
 
-          @param QModelIndex index: cell fo which the flags are requested
+        @param QModelIndex index: cell fo which the flags are requested
 
-          @return Qt.ItemFlags: actins allowed fotr this cell
+        @return Qt.ItemFlags: actins allowed fotr this cell
         """
-        return QtCore.Qt.ItemIsEnabled |  QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     def data(self, index, role):
-        """ Get data from model for a given cell. Data can have a role that affects display.
+        """Get data from model for a given cell. Data can have a role that affects display.
 
-          @param QModelIndex index: cell for which data is requested
-          @param ItemDataRole role: role for which data is requested
+        @param QModelIndex index: cell for which data is requested
+        @param ItemDataRole role: role for which data is requested
 
-          @return QVariant: data for given cell and role
+        @return QVariant: data for given cell and role
         """
         if not index.isValid():
             return None
@@ -104,16 +104,16 @@ class ModuleConfigModel(QtCore.QAbstractTableModel):
         else:
             return None
 
-    def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
-        """ Data for the table view headers.
+    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+        """Data for the table view headers.
 
-          @param int section: number of the column to get header data for
-          @param Qt.Orientation: orientation of header (horizontal or vertical)
-          @param ItemDataRole: role for which to get data
+        @param int section: number of the column to get header data for
+        @param Qt.Orientation: orientation of header (horizontal or vertical)
+        @param ItemDataRole: role for which to get data
 
-          @return QVariant: header data for given column and role
+        @return QVariant: header data for given column and role
         """
-        if not(0 <= section < len(self.headers)):
+        if not (0 <= section < len(self.headers)):
             return None
         elif role != QtCore.Qt.DisplayRole:
             return None
@@ -121,4 +121,3 @@ class ModuleConfigModel(QtCore.QAbstractTableModel):
             return None
         else:
             return self.headers[section]
-

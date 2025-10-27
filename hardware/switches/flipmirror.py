@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Control the Radiant Dyes flip mirror driver through the serial interface.
 
@@ -20,16 +19,16 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import visa
-import time
-from core.module import Base
+
 from core.configoption import ConfigOption
+from core.module import Base
 from core.statusvariable import StatusVar
 from core.util.mutex import RecursiveMutex
 from interface.switch_interface import SwitchInterface
 
 
 class FlipMirror(Base, SwitchInterface):
-    """ This class is implements communication with the Radiant Dyes flip mirror driver using pyVISA
+    """This class is implements communication with the Radiant Dyes flip mirror driver using pyVISA
 
     Example config for copy-paste:
 
@@ -44,20 +43,20 @@ class FlipMirror(Base, SwitchInterface):
     """
 
     # ConfigOptions to give the single switch and its states custom names
-    _switch_name = ConfigOption(name='switch_name', default='1', missing='nothing')
-    _switch_states = ConfigOption(name='switch_states', default=['Down', 'Up'], missing='nothing')
+    _switch_name = ConfigOption(name="switch_name", default="1", missing="nothing")
+    _switch_states = ConfigOption(name="switch_states", default=["Down", "Up"], missing="nothing")
     # optional name of the hardware
-    _hardware_name = ConfigOption(name='name', default='Flipmirror Switch', missing='nothing')
+    _hardware_name = ConfigOption(name="name", default="Flipmirror Switch", missing="nothing")
     # if remember_states is True the last state will be restored at reloading of the module
-    _remember_states = ConfigOption(name='remember_states', default=False, missing='nothing')
+    _remember_states = ConfigOption(name="remember_states", default=False, missing="nothing")
     # switch_time to wait after setting the states for the solenoids to react
-    _switch_time = ConfigOption(name='switch_time', default=2.0, missing='nothing')
+    _switch_time = ConfigOption(name="switch_time", default=2.0, missing="nothing")
     # name of the serial interface where the hardware is connected.
     # Use e.g. the Keysight IO connections expert to find the device.
-    serial_interface = ConfigOption('interface', 'ASRL1::INSTR', missing='error')
+    serial_interface = ConfigOption("interface", "ASRL1::INSTR", missing="error")
 
     # StatusVariable for remembering the last state of the hardware
-    _states = StatusVar(name='states', default=None)
+    _states = StatusVar(name="states", default=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,8 +66,7 @@ class FlipMirror(Base, SwitchInterface):
         self._switches = dict()
 
     def on_activate(self):
-        """ Prepare module, connect to hardware.
-        """
+        """Prepare module, connect to hardware."""
         assert isinstance(self._switch_name, str), 'ConfigOption "switch_name" must be str type'
         assert len(self._switch_states) == 2, 'ConfigOption "switch_states" must be len 2 iterable'
         self._switches = self._chk_refine_available_switches(
@@ -79,15 +77,18 @@ class FlipMirror(Base, SwitchInterface):
         self._instrument = self._resource_manager.open_resource(
             self.serial_interface,
             baud_rate=115200,
-            write_termination='\r\n',
-            read_termination='\r\n',
+            write_termination="\r\n",
+            read_termination="\r\n",
             timeout=10,
-            send_end=True
+            send_end=True,
         )
 
         # reset states if requested, otherwise use the saved states
-        if self._remember_states and isinstance(self._states, dict) and \
-                set(self._states) == set(self._switches):
+        if (
+            self._remember_states
+            and isinstance(self._states, dict)
+            and set(self._states) == set(self._switches)
+        ):
             self._states = {switch: self._states[switch] for switch in self._switches}
             self.states = self._states
         else:
@@ -95,14 +96,13 @@ class FlipMirror(Base, SwitchInterface):
             self.states = {switch: states[0] for switch, states in self._switches.items()}
 
     def on_deactivate(self):
-        """ Disconnect from hardware on deactivation.
-        """
+        """Disconnect from hardware on deactivation."""
         self._instrument.close()
         self._resource_manager.close()
 
     @property
     def name(self):
-        """ Name of the hardware as string.
+        """Name of the hardware as string.
 
         @return str: The name of the hardware
         """
@@ -110,7 +110,7 @@ class FlipMirror(Base, SwitchInterface):
 
     @property
     def available_states(self):
-        """ Names of the states as a dict of tuples.
+        """Names of the states as a dict of tuples.
 
         The keys contain the names for each of the switches. The values are tuples of strings
         representing the ordered names of available states for each switch.
@@ -121,47 +121,51 @@ class FlipMirror(Base, SwitchInterface):
 
     @property
     def states(self):
-        """ The current states the hardware is in.
+        """The current states the hardware is in.
 
         The states of the system as a dict consisting of switch names as keys and state names as values.
 
         @return dict: All the current states of the switches in a state dict of the form {"switch": "state"}
         """
         with self.lock:
-            response = self._instrument.query('GP1').strip().upper()
-            assert response in {'H1', 'V1'}, f'Unexpected hardware return value: "{response}"'
+            response = self._instrument.query("GP1").strip().upper()
+            assert response in {"H1", "V1"}, f'Unexpected hardware return value: "{response}"'
             switch, avail_states = next(iter(self.available_states.items()))
-            self._states = {switch: avail_states[int(response == 'V1')]}
+            self._states = {switch: avail_states[int(response == "V1")]}
             return self._states.copy()
 
     @states.setter
     def states(self, state_dict):
-        """ The setter for the states of the hardware.
+        """The setter for the states of the hardware.
 
         The states of the system can be set by specifying a dict that has the switch names as keys
         and the names of the states as values.
 
         @param dict state_dict: state dict of the form {"switch": "state"}
         """
-        assert isinstance(state_dict, dict), \
+        assert isinstance(state_dict, dict), (
             f'Property "state" must be dict type. Received: {type(state_dict)}'
-        assert all(switch in self.available_states for switch in state_dict), \
-            f'Invalid switch name(s) encountered: {tuple(state_dict)}'
-        assert all(isinstance(state, str) for state in state_dict.values()), \
-            f'Invalid switch state(s) encountered: {tuple(state_dict.values())}'
+        )
+        assert all(switch in self.available_states for switch in state_dict), (
+            f"Invalid switch name(s) encountered: {tuple(state_dict)}"
+        )
+        assert all(isinstance(state, str) for state in state_dict.values()), (
+            f"Invalid switch state(s) encountered: {tuple(state_dict.values())}"
+        )
 
         if state_dict:
             with self.lock:
                 switch, state = next(iter(state_dict.items()))
                 down = self.available_states[switch][0] == state
-                answer = self._instrument.query('SH1' if down else 'SV1', delay=self._switch_time)
-                assert answer == 'OK1', \
+                answer = self._instrument.query("SH1" if down else "SV1", delay=self._switch_time)
+                assert answer == "OK1", (
                     f'setting of state "{state}" in switch "{switch}" failed with return value "{answer}"'
+                )
                 self._states = {switch: state}
-                self.log.debug('{0}-{1}: {2}'.format(self.name, switch, state))
+                self.log.debug(f"{self.name}-{switch}: {state}")
 
     def get_state(self, switch):
-        """ Query state of single switch by name
+        """Query state of single switch by name
 
         @param str switch: name of the switch to query the state for
         @return str: The current switch state
@@ -170,7 +174,7 @@ class FlipMirror(Base, SwitchInterface):
         return self.states[switch]
 
     def set_state(self, switch, state):
-        """ Query state of single switch by name
+        """Query state of single switch by name
 
         @param str switch: name of the switch to change
         @param str state: name of the state to set

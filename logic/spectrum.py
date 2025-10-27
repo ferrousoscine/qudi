@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi logic class that captures and processes fluorescence spectra.
 
@@ -19,10 +18,11 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtCore
 from collections import OrderedDict
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+from qtpy import QtCore
 
 from core.connector import Connector
 from core.statusvariable import StatusVar
@@ -32,7 +32,6 @@ from logic.generic_logic import GenericLogic
 
 
 class SpectrumLogic(GenericLogic):
-
     """This logic module gathers data from the spectrometer.
 
     Demo config:
@@ -47,16 +46,16 @@ class SpectrumLogic(GenericLogic):
     """
 
     # declare connectors
-    spectrometer = Connector(interface='SpectrometerInterface')
-    odmrlogic = Connector(interface='ODMRLogic', optional=True)
-    savelogic = Connector(interface='SaveLogic')
-    fitlogic = Connector(interface='FitLogic')
+    spectrometer = Connector(interface="SpectrometerInterface")
+    odmrlogic = Connector(interface="ODMRLogic", optional=True)
+    savelogic = Connector(interface="SaveLogic")
+    fitlogic = Connector(interface="FitLogic")
 
     # declare status variables
-    _spectrum_data = StatusVar('spectrum_data', np.empty((2, 0)))
-    _spectrum_background = StatusVar('spectrum_background', np.empty((2, 0)))
-    _background_correction = StatusVar('background_correction', False)
-    fc = StatusVar('fits', None)
+    _spectrum_data = StatusVar("spectrum_data", np.empty((2, 0)))
+    _spectrum_background = StatusVar("spectrum_background", np.empty((2, 0)))
+    _background_correction = StatusVar("background_correction", False)
+    fc = StatusVar("fits", None)
 
     # Internal signals
     sig_specdata_updated = QtCore.Signal()
@@ -67,9 +66,9 @@ class SpectrumLogic(GenericLogic):
     fit_domain_updated_Signal = QtCore.Signal(np.ndarray)
 
     def __init__(self, **kwargs):
-        """ Create SpectrometerLogic object with connectors.
+        """Create SpectrometerLogic object with connectors.
 
-          @param dict kwargs: optional parameters
+        @param dict kwargs: optional parameters
         """
         super().__init__(**kwargs)
 
@@ -77,8 +76,7 @@ class SpectrumLogic(GenericLogic):
         self.threadlock = Mutex()
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self._spectrum_data_corrected = np.array([])
         self._calculate_corrected_spectrum()
 
@@ -87,7 +85,7 @@ class SpectrumLogic(GenericLogic):
 
         self.diff_spec_data_mod_on = np.array([])
         self.diff_spec_data_mod_off = np.array([])
-        self.repetition_count = 0    # count loops for differential spectrum
+        self.repetition_count = 0  # count loops for differential spectrum
 
         self._spectrometer_device = self.spectrometer()
         self._odmr_logic = self.odmrlogic()
@@ -97,40 +95,35 @@ class SpectrumLogic(GenericLogic):
         self.sig_specdata_updated.emit()
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
-        if self.module_state() != 'idle' and self.module_state() != 'deactivated':
+        """Deinitialisation performed during deactivation of the module."""
+        if self.module_state() != "idle" and self.module_state() != "deactivated":
             pass
 
     @fc.constructor
     def sv_set_fits(self, val):
-        """ Set up fit container """
-        fc = self.fitlogic().make_fit_container('ODMR sum', '1d')
-        fc.set_units(['m', 'c/s'])
+        """Set up fit container"""
+        fc = self.fitlogic().make_fit_container("ODMR sum", "1d")
+        fc.set_units(["m", "c/s"])
         if isinstance(val, dict) and len(val) > 0:
             fc.load_from_dict(val)
         else:
             d1 = OrderedDict()
-            d1['Gaussian peak'] = {
-                'fit_function': 'gaussian',
-                'estimator': 'peak'
-                }
+            d1["Gaussian peak"] = {"fit_function": "gaussian", "estimator": "peak"}
             default_fits = OrderedDict()
-            default_fits['1d'] = d1
+            default_fits["1d"] = d1
             fc.load_from_dict(default_fits)
         return fc
 
     @fc.representer
     def sv_get_fits(self, val):
-        """ save configured fits """
+        """save configured fits"""
         if len(val.fit_list) > 0:
             return val.save_to_dict()
         else:
             return None
 
     def get_single_spectrum(self, background=False):
-        """ Record a single spectrum from the spectrometer.
-        """
+        """Record a single spectrum from the spectrometer."""
         # Clear any previous fit
         self.fc.clear_result()
 
@@ -150,13 +143,16 @@ class SpectrumLogic(GenericLogic):
 
     def _calculate_corrected_spectrum(self):
         self._spectrum_data_corrected = np.copy(self._spectrum_data)
-        if len(self._spectrum_background) == 2 \
-                and len(self._spectrum_background[1, :]) == len(self._spectrum_data[1, :]):
+        if len(self._spectrum_background) == 2 and len(self._spectrum_background[1, :]) == len(
+            self._spectrum_data[1, :]
+        ):
             self._spectrum_data_corrected[1, :] -= self._spectrum_background[1, :]
         else:
-            self.log.warning('Background spectrum has a different dimension then the acquired spectrum. '
-                             'Returning raw spectrum. '
-                             'Try acquiring a new background spectrum.')
+            self.log.warning(
+                "Background spectrum has a different dimension then the acquired spectrum. "
+                "Returning raw spectrum. "
+                "Try acquiring a new background spectrum."
+            )
 
     @property
     def spectrum_data(self):
@@ -178,16 +174,14 @@ class SpectrumLogic(GenericLogic):
             self._background_correction = False
         self.sig_specdata_updated.emit()
 
-    def save_raw_spectrometer_file(self, path='', postfix=''):
-        """Ask the hardware device to save its own raw file.
-        """
+    def save_raw_spectrometer_file(self, path="", postfix=""):
+        """Ask the hardware device to save its own raw file."""
         # TODO: sanity check the passed parameters.
 
         self._spectrometer_device.saveSpectrum(path, postfix=postfix)
 
     def start_differential_spectrum(self):
-        """Start a differential spectrum acquisition.  An initial spectrum is recorded to initialise the data arrays to the right size.
-        """
+        """Start a differential spectrum acquisition.  An initial spectrum is recorded to initialise the data arrays to the right size."""
 
         self._continue_differential = True
 
@@ -207,8 +201,7 @@ class SpectrumLogic(GenericLogic):
         self._loop_differential_spectrum()
 
     def resume_differential_spectrum(self):
-        """Resume a differential spectrum acquisition.
-        """
+        """Resume a differential spectrum acquisition."""
 
         self._continue_differential = True
 
@@ -216,8 +209,7 @@ class SpectrumLogic(GenericLogic):
         self._loop_differential_spectrum()
 
     def _loop_differential_spectrum(self):
-        """ This loop toggles the modulation and iteratively records a differential spectrum.
-        """
+        """This loop toggles the modulation and iteratively records a differential spectrum."""
 
         # If the loop should not continue, then return immediately without
         # emitting any signal to repeat.
@@ -236,25 +228,24 @@ class SpectrumLogic(GenericLogic):
         these_data = netobtain(self._spectrometer_device.recordSpectrum())
         self.diff_spec_data_mod_off[1, :] += these_data[1, :]
 
-        self.repetition_count += 1    # increment the loop count
+        self.repetition_count += 1  # increment the loop count
 
         # Calculate the differential spectrum
-        self._spectrum_data[1, :] = self.diff_spec_data_mod_on[
-            1, :] - self.diff_spec_data_mod_off[1, :]
+        self._spectrum_data[1, :] = (
+            self.diff_spec_data_mod_on[1, :] - self.diff_spec_data_mod_off[1, :]
+        )
 
         self.sig_specdata_updated.emit()
 
         self.sig_next_diff_loop.emit()
 
     def stop_differential_spectrum(self):
-        """Stop an ongoing differential spectrum acquisition
-        """
+        """Stop an ongoing differential spectrum acquisition"""
 
         self._continue_differential = False
 
     def toggle_modulation(self, on):
-        """ Toggle the modulation.
-        """
+        """Toggle the modulation."""
         if self._odmr_logic is None:
             return
         if on:
@@ -264,8 +255,8 @@ class SpectrumLogic(GenericLogic):
         else:
             print("Parameter 'on' needs to be boolean")
 
-    def save_spectrum_data(self, background=False, name_tag='', custom_header = None):
-        """ Saves the current spectrum data to a file.
+    def save_spectrum_data(self, background=False, name_tag="", custom_header=None):
+        """Saves the current spectrum data to a file.
 
         @param bool background: Whether this is a background spectrum (dark field) or not.
 
@@ -275,29 +266,29 @@ class SpectrumLogic(GenericLogic):
             This ordered dictionary is added to the default data file header. It allows arbitrary
             additional experimental information to be included in the saved data file header.
         """
-        filepath = self._save_logic.get_path_for_module(module_name='spectra')
+        filepath = self._save_logic.get_path_for_module(module_name="spectra")
         if background:
-            filelabel = 'background'
+            filelabel = "background"
             spectrum_data = self._spectrum_background
         else:
-            filelabel = 'spectrum'
+            filelabel = "spectrum"
             spectrum_data = self._spectrum_data
 
         # Add name_tag as postfix to filename
-        if name_tag != '':
-            filelabel = filelabel + '_' + name_tag
+        if name_tag != "":
+            filelabel = filelabel + "_" + name_tag
 
         # write experimental parameters
         parameters = OrderedDict()
-        parameters['Spectrometer acquisition repetitions'] = self.repetition_count
+        parameters["Spectrometer acquisition repetitions"] = self.repetition_count
 
         # add all fit parameter to the saved data:
         if self.fc.current_fit_result is not None:
-            parameters['Fit function'] = self.fc.current_fit
+            parameters["Fit function"] = self.fc.current_fit
 
             for name, param in self.fc.current_fit_param.items():
                 parameters[name] = str(param)
-        
+
         # add any custom header params
         if custom_header is not None:
             for key in custom_header:
@@ -306,41 +297,39 @@ class SpectrumLogic(GenericLogic):
         # prepare the data in an OrderedDict:
         data = OrderedDict()
 
-        data['wavelength'] = spectrum_data[0, :]
+        data["wavelength"] = spectrum_data[0, :]
 
         # If the differential spectra arrays are not empty, save them as raw data
         if len(self.diff_spec_data_mod_on) != 0 and len(self.diff_spec_data_mod_off) != 0:
-            data['signal_mod_on'] = self.diff_spec_data_mod_on[1, :]
-            data['signal_mod_off'] = self.diff_spec_data_mod_off[1, :]
-            data['differential'] = spectrum_data[1, :]
+            data["signal_mod_on"] = self.diff_spec_data_mod_on[1, :]
+            data["signal_mod_off"] = self.diff_spec_data_mod_off[1, :]
+            data["differential"] = spectrum_data[1, :]
         else:
-            data['signal'] = spectrum_data[1, :]
+            data["signal"] = spectrum_data[1, :]
 
         if not background and len(self._spectrum_data_corrected) != 0:
-            data['corrected'] = self._spectrum_data_corrected[1, :]
+            data["corrected"] = self._spectrum_data_corrected[1, :]
 
         fig = self.draw_figure()
 
         # Save to file
-        self._save_logic.save_data(data,
-                                   filepath=filepath,
-                                   parameters=parameters,
-                                   filelabel=filelabel,
-                                   plotfig=fig)
-        self.log.debug('Spectrum saved to:\n{0}'.format(filepath))
+        self._save_logic.save_data(
+            data, filepath=filepath, parameters=parameters, filelabel=filelabel, plotfig=fig
+        )
+        self.log.debug(f"Spectrum saved to:\n{filepath}")
 
     def draw_figure(self):
-        """ Draw the summary plot to save with the data.
+        """Draw the summary plot to save with the data.
 
         @return fig fig: a matplotlib figure object to be saved to file.
         """
-        wavelength = self.spectrum_data[0, :] * 1e9 # convert m to nm for plot
+        wavelength = self.spectrum_data[0, :] * 1e9  # convert m to nm for plot
         spec_data = self.spectrum_data[1, :]
 
-        prefix = ['', 'k', 'M', 'G', 'T']
+        prefix = ["", "k", "M", "G", "T"]
         prefix_index = 0
         rescale_factor = 1
-        
+
         # Rescale spectrum data with SI prefix
         while np.max(spec_data) / rescale_factor > 1000:
             rescale_factor = rescale_factor * 1000
@@ -353,21 +342,18 @@ class SpectrumLogic(GenericLogic):
 
         fig, ax1 = plt.subplots()
 
-        ax1.plot(wavelength,
-                 spec_data / rescale_factor,
-                 linestyle=':',
-                 linewidth=0.5
-                )
-        
+        ax1.plot(wavelength, spec_data / rescale_factor, linestyle=":", linewidth=0.5)
+
         # If there is a fit, plot it also
         if self.fc.current_fit_result is not None:
-            ax1.plot(self.spectrum_fit[0] * 1e9,  # convert m to nm for plot
-                     self.spectrum_fit[1] / rescale_factor,
-                     marker='None'
-                    )
+            ax1.plot(
+                self.spectrum_fit[0] * 1e9,  # convert m to nm for plot
+                self.spectrum_fit[1] / rescale_factor,
+                marker="None",
+            )
 
-        ax1.set_xlabel('Wavelength (nm)')
-        ax1.set_ylabel('Intensity ({}count)'.format(intensity_prefix))
+        ax1.set_xlabel("Wavelength (nm)")
+        ax1.set_ylabel(f"Intensity ({intensity_prefix}count)")
 
         fig.tight_layout()
 
@@ -377,7 +363,7 @@ class SpectrumLogic(GenericLogic):
     # Fitting things
 
     def get_fit_functions(self):
-        """ Return the hardware constraints/limits
+        """Return the hardware constraints/limits
         @return list(str): list of fit function names
         """
         return list(self.fc.fit_list)
@@ -406,11 +392,11 @@ class SpectrumLogic(GenericLogic):
             if fit_function in self.get_fit_functions():
                 self.fc.set_current_fit(fit_function)
             else:
-                self.fc.set_current_fit('No Fit')
-                if fit_function != 'No Fit':
-                    self.log.warning('Fit function "{0}" not available in Spectrum logic '
-                                     'fit container.'.format(fit_function)
-                                     )
+                self.fc.set_current_fit("No Fit")
+                if fit_function != "No Fit":
+                    self.log.warning(
+                        f'Fit function "{fit_function}" not available in Spectrum logic fit container.'
+                    )
 
         spectrum_fit_x, spectrum_fit_y, result = self.fc.do_fit(x_data, y_data)
 
@@ -420,14 +406,13 @@ class SpectrumLogic(GenericLogic):
             result_str_dict = {}
         else:
             result_str_dict = result.result_str_dict
-        self.spectrum_fit_updated_Signal.emit(self.spectrum_fit,
-                                              result_str_dict,
-                                              self.fc.current_fit
-                                              )
+        self.spectrum_fit_updated_Signal.emit(
+            self.spectrum_fit, result_str_dict, self.fc.current_fit
+        )
         return
 
     def _find_nearest_idx(self, array, value):
-        """ Find array index of element nearest to given value
+        """Find array index of element nearest to given value
 
         @param list array: array to be searched.
         @param float value: desired value.
@@ -435,11 +420,11 @@ class SpectrumLogic(GenericLogic):
         @return index of nearest element.
         """
 
-        idx = (np.abs(array-value)).argmin()
+        idx = (np.abs(array - value)).argmin()
         return idx
 
     def set_fit_domain(self, domain=None):
-        """ Set the fit domain to a user specified portion of the data.
+        """Set the fit domain to a user specified portion of the data.
 
         If no domain is given, then this method sets the fit domain to match the full data domain.
 

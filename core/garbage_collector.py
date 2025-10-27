@@ -1,10 +1,9 @@
 import gc
-
-from qtpy.QtCore import QObject
-from qtpy.QtCore import QTimer
-from qtpy.QtCore import Slot
 import logging
-logger = logging.getLogger('gc')
+
+from qtpy.QtCore import QObject, QTimer, Slot
+
+logger = logging.getLogger("gc")
 
 
 class GarbageCollector(QObject):
@@ -56,22 +55,19 @@ class GarbageCollector(QObject):
         # return self.debug_cycles() # uncomment to just debug cycles
         l0, l1, l2 = gc.get_count()
         if self.debug:
-            logger.debug('gc_check called: {0} {1} {2}'.format(l0, l1, l2))
+            logger.debug(f"gc_check called: {l0} {l1} {l2}")
         if l0 > self.threshold[0]:
             num = gc.collect(0)
             if self.debug:
-                logger.debug('collecting gen 0, found: {0:d} unreachable'
-                             ''.format(num))
+                logger.debug(f"collecting gen 0, found: {num:d} unreachable")
             if l1 > self.threshold[1]:
                 num = gc.collect(1)
                 if self.debug:
-                    logger.debug('collecting gen 1, found: {0:d} unreachable'
-                                 ''.format(num))
+                    logger.debug(f"collecting gen 1, found: {num:d} unreachable")
                 if l2 > self.threshold[2]:
                     num = gc.collect(2)
                     if self.debug:
-                        logger.debug('collecting gen 2, found: {0:d} '
-                                     'unreachable'.format(num))
+                        logger.debug(f"collecting gen 2, found: {num:d} unreachable")
 
     def debug_cycles(self):
         """

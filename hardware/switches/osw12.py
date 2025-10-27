@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Control for a Thorlabs OWS12 MEMS Fiber-Optic Switch through the serial interface.
 
@@ -19,16 +18,18 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import visa
 import time
-from core.module import Base
+
+import visa
+
 from core.configoption import ConfigOption
+from core.module import Base
 from core.util.mutex import Mutex
 from interface.switch_interface import SwitchInterface
 
 
 class OSW12(Base, SwitchInterface):
-    """ This class is implements communication with Thorlabs OSW12(22) fibered switch.
+    """This class is implements communication with Thorlabs OSW12(22) fibered switch.
 
     Description of the hardware provided by Thorlabs:
         Thorlabs offers a line of bidirectional fiber optic switch kits that include a MEMS optical switch with an
@@ -48,13 +49,13 @@ class OSW12(Base, SwitchInterface):
     """
 
     # ConfigOptions to give the single switch and its states custom names
-    _switch_name = ConfigOption(name='switch_name', default='1', missing='nothing')
-    _switch_states = ConfigOption(name='switch_states', default=['Off', 'On'], missing='nothing')
+    _switch_name = ConfigOption(name="switch_name", default="1", missing="nothing")
+    _switch_states = ConfigOption(name="switch_states", default=["Off", "On"], missing="nothing")
     # optional name of the hardware
-    _hardware_name = ConfigOption(name='name', default='MEMS Fiber-Optic Switch', missing='nothing')
+    _hardware_name = ConfigOption(name="name", default="MEMS Fiber-Optic Switch", missing="nothing")
     # name of the serial interface where the hardware is connected.
     # Use e.g. the Keysight IO connections expert to find the device.
-    serial_interface = ConfigOption('interface', 'ASRL1::INSTR')
+    serial_interface = ConfigOption("interface", "ASRL1::INSTR")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,8 +65,7 @@ class OSW12(Base, SwitchInterface):
         self._switches = dict()
 
     def on_activate(self):
-        """ Prepare module, connect to hardware.
-        """
+        """Prepare module, connect to hardware."""
         assert isinstance(self._switch_name, str), 'ConfigOption "switch_name" must be str type'
         assert len(self._switch_states) == 2, 'ConfigOption "switch_states" must be len 2 iterable'
         self._switches = self._chk_refine_available_switches(
@@ -76,21 +76,20 @@ class OSW12(Base, SwitchInterface):
         self._instrument = self._resource_manager.open_resource(
             self.serial_interface,
             baud_rate=115200,
-            write_termination='\n',
-            read_termination='\r\n',
+            write_termination="\n",
+            read_termination="\r\n",
             timeout=10,
-            send_end=True
+            send_end=True,
         )
 
     def on_deactivate(self):
-        """ Disconnect from hardware on deactivation.
-        """
+        """Disconnect from hardware on deactivation."""
         self._instrument.close()
         self._resource_manager.close()
 
     @property
     def name(self):
-        """ Name of the hardware as string.
+        """Name of the hardware as string.
 
         @return str: The name of the hardware
         """
@@ -98,7 +97,7 @@ class OSW12(Base, SwitchInterface):
 
     @property
     def available_states(self):
-        """ Names of the states as a dict of tuples.
+        """Names of the states as a dict of tuples.
 
         The keys contain the names for each of the switches. The values are tuples of strings
         representing the ordered names of available states for each switch.
@@ -109,7 +108,7 @@ class OSW12(Base, SwitchInterface):
 
     @property
     def states(self):
-        """ The current states the hardware is in as state dictionary with switch names as keys and
+        """The current states the hardware is in as state dictionary with switch names as keys and
         state names as values.
 
         @return dict: All the current states of the switches in the form {"switch": "state"}
@@ -119,7 +118,7 @@ class OSW12(Base, SwitchInterface):
 
     @states.setter
     def states(self, state_dict):
-        """ The setter for the states of the hardware.
+        """The setter for the states of the hardware.
 
         The states of the system can be set by specifying a dict that has the switch names as keys
         and the names of the states as values.
@@ -132,27 +131,27 @@ class OSW12(Base, SwitchInterface):
                 self.set_state(switch, state)
 
     def get_state(self, switch):
-        """ Query state of single switch by name
+        """Query state of single switch by name
 
         @param str switch: name of the switch to query the state for
         @return str: The current switch state
         """
         avail_states = self.available_states
-        assert switch in avail_states, 'Invalid switch name "{0}"'.format(switch)
+        assert switch in avail_states, f'Invalid switch name "{switch}"'
 
         with self.lock:
             for attempt in range(3):
                 try:
-                    response = self._instrument.query('S?').strip()
+                    response = self._instrument.query("S?").strip()
                 except visa.VisaIOError:
-                    self.log.debug('Hardware query raised VisaIOError, trying again...')
+                    self.log.debug("Hardware query raised VisaIOError, trying again...")
                 else:
-                    assert response in {'1', '2'}, f'Unexpected return value "{response}"'
-                    return avail_states[switch][int(response == '1')]
-            raise Exception('Hardware did not respond after 3 attempts. Visa error')
+                    assert response in {"1", "2"}, f'Unexpected return value "{response}"'
+                    return avail_states[switch][int(response == "1")]
+            raise Exception("Hardware did not respond after 3 attempts. Visa error")
 
     def set_state(self, switch, state):
-        """ Query state of single switch by name
+        """Query state of single switch by name
 
         @param str switch: name of the switch to change
         @param str state: name of the state to set
@@ -163,7 +162,7 @@ class OSW12(Base, SwitchInterface):
 
         with self.lock:
             direction = avail_states[switch].index(state)
-            self._instrument.write('S {0:d}'.format(1 if direction else 2))
+            self._instrument.write(f"S {1 if direction else 2:d}")
             time.sleep(0.1)
 
             # FIXME: For some reason first returned value is not updated yet, let's clear it.

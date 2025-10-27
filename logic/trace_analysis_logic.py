@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the general Qudi trace analysis logic.
 Qudi is free software: you can redistribute it and/or modify
@@ -15,41 +14,42 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtCore
-import numpy as np
-from scipy.signal import gaussian
-from scipy.ndimage import filters
-import scipy.integrate as integrate
-from scipy.interpolate import InterpolatedUnivariateSpline
 from collections import OrderedDict
+
+import numpy as np
+import scipy.integrate as integrate
+from qtpy import QtCore
+from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.ndimage import filters
+from scipy.signal.windows import gaussian
 
 from core.connector import Connector
 from logic.generic_logic import GenericLogic
 
 
 class TraceAnalysisLogic(GenericLogic):
-    """ Perform a gated counting measurement with the hardware.  """
+    """Perform a gated counting measurement with the hardware."""
 
     # declare connectors
-    counterlogic1 = Connector(interface='CounterLogic')
-    savelogic = Connector(interface='SaveLogic')
-    fitlogic = Connector(interface='FitLogic')
+    counterlogic1 = Connector(interface="CounterLogic")
+    savelogic = Connector(interface="SaveLogic")
+    fitlogic = Connector(interface="FitLogic")
 
     sigHistogramUpdated = QtCore.Signal()
     sigAnalysisResultsUpdated = QtCore.Signal()
 
     def __init__(self, config, **kwargs):
-        """ Create CounterLogic object with connectors.
+        """Create CounterLogic object with connectors.
         @param dict config: module configuration
         @param dict kwargs: optional parameters
         """
         super().__init__(config=config, **kwargs)
 
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
         for key in config.keys():
-            self.log.debug('{0}: {1}'.format(key, config[key]))
+            self.log.debug(f"{key}: {config[key]}")
 
         self.hist_data = None
         self._hist_num_bins = None
@@ -58,26 +58,23 @@ class TraceAnalysisLogic(GenericLogic):
         self.fidelity_right = 0
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
 
         # self._counter_logic = self.get_connector('counterlogic1')
-        self._save_logic = self.get_connector('savelogic')
-        self._fit_logic = self.get_connector('fitlogic')
+        self._save_logic = self.get_connector("savelogic")
+        self._fit_logic = self.get_connector("fitlogic")
         self.trace = np.array([])
 
         # self._counter_logic.sigGatedCounterFinished.connect(self.do_calculate_histogram)
 
-
-        self.current_fit_function = 'No Fit'
+        self.current_fit_function = "No Fit"
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         return
 
     def set_num_bins_histogram(self, num_bins, update=True):
-        """ Set the number of bins
+        """Set the number of bins
         @param int num_bins: number of bins for the histogram
         @param bool update: if the change of bins should evoke a recalculation
                             of the histogram.
@@ -87,18 +84,19 @@ class TraceAnalysisLogic(GenericLogic):
         if update:
             self.do_calculate_histogram()
 
-    def do_calculate_histogram(self, mode='normal'):
-        """ Passes all the needed parameters to the appropriated methods.
+    def do_calculate_histogram(self, mode="normal"):
+        """Passes all the needed parameters to the appropriated methods.
         @return:
         """
-        if mode == 'normal':
-            self.hist_data = self.calculate_histogram(self._counter_logic.countdata[0],
-                                                      self._hist_num_bins)
-        if mode == 'fastcomtec':
+        if mode == "normal":
+            self.hist_data = self.calculate_histogram(
+                self._counter_logic.countdata[0], self._hist_num_bins
+            )
+        if mode == "fastcomtec":
             self.sigHistogramUpdated.emit()
 
     def calculate_histogram(self, trace, num_bins=None, custom_bin_arr=None):
-        """ Calculate the histogram of a given trace.
+        """Calculate the histogram of a given trace.
         @param np.array trace: a 1D trace
         @param int num_bins: number of bins between the minimal and maximal
                              value of the trace. That must be an integer greater
@@ -118,10 +116,8 @@ class TraceAnalysisLogic(GenericLogic):
         """
 
         if custom_bin_arr is not None:
-            hist_y_val, hist_x_val = np.histogram(trace, custom_bin_arr,
-                                                  density=False)
+            hist_y_val, hist_x_val = np.histogram(trace, custom_bin_arr, density=False)
         else:
-
             # analyze the trace, and check whether all values are the same
             difference = trace.max() - trace.min()
 
@@ -204,18 +200,18 @@ class TraceAnalysisLogic(GenericLogic):
 
         # put all the calculated parameters in a proper dict:
         param = OrderedDict()
-        param['num_dark_state'] = num_dark_state  # Number of Dark States
-        param['num_bright_state'] = num_bright_state  # Number of Bright States
-        param['num_flip_to_dark'] = num_flip_to_dark  # Number of flips from bright to dark
-        param['fidelity'] = fidelity  # Fidelity of Double Poissonian Fit
-        param['threshold'] = threshold_fit  # Threshold
+        param["num_dark_state"] = num_dark_state  # Number of Dark States
+        param["num_bright_state"] = num_bright_state  # Number of Bright States
+        param["num_flip_to_dark"] = num_flip_to_dark  # Number of flips from bright to dark
+        param["fidelity"] = fidelity  # Fidelity of Double Poissonian Fit
+        param["threshold"] = threshold_fit  # Threshold
 
         # add the fit parameter to the output parameter:
         param.update(fit_param)
 
         return flip_prob, param
 
-    def analyze_flip_prob2(self, trace, threshold=1, analyze_mode='full'):
+    def analyze_flip_prob2(self, trace, threshold=1, analyze_mode="full"):
         """General method, which analysis how often a value was changed from
            one data point to another in relation to a certain threshold.
         @param np.array trace: 1D trace of data
@@ -234,18 +230,20 @@ class TraceAnalysisLogic(GenericLogic):
         """
         no_flip = 0.0
 
-        if analyze_mode == 'full':
+        if analyze_mode == "full":
             for ii in range(len(trace) - 1):
-                if trace[ii] > threshold and trace[ii + 1] > threshold:
-                    no_flip = no_flip + 1
-
-                elif trace[ii] < threshold and trace[ii + 1] < threshold:
+                if (
+                    trace[ii] > threshold
+                    and trace[ii + 1] > threshold
+                    or trace[ii] < threshold
+                    and trace[ii + 1] < threshold
+                ):
                     no_flip = no_flip + 1
 
             probability = 1.0 - (no_flip / len(trace))
             lost_events = 0.0
 
-        if analyze_mode == 'dark':
+        if analyze_mode == "dark":
             dark_counter = 0.0
             for ii in range(len(trace) - 1):
                 if trace[ii] < threshold:
@@ -255,7 +253,7 @@ class TraceAnalysisLogic(GenericLogic):
             probability = 1.0 - (no_flip / dark_counter)
             lost_events = (1.0 - (dark_counter / len(trace))) * 100
 
-        if analyze_mode == 'bright':
+        if analyze_mode == "bright":
             bright_counter = 0.0
             for ii in range(len(trace) - 1):
                 if trace[ii] > threshold:
@@ -267,7 +265,9 @@ class TraceAnalysisLogic(GenericLogic):
 
         return probability, lost_events
 
-    def analyze_flip_prob3(self, trace, init_threshold=None, ana_threshold=None, analyze_mode='full'):
+    def analyze_flip_prob3(
+        self, trace, init_threshold=None, ana_threshold=None, analyze_mode="full"
+    ):
         """General method, which analysis how often a value was changed from
            one data point to another in relation to a certain threshold.
         @param np.array trace: 1D trace of data
@@ -296,7 +296,7 @@ class TraceAnalysisLogic(GenericLogic):
         # find all indices in the trace-array, where the value is below ana_threshold[0]
         ana_low = np.where(trace < ana_threshold[0])[0]
 
-        if analyze_mode == 'bright' or analyze_mode == 'full':
+        if analyze_mode == "bright" or analyze_mode == "full":
             # analyze the trace where the data were the nuclear was initalized into one direction
             for index in init_high:
                 # check if the following data point is in the analysis array
@@ -305,7 +305,7 @@ class TraceAnalysisLogic(GenericLogic):
                 elif index + 1 in ana_low:
                     flip = flip + 1
 
-        if analyze_mode == 'dark' or analyze_mode == 'full':
+        if analyze_mode == "dark" or analyze_mode == "full":
             # repeat the same if the nucleus was initalized into the other array
             for index in init_low:
                 # check if the following data point is in the analysis array
@@ -316,7 +316,7 @@ class TraceAnalysisLogic(GenericLogic):
 
         # the flip probability is given by the number of flips divided by the total number of analyzed data points
         if (flip + no_flip) == 0:
-            self.log.error('There is not enough data to anaylsis SSR!')
+            self.log.error("There is not enough data to anaylsis SSR!")
         else:
             probability = flip / (flip + no_flip)
         # the number of lost events is given by the length of the time_trace minus the number of analyzed data points
@@ -324,7 +324,9 @@ class TraceAnalysisLogic(GenericLogic):
 
         return probability, lost_events
 
-    def analyze_flip_prob4(self, trace, bins=30, init_threshold = None, ana_threshold = None, analyze_mode='full'):
+    def analyze_flip_prob4(
+        self, trace, bins=30, init_threshold=None, ana_threshold=None, analyze_mode="full"
+    ):
         """
         Method which calculates the histogram, the fidelity and the flip probability of a time trace.
         :param trace:
@@ -338,7 +340,7 @@ class TraceAnalysisLogic(GenericLogic):
         init_threshold = init_threshold if init_threshold is not None else [1, 1]
         ana_threshold = ana_threshold if ana_threshold is not None else [1, 1]
         self.calculate_histogram(trace, bins)
-        axis = self.hist_data[0][:-1] + (self.hist_data[0][1] - self.hist_data[0][0]) / 2.
+        axis = self.hist_data[0][:-1] + (self.hist_data[0][1] - self.hist_data[0][0]) / 2.0
         data = self.hist_data[1]
 
         try:
@@ -346,12 +348,16 @@ class TraceAnalysisLogic(GenericLogic):
             fit_params = fit_result.best_values
 
             # calculate the fidelity for the left and right part from the threshold
-            center1 = fit_params['g0_center']
-            center2 = fit_params['g1_center']
-            std1 = fit_params['g0_sigma']
-            std2 = fit_params['g1_sigma']
-            gaussian1 = lambda x: fit_params['g0_amplitude'] * np.exp(-(x - center1) ** 2 / (2 * std1 ** 2))
-            gaussian2 = lambda x: fit_params['g1_amplitude'] * np.exp(-(x - center2) ** 2 / (2 * std2 ** 2))
+            center1 = fit_params["g0_center"]
+            center2 = fit_params["g1_center"]
+            std1 = fit_params["g0_sigma"]
+            std2 = fit_params["g1_sigma"]
+            gaussian1 = lambda x: fit_params["g0_amplitude"] * np.exp(
+                -((x - center1) ** 2) / (2 * std1**2)
+            )
+            gaussian2 = lambda x: fit_params["g1_amplitude"] * np.exp(
+                -((x - center2) ** 2) / (2 * std2**2)
+            )
             if center1 > center2:
                 gaussian = gaussian1
                 gaussian1 = gaussian2
@@ -363,7 +369,7 @@ class TraceAnalysisLogic(GenericLogic):
             self.fidelity_left = area_left1[0] / (area_left1[0] + area_left2[0])
             self.fidelity_right = area_right2[0] / (area_right1[0] + area_right2[0])
         except:
-            self.log.warning('Not enough data points yet!')
+            self.log.warning("Not enough data points yet!")
 
         # calculate the flip probability
         no_flip = 0.0
@@ -377,7 +383,7 @@ class TraceAnalysisLogic(GenericLogic):
         # find all indices in the trace-array, where the value is below ana_threshold[0]
         ana_low = np.where(trace < ana_threshold[0])[0]
 
-        if analyze_mode == 'bright' or analyze_mode == 'full':
+        if analyze_mode == "bright" or analyze_mode == "full":
             # analyze the trace where the data were the nuclear was initalized into one direction
             for index in init_high:
                 # check if the following data point is in the analysis array
@@ -385,7 +391,7 @@ class TraceAnalysisLogic(GenericLogic):
                     no_flip = no_flip + 1
                 elif index + 1 in ana_low:
                     flip = flip + 1
-        if analyze_mode == 'dark' or analyze_mode == 'full':
+        if analyze_mode == "dark" or analyze_mode == "full":
             # repeat the same if the nucleus was initalized into the other array
             for index in init_low:
                 # check if the following data point is in the analysis array
@@ -396,23 +402,23 @@ class TraceAnalysisLogic(GenericLogic):
 
         # the flip probability is given by the number of flips divided by the total number of analyzed data points
         if (flip + no_flip) == 0:
-            self.log.error('There is not enough data to anaylsis SSR!')
+            self.log.error("There is not enough data to anaylsis SSR!")
         else:
             self.spin_flip_prob = flip / (flip + no_flip)
         # the number of lost events is given by the length of the time_trace minus the number of analyzed data points
         lost_events = len(trace) - (flip + no_flip)
 
         results_dict = dict()
-        results_dict['fidelity_left'] = self.fidelity_left
-        results_dict['fidelity_right'] = self.fidelity_right
-        results_dict['flip_prob'] = self.spin_flip_prob
+        results_dict["fidelity_left"] = self.fidelity_left
+        results_dict["fidelity_right"] = self.fidelity_right
+        results_dict["flip_prob"] = self.spin_flip_prob
 
         self.sigAnalysisResultsUpdated.emit()
 
         return self.spin_flip_prob, lost_events, hist_fit_x, hist_fit_y, fit_result
 
     def analyze_flip_prob_postselect(self):
-        """ Post select the data trace so that the flip probability is only
+        """Post select the data trace so that the flip probability is only
             calculated from a jump from below a threshold value to an value
             above threshold.
         @return:
@@ -420,15 +426,13 @@ class TraceAnalysisLogic(GenericLogic):
         pass
 
     def get_fit_functions(self):
-        """ Return all fit functions, which are currently implemented for that module.
+        """Return all fit functions, which are currently implemented for that module.
         @return list: with string entries denoting the name of the fit.
         """
-        return ['No Fit', 'Gaussian', 'Double Gaussian', 'Poisson',
-                'Double Poisson']
-
+        return ["No Fit", "Gaussian", "Double Gaussian", "Poisson", "Double Poisson"]
 
     def do_fit(self, fit_function=None):
-        """ Makes the a fit of the current fit function.
+        """Makes the a fit of the current fit function.
         @param str fit_function: name of the chosen fit function.
         @return tuple(x_val, y_val, fit_results):
                     x_val: a 1D numpy array containing the x values
@@ -445,31 +449,38 @@ class TraceAnalysisLogic(GenericLogic):
             fit_result = None
             return hist_fit_x, hist_fit_y, param_dict, fit_result
         else:
-
             # self.log.debug((self.calculate_threshold(self.hist_data)))
 
             # shift x axis to middle of bin
-            axis = self.hist_data[0][:-1] + (self.hist_data[0][1] - self.hist_data[0][0]) / 2.
+            axis = self.hist_data[0][:-1] + (self.hist_data[0][1] - self.hist_data[0][0]) / 2.0
             data = self.hist_data[1]
 
-            if fit_function == 'No Fit':
+            if fit_function == "No Fit":
                 hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_no_fit()
                 return hist_fit_x, hist_fit_y, fit_param_dict, fit_result
-            elif fit_function == 'Gaussian':
-                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_gaussian_fit(axis, data)
+            elif fit_function == "Gaussian":
+                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_gaussian_fit(
+                    axis, data
+                )
                 return hist_fit_x, hist_fit_y, fit_param_dict, fit_result
-            elif fit_function == 'Double Gaussian':
-                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_doublegaussian_fit(axis, data)
+            elif fit_function == "Double Gaussian":
+                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_doublegaussian_fit(
+                    axis, data
+                )
                 return hist_fit_x, hist_fit_y, fit_param_dict, fit_result
-            elif fit_function == 'Poisson':
-                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_possonian_fit(axis, data)
+            elif fit_function == "Poisson":
+                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_possonian_fit(
+                    axis, data
+                )
                 return hist_fit_x, hist_fit_y, fit_param_dict, fit_result
-            elif fit_function == 'Double Poisson':
-                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_doublepossonian_fit(axis, data)
+            elif fit_function == "Double Poisson":
+                hist_fit_x, hist_fit_y, fit_param_dict, fit_result = self.do_doublepossonian_fit(
+                    axis, data
+                )
                 return hist_fit_x, hist_fit_y, fit_param_dict, fit_result
 
     def do_no_fit(self):
-        """ Perform no fit, basically return an empty array.
+        """Perform no fit, basically return an empty array.
         @return tuple(x_val, y_val, fit_results):
                     x_val: a 1D numpy array containing the x values
                     y_val: a 1D numpy array containing the y values
@@ -482,9 +493,10 @@ class TraceAnalysisLogic(GenericLogic):
         fit_result = None
         return hist_fit_x, hist_fit_y, param_dict, fit_result
 
-    def analyze_lifetime(self, trace, dt, method='postselect',
-                         distr='gaussian_normalized', state='|-1>', num_bins=50):
-        """ Perform an lifetime analysis of a 1D time trace. The analysis is
+    def analyze_lifetime(
+        self, trace, dt, method="postselect", distr="gaussian_normalized", state="|-1>", num_bins=50
+    ):
+        """Perform an lifetime analysis of a 1D time trace. The analysis is
             based on the method provided ( for now only post select is implemented ).
         @param numpy array trace: 1 D array
         @param string method: The method used for the lifetime analysis
@@ -498,12 +510,13 @@ class TraceAnalysisLogic(GenericLogic):
         """
         lifetime_dict = {}
 
-        if method == 'postselect':
-            if distr == 'gaussian_normalized':
+        if method == "postselect":
+            if distr == "gaussian_normalized":
                 hist_y_val, hist_x_val = np.histogram(trace, num_bins)
                 hist_data = np.array([hist_x_val, hist_y_val])
-                threshold_fit, fidelity, param_dict = self.calculate_threshold(hist_data=hist_data,
-                                                                               distr='gaussian_normalized')
+                threshold_fit, fidelity, param_dict = self.calculate_threshold(
+                    hist_data=hist_data, distr="gaussian_normalized"
+                )
                 threshold = threshold_fit
 
             # helper functions to get and analyze the timetrace
@@ -566,62 +579,66 @@ class TraceAnalysisLogic(GenericLogic):
             vals = [i for i in filter(lambda x: x[1] > 0, enumerate(time_hist_high[0][0:num_bins]))]
 
             indices = np.array([val[0] for val in vals])
-            indices = np.array([np.int(indice) for indice in indices])
-            self.log.debug('threshold {0}'.format(threshold))
-            self.log.debug('time_array:{0}'.format(time_array))
-            self.log.debug('time_array_high:{0}'.format(time_array_high))
-            self.log.debug('time_hist_high:{0}'.format(time_hist_high))
-            self.log.debug('indices: {0}'.format(indices))
+            indices = np.array([int(indice) for indice in indices])
+            self.log.debug(f"threshold {threshold}")
+            self.log.debug(f"time_array:{time_array}")
+            self.log.debug(f"time_array_high:{time_array_high}")
+            self.log.debug(f"time_hist_high:{time_hist_high}")
+            self.log.debug(f"indices: {indices}")
             self.debug_lifetime_x = time_hist_high[1][indices]
             self.debug_lifetime_y = time_hist_high[0][indices]
             para = dict()
-            para['offset'] = {"value": 0.0, "vary": False}
-            result = self._fit_logic.make_decayexponential_fit(time_hist_high[1][indices],
-                                                               time_hist_high[0][indices],
-                                                               self._fit_logic.estimate_decayexponential,
-                                                               add_params=para)
-            bright_liftime = result.params['lifetime']
+            para["offset"] = {"value": 0.0, "vary": False}
+            result = self._fit_logic.make_decayexponential_fit(
+                time_hist_high[1][indices],
+                time_hist_high[0][indices],
+                self._fit_logic.estimate_decayexponential,
+                add_params=para,
+            )
+            bright_liftime = result.params["lifetime"]
             # for debug purposes give also the results back of the fits for now
-            lifetime_dict['result_bright'] = result
+            lifetime_dict["result_bright"] = result
             # also give back the data used for the fit
-            lifetime_dict['bright_raw'] = np.array([time_hist_high[1][indices], time_hist_high[0][indices]])
+            lifetime_dict["bright_raw"] = np.array(
+                [time_hist_high[1][indices], time_hist_high[0][indices]]
+            )
 
             # get lifetime of dark state
             time_hist_low = np.histogram(time_array_low, bins=num_bins)
             vals = [i for i in filter(lambda x: x[1] > 0, enumerate(time_hist_low[0][0:num_bins]))]
             indices = np.array([val[0] for val in vals])
-            indices = np.array([np.int(indice) for indice in indices])
+            indices = np.array([int(indice) for indice in indices])
             values = np.array([val[1] for val in vals])
             # positive axis
             mirror_axis = -time_hist_low[1][indices]
-            result = self._fit_logic.make_decayexponential_fit(mirror_axis,
-                                                               values,
-                                                               self._fit_logic.estimate_decayexponential,
-                                                               add_params=para)
-            dark_liftime = result.params['lifetime']
-            lifetime_dict['result_dark'] = result
+            result = self._fit_logic.make_decayexponential_fit(
+                mirror_axis, values, self._fit_logic.estimate_decayexponential, add_params=para
+            )
+            dark_liftime = result.params["lifetime"]
+            lifetime_dict["result_dark"] = result
 
-            lifetime_dict['bright_state'] = bright_liftime.value
-            lifetime_dict['dark_state'] = dark_liftime.value
+            lifetime_dict["bright_state"] = bright_liftime.value
+            lifetime_dict["dark_state"] = dark_liftime.value
             # also give back the data used for the fit
-            lifetime_dict['dark_raw'] = np.array([mirror_axis, values])
+            lifetime_dict["dark_raw"] = np.array([mirror_axis, values])
 
         return lifetime_dict
 
     def do_gaussian_fit(self, axis, data):
-        """ Perform a gaussian fit.
+        """Perform a gaussian fit.
         @param axis:
         @param data:
         @return:
         """
         model, params = self._fit_logic.make_gaussian_model()
         if len(axis) < len(params):
-            self.log.warning('Fit could not be performed because number of '
-                             'parameters is larger than data points.')
+            self.log.warning(
+                "Fit could not be performed because number of "
+                "parameters is larger than data points."
+            )
             return self.do_no_fit()
 
         else:
-
             parameters_to_substitute = dict()
             update_dict = dict()
 
@@ -629,7 +646,7 @@ class TraceAnalysisLogic(GenericLogic):
             #      make the filter an extra function shared and usable for other
             #      functions
             gauss = gaussian(10, 10)
-            data_smooth = filters.convolve1d(data, gauss / gauss.sum(), mode='mirror')
+            data_smooth = filters.convolve1d(data, gauss / gauss.sum(), mode="mirror")
 
             # integral of data corresponds to sqrt(2) * Amplitude * Sigma
             fit_function = InterpolatedUnivariateSpline(axis, data_smooth, k=1)
@@ -638,16 +655,22 @@ class TraceAnalysisLogic(GenericLogic):
             sigma = Integral / amp / np.sqrt(2 * np.pi)
             amplitude = amp * sigma * np.sqrt(2 * np.pi)
 
-            update_dict['offset'] = {'min': 0, 'max': data.max(), 'value': 1e-15, 'vary': False}
-            update_dict['center'] = {'min': axis.min(), 'max': axis.max(), 'value': axis[np.argmax(data)]}
-            update_dict['sigma'] = {'min': -np.inf, 'max': np.inf, 'value': sigma}
-            update_dict['amplitude'] = {'min': 0, 'max': np.inf, 'value': amplitude}
+            update_dict["offset"] = {"min": 0, "max": data.max(), "value": 1e-15, "vary": False}
+            update_dict["center"] = {
+                "min": axis.min(),
+                "max": axis.max(),
+                "value": axis[np.argmax(data)],
+            }
+            update_dict["sigma"] = {"min": -np.inf, "max": np.inf, "value": sigma}
+            update_dict["amplitude"] = {"min": 0, "max": np.inf, "value": amplitude}
 
-            result = self._fit_logic.make_gaussian_fit(x_axis=axis,
-                                                       data=data,
-                                                       estimator=self._fit_logic.estimate_gaussian_peak,
-                                                       units=None,  # TODO
-                                                       add_params=update_dict)
+            result = self._fit_logic.make_gaussian_fit(
+                x_axis=axis,
+                data=data,
+                estimator=self._fit_logic.estimate_gaussian_peak,
+                units=None,  # TODO
+                add_params=update_dict,
+            )
             # 1000 points in x axis for smooth fit data
             hist_fit_x = np.linspace(axis[0], axis[-1], 1000)
             hist_fit_y = model.eval(x=hist_fit_x, params=result.params)
@@ -655,23 +678,31 @@ class TraceAnalysisLogic(GenericLogic):
             param_dict = OrderedDict()
 
             # create the proper param_dict with the values:
-            param_dict['sigma_0'] = {'value': result.params['sigma'].value,
-                                     'error': result.params['sigma'].stderr,
-                                     'unit': 'Occurrences'}
+            param_dict["sigma_0"] = {
+                "value": result.params["sigma"].value,
+                "error": result.params["sigma"].stderr,
+                "unit": "Occurrences",
+            }
 
-            param_dict['FWHM'] = {'value': result.params['fwhm'].value,
-                                  'error': result.params['fwhm'].stderr,
-                                  'unit': 'Counts/s'}
+            param_dict["FWHM"] = {
+                "value": result.params["fwhm"].value,
+                "error": result.params["fwhm"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Center'] = {'value': result.params['center'].value,
-                                    'error': result.params['center'].stderr,
-                                    'unit': 'Counts/s'}
+            param_dict["Center"] = {
+                "value": result.params["center"].value,
+                "error": result.params["center"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Amplitude'] = {'value': result.params['amplitude'].value,
-                                       'error': result.params['amplitude'].stderr,
-                                       'unit': 'Occurrences'}
+            param_dict["Amplitude"] = {
+                "value": result.params["amplitude"].value,
+                "error": result.params["amplitude"].stderr,
+                "unit": "Occurrences",
+            }
 
-            param_dict['chi_sqr'] = {'value': result.chisqr, 'unit': ''}
+            param_dict["chi_sqr"] = {"value": result.chisqr, "unit": ""}
 
             return hist_fit_x, hist_fit_y, param_dict, result
 
@@ -679,20 +710,22 @@ class TraceAnalysisLogic(GenericLogic):
         model, params = self._fit_logic.make_gaussiandouble_model()
 
         update_dict = dict()
-        update_dict['offset'] = {'min': 0, 'max': data.max(), 'value': 1e-15, 'vary': False}
-        #update_dict['g0_center'] = {'min': axis.min(), 'max': axis.max()}
-        #update_dict['g1_center'] = {'min': axis.min(), 'max': axis.max()}
-        #update_dict['g0_amplitude'] = {'min': 0, 'max': 2 * data.max()}
-        #update_dict['g1_amplitude'] = {'min': 0, 'max': 2 * data.max()}
+        update_dict["offset"] = {"min": 0, "max": data.max(), "value": 1e-15, "vary": False}
+        # update_dict['g0_center'] = {'min': axis.min(), 'max': axis.max()}
+        # update_dict['g1_center'] = {'min': axis.min(), 'max': axis.max()}
+        # update_dict['g0_amplitude'] = {'min': 0, 'max': 2 * data.max()}
+        # update_dict['g1_amplitude'] = {'min': 0, 'max': 2 * data.max()}
 
         if len(axis) < len(params):
-            self.log.warning('Fit could not be performed because number of '
-                             'parameters is larger than data points')
+            self.log.warning(
+                "Fit could not be performed because number of parameters is larger than data points"
+            )
             return self.do_no_fit()
 
         else:
-            result = self._fit_logic.make_gaussiandouble_fit(axis, data, self._fit_logic.estimate_gaussiandouble_peak,
-                                                             add_params=update_dict)
+            result = self._fit_logic.make_gaussiandouble_fit(
+                axis, data, self._fit_logic.estimate_gaussiandouble_peak, add_params=update_dict
+            )
 
             # 1000 points in x axis for smooth fit data
             hist_fit_x = np.linspace(axis[0], axis[-1], 1000)
@@ -702,53 +735,71 @@ class TraceAnalysisLogic(GenericLogic):
             param_dict = OrderedDict()
 
             # create the proper param_dict with the values:
-            param_dict['sigma_0'] = {'value': result.params['g0_sigma'].value,
-                                     'error': result.params['g0_sigma'].stderr,
-                                     'unit': 'Counts/s'}
+            param_dict["sigma_0"] = {
+                "value": result.params["g0_sigma"].value,
+                "error": result.params["g0_sigma"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['FWHM_0'] = {'value': result.params['g0_fwhm'].value,
-                                    'error': result.params['g0_fwhm'].stderr,
-                                    'unit': 'Counts/s'}
+            param_dict["FWHM_0"] = {
+                "value": result.params["g0_fwhm"].value,
+                "error": result.params["g0_fwhm"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Center_0'] = {'value': result.params['g0_center'].value,
-                                      'error': result.params['g0_center'].stderr,
-                                      'unit': 'Counts/s'}
+            param_dict["Center_0"] = {
+                "value": result.params["g0_center"].value,
+                "error": result.params["g0_center"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Amplitude_0'] = {'value': result.params['g0_amplitude'].value,
-                                         'error': result.params['g0_amplitude'].stderr,
-                                         'unit': 'Occurrences'}
+            param_dict["Amplitude_0"] = {
+                "value": result.params["g0_amplitude"].value,
+                "error": result.params["g0_amplitude"].stderr,
+                "unit": "Occurrences",
+            }
 
-            param_dict['sigma_1'] = {'value': result.params['g1_sigma'].value,
-                                     'error': result.params['g1_sigma'].stderr,
-                                     'unit': 'Counts/s'}
+            param_dict["sigma_1"] = {
+                "value": result.params["g1_sigma"].value,
+                "error": result.params["g1_sigma"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['FWHM_1'] = {'value': result.params['g1_fwhm'].value,
-                                    'error': result.params['g1_fwhm'].stderr,
-                                    'unit': 'Counts/s'}
+            param_dict["FWHM_1"] = {
+                "value": result.params["g1_fwhm"].value,
+                "error": result.params["g1_fwhm"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Center_1'] = {'value': result.params['g1_center'].value,
-                                      'error': result.params['g1_center'].stderr,
-                                      'unit': 'Counts/s'}
+            param_dict["Center_1"] = {
+                "value": result.params["g1_center"].value,
+                "error": result.params["g1_center"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['Amplitude_1'] = {'value': result.params['g1_amplitude'].value,
-                                         'error': result.params['g1_amplitude'].stderr,
-                                         'unit': 'Occurrences'}
+            param_dict["Amplitude_1"] = {
+                "value": result.params["g1_amplitude"].value,
+                "error": result.params["g1_amplitude"].stderr,
+                "unit": "Occurrences",
+            }
 
-            param_dict['chi_sqr'] = {'value': result.chisqr, 'unit': ''}
+            param_dict["chi_sqr"] = {"value": result.chisqr, "unit": ""}
 
             return hist_fit_x, hist_fit_y, param_dict, result
 
     def do_doublepossonian_fit(self, axis, data):
         model, params = self._fit_logic.make_multiplepoissonian_model(no_of_functions=2)
         if len(axis) < len(params):
-            self.log.warning('Fit could not be performed because number of '
-                             'parameters is smaller than data points')
+            self.log.warning(
+                "Fit could not be performed because number of "
+                "parameters is smaller than data points"
+            )
             return self.do_no_fit()
 
         else:
-            result = self._fit_logic.make_doublepoissonian_fit(x_axis=axis,
-                                                               data=data,
-                                                               add_params=None)
+            result = self._fit_logic.make_doublepoissonian_fit(
+                x_axis=axis, data=data, add_params=None
+            )
 
             # 1000 points in x axis for smooth fit data
             hist_fit_x = np.linspace(axis[0], axis[-1], 1000)
@@ -758,20 +809,28 @@ class TraceAnalysisLogic(GenericLogic):
             param_dict = OrderedDict()
 
             # create the proper param_dict with the values:
-            param_dict['lambda_0'] = {'value': result.params['p0_mu'].value,
-                                      'error': result.params['p0_mu'].stderr,
-                                      'unit': 'Counts/s'}
-            param_dict['Amplitude_0'] = {'value': result.params['p0_amplitude'].value,
-                                         'error': result.params['p0_amplitude'].stderr,
-                                         'unit': 'Occurrences'}
-            param_dict['lambda_1'] = {'value': result.params['p1_mu'].value,
-                                      'error': result.params['p1_mu'].stderr,
-                                      'unit': 'Counts/s'}
-            param_dict['Amplitude_1'] = {'value': result.params['p1_amplitude'].value,
-                                         'error': result.params['p1_amplitude'].stderr,
-                                         'unit': 'Occurrences'}
+            param_dict["lambda_0"] = {
+                "value": result.params["p0_mu"].value,
+                "error": result.params["p0_mu"].stderr,
+                "unit": "Counts/s",
+            }
+            param_dict["Amplitude_0"] = {
+                "value": result.params["p0_amplitude"].value,
+                "error": result.params["p0_amplitude"].stderr,
+                "unit": "Occurrences",
+            }
+            param_dict["lambda_1"] = {
+                "value": result.params["p1_mu"].value,
+                "error": result.params["p1_mu"].stderr,
+                "unit": "Counts/s",
+            }
+            param_dict["Amplitude_1"] = {
+                "value": result.params["p1_amplitude"].value,
+                "error": result.params["p1_amplitude"].stderr,
+                "unit": "Occurrences",
+            }
 
-            param_dict['chi_sqr'] = {'value': result.chisqr, 'unit': ''}
+            param_dict["chi_sqr"] = {"value": result.chisqr, "unit": ""}
             # removed last return value <<result>> here, because function calculate_threshold only expected
             # three return values
             return hist_fit_x, hist_fit_y, param_dict
@@ -779,12 +838,18 @@ class TraceAnalysisLogic(GenericLogic):
     def do_possonian_fit(self, axis, data):
         model, params = self._fit_logic.make_poissonian_model()
         if len(axis) < len(params):
-            self.log.error('Fit could not be performed because number of '
-                           'parameters is smaller than data points')
+            self.log.error(
+                "Fit could not be performed because number of "
+                "parameters is smaller than data points"
+            )
             return self.do_no_fit()
         else:
-            result = self._fit_logic.make_poissonian_fit(x_axis=axis, data=data,
-                                                         estimator=self._fit_logic.estimate_poissonian, add_params=None)
+            result = self._fit_logic.make_poissonian_fit(
+                x_axis=axis,
+                data=data,
+                estimator=self._fit_logic.estimate_poissonian,
+                add_params=None,
+            )
 
             # 1000 points in x axis for smooth fit data
             hist_fit_x = np.linspace(axis[0], axis[-1], 1000)
@@ -794,16 +859,18 @@ class TraceAnalysisLogic(GenericLogic):
             param_dict = OrderedDict()
 
             # create the proper param_dict with the values:
-            param_dict['lambda'] = {'value': result.params['mu'].value,
-                                    'error': result.params['mu'].stderr,
-                                    'unit': 'Counts/s'}
+            param_dict["lambda"] = {
+                "value": result.params["mu"].value,
+                "error": result.params["mu"].stderr,
+                "unit": "Counts/s",
+            }
 
-            param_dict['chi_sqr'] = {'value': result.chisqr, 'unit': ''}
+            param_dict["chi_sqr"] = {"value": result.chisqr, "unit": ""}
 
             return hist_fit_x, hist_fit_y, param_dict, result
 
     def get_poissonian(self, x_val, mu, amplitude):
-        """ Calculate, bases on the passed values a poisson distribution.
+        """Calculate, bases on the passed values a poisson distribution.
         @param float mu: expected value of poisson distribution
         @param float amplitude: Amplitude to which is multiplied on distribution
         @param int,float or np.array x_val: x values for poisson distribution,
@@ -819,7 +886,7 @@ class TraceAnalysisLogic(GenericLogic):
         return model.eval(x=np.array(x_val), poissonian_mu=mu, poissonian_amplitude=amplitude)
 
     def guess_threshold(self, hist_val=None, trace=None, max_ratio_value=0.1):
-        """ Assume a distribution between two values and try to guess the threshold.
+        """Assume a distribution between two values and try to guess the threshold.
         @param np.array hist_val: 1D array which represent the y values of a
                                     histogram of a trace. Optional, if None
                                     is passed here, the passed trace will be
@@ -851,8 +918,8 @@ class TraceAnalysisLogic(GenericLogic):
 
         return guessed_threshold
 
-    def calculate_threshold(self, hist_data=None, distr='poissonian'):
-        """ Calculate the threshold by minimizing its overlap with the poissonian fits.
+    def calculate_threshold(self, hist_data=None, distr="poissonian"):
+        """Calculate the threshold by minimizing its overlap with the poissonian fits.
         @param np.array hist_data: 2D array which represent the x and y values
                                    of a histogram of a trace.
                string distr: tells the function on what distribution it should calculate
@@ -868,37 +935,38 @@ class TraceAnalysisLogic(GenericLogic):
         respect to the overlap area:
         """
         # in any case calculate the hist data
-        x_axis = hist_data[0][:-1] + (hist_data[0][1] - hist_data[0][0]) / 2.
+        x_axis = hist_data[0][:-1] + (hist_data[0][1] - hist_data[0][0]) / 2.0
         y_data = hist_data[1]
-        if distr == 'poissonian':
+        if distr == "poissonian":
             # perform the fit
 
             hist_fit_x, hist_fit_y, param_dict = self.do_doublepossonian_fit(x_axis, y_data)
 
-            if param_dict.get('lambda_0') is None:
-                self.log.error('The double poissonian fit does not work! Take at '
-                               'least a dummy value, in order not to break the '
-                               'routine.')
+            if param_dict.get("lambda_0") is None:
+                self.log.error(
+                    "The double poissonian fit does not work! Take at "
+                    "least a dummy value, in order not to break the "
+                    "routine."
+                )
                 amp0 = 1
                 amp1 = 1
 
-                param_dict['Amplitude_0'] = {'value': amp0, 'unit': 'occurences'}
-                param_dict['Amplitude_1'] = {'value': amp0, 'unit': 'occurences'}
+                param_dict["Amplitude_0"] = {"value": amp0, "unit": "occurences"}
+                param_dict["Amplitude_1"] = {"value": amp0, "unit": "occurences"}
 
                 # make them a bit different so that fit works.
                 mu0 = hist_data[0][:].mean() - 0.1
                 mu1 = hist_data[0][:].mean() + 0.1
 
-                param_dict['lambda_0'] = {'value': mu0, 'unit': 'counts'}
-                param_dict['lambda_1'] = {'value': mu1, 'unit': 'counts'}
+                param_dict["lambda_0"] = {"value": mu0, "unit": "counts"}
+                param_dict["lambda_1"] = {"value": mu1, "unit": "counts"}
 
             else:
+                mu0 = param_dict["lambda_0"]["value"]
+                mu1 = param_dict["lambda_1"]["value"]
 
-                mu0 = param_dict['lambda_0']['value']
-                mu1 = param_dict['lambda_1']['value']
-
-                amp0 = param_dict['Amplitude_0']['value']
-                amp1 = param_dict['Amplitude_1']['value']
+                amp0 = param_dict["Amplitude_0"]["value"]
+                amp1 = param_dict["Amplitude_1"]["value"]
 
             if mu0 < mu1:
                 first_dist = self.get_poissonian(x_val=hist_data[0], mu=mu0, amplitude=amp0)
@@ -917,10 +985,10 @@ class TraceAnalysisLogic(GenericLogic):
                 # go through the combined histogram array and the point which
                 # changes the sign. The transition from positive to negative values
                 # will get the threshold:
-                if difference_poissonian[i] < 0 <= difference_poissonian[i + 1]:
-                    trans_index = i
-                    break
-                elif difference_poissonian[i] > 0 >= difference_poissonian[i + 1]:
+                if (
+                    difference_poissonian[i] < 0 <= difference_poissonian[i + 1]
+                    or difference_poissonian[i] > 0 >= difference_poissonian[i + 1]
+                ):
                     trans_index = i
                     break
 
@@ -963,41 +1031,52 @@ class TraceAnalysisLogic(GenericLogic):
             area1 = self.get_poissonian(hist_data[0][:], mu1, amp1).sum()
 
             # try this new measure for the fidelity
-            fidelity2 = 1 - ((area1_low_amp / area1) / (area0_low_amp / area0) + (area0_high_amp / area0) / (
-            area1_high_amp / area1)) / 2
+            fidelity2 = (
+                1
+                - (
+                    (area1_low_amp / area1) / (area0_low_amp / area0)
+                    + (area0_high_amp / area0) / (area1_high_amp / area1)
+                )
+                / 2
+            )
 
-            param_dict['normalized_fidelity'] = fidelity2
+            param_dict["normalized_fidelity"] = fidelity2
 
             return threshold_fit, fidelity, param_dict
 
         # this works if your data is normalized to the interval (-1,1)
-        if distr == 'gaussian_normalized':
+        if distr == "gaussian_normalized":
             # first some helper functions
             def two_gaussian_intersect(m1, m2, std1, std2, amplitude1, amplitude2):
                 """
                 function to calculate intersection of two gaussians
                 """
-                a = 1 / (2 * std1 ** 2) - 1 / (2 * std2 ** 2)
-                b = m2 / (std2 ** 2) - m1 / (std1 ** 2)
-                c = m1 ** 2 / (2 * std1 ** 2) - m2 ** 2 / (2 * std2 ** 2) - np.log(amplitude2 / amplitude1)
+                a = 1 / (2 * std1**2) - 1 / (2 * std2**2)
+                b = m2 / (std2**2) - m1 / (std1**2)
+                c = m1**2 / (2 * std1**2) - m2**2 / (2 * std2**2) - np.log(amplitude2 / amplitude1)
                 return np.roots([a, b, c])
 
             def gaussian(counts, amp, stdv, mean):
-                return amp * np.exp(-(counts - mean) ** 2 / (2 * stdv ** 2)) / (stdv * np.sqrt(2 * np.pi))
+                return (
+                    amp
+                    * np.exp(-((counts - mean) ** 2) / (2 * stdv**2))
+                    / (stdv * np.sqrt(2 * np.pi))
+                )
 
             try:
-                result = self._fit_logic.make_gaussiandouble_fit(x_axis, y_data,
-                                                                 self._fit_logic.estimate_gaussiandouble_peak)
+                result = self._fit_logic.make_gaussiandouble_fit(
+                    x_axis, y_data, self._fit_logic.estimate_gaussiandouble_peak
+                )
                 # calculating the threshold
                 # NOTE the threshold is taken as the intersection of the two gaussians, while this should give
                 # a good approximation I doubt it is mathematical exact.
 
-                mu0 = result.params['g0_center'].value
-                mu1 = result.params['g1_center'].value
-                sigma0 = result.params['g0_sigma'].value
-                sigma1 = result.params['g1_sigma'].value
-                amp0 = result.params['g0_amplitude'].value / (sigma0 * np.sqrt(2 * np.pi))
-                amp1 = result.params['g1_amplitude'].value / (sigma1 * np.sqrt(2 * np.pi))
+                mu0 = result.params["g0_center"].value
+                mu1 = result.params["g1_center"].value
+                sigma0 = result.params["g0_sigma"].value
+                sigma1 = result.params["g1_sigma"].value
+                amp0 = result.params["g0_amplitude"].value / (sigma0 * np.sqrt(2 * np.pi))
+                amp1 = result.params["g1_amplitude"].value / (sigma1 * np.sqrt(2 * np.pi))
                 candidates = two_gaussian_intersect(mu0, mu1, sigma0, sigma1, amp0, amp1)
 
                 # we want to get the intersection that lies between the two peaks
@@ -1012,19 +1091,27 @@ class TraceAnalysisLogic(GenericLogic):
                 # of the bigger peak ( most likely the two states that aren't driven by the mw pi pulse )
                 if mu0 < mu1:
                     gc0 = integrate.quad(lambda counts: gaussian(counts, amp1, sigma1, mu1), -1, 1)
-                    gp0 = integrate.quad(lambda counts: gaussian(counts, amp1, sigma1, mu1), -1, threshold)
+                    gp0 = integrate.quad(
+                        lambda counts: gaussian(counts, amp1, sigma1, mu1), -1, threshold
+                    )
                 else:
                     gc0 = integrate.quad(lambda counts: gaussian(counts, amp0, sigma0, mu0), -1, 1)
-                    gp0 = integrate.quad(lambda counts: gaussian(counts, amp0, sigma0, mu0), -1, threshold)
+                    gp0 = integrate.quad(
+                        lambda counts: gaussian(counts, amp0, sigma0, mu0), -1, threshold
+                    )
 
                 # and then the same for the other peak ]
 
                 if mu0 > mu1:
                     gc1 = integrate.quad(lambda counts: gaussian(counts, amp1, sigma1, mu1), -1, 1)
-                    gp1 = integrate.quad(lambda counts: gaussian(counts, amp1, sigma1, mu1), threshold, 1)
+                    gp1 = integrate.quad(
+                        lambda counts: gaussian(counts, amp1, sigma1, mu1), threshold, 1
+                    )
                 else:
                     gc1 = integrate.quad(lambda counts: gaussian(counts, amp0, sigma0, mu0), -1, 1)
-                    gp1 = integrate.quad(lambda counts: gaussian(counts, amp0, sigma0, mu0), threshold, 1)
+                    gp1 = integrate.quad(
+                        lambda counts: gaussian(counts, amp0, sigma0, mu0), threshold, 1
+                    )
 
                 param_dict = {}
                 fidelity = 1 - (gp0[0] / gc0[0] + gp1[0] / gc1[0]) / 2
@@ -1032,20 +1119,20 @@ class TraceAnalysisLogic(GenericLogic):
                 fidelity2 = 1 - gp1[0] / gc1[0]
                 threshold_fit = threshold
                 # if the fit worked, add also the result to the param_dict, which might be useful for debugging
-                param_dict['result'] = result
+                param_dict["result"] = result
             except:
-                self.log.error('could not fit the data')
+                self.log.error("could not fit the data")
                 error = True
                 fidelity = 0
                 threshold_fit = 0
                 param_dict = {}
-                new_dict = {'value': np.inf}
-                param_dict['chi_sqr'] = new_dict
+                new_dict = {"value": np.inf}
+                param_dict["chi_sqr"] = new_dict
 
             return threshold_fit, fidelity, param_dict
 
     def calculate_binary_trace(self, trace, threshold):
-        """ Calculate for a given threshold all the trace values und output a
+        """Calculate for a given threshold all the trace values und output a
             binary array, where
                 True = Below or equal Threshold
                 False = Above Threshold.
@@ -1058,7 +1145,7 @@ class TraceAnalysisLogic(GenericLogic):
         return trace <= threshold
 
     def extract_filtered_values(self, trace, threshold, below=True):
-        """ Extract only those values, which are below or equal a certain Threshold.
+        """Extract only those values, which are below or equal a certain Threshold.
         @param np.array trace:
         @param float threshold:
         @return tuple(index_array, filtered_array):
@@ -1074,4 +1161,3 @@ class TraceAnalysisLogic(GenericLogic):
             index_array = np.where(trace > threshold)[0]
         filtered_array = trace[index_array]
         return index_array, filtered_array
-

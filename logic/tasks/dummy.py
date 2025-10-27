@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dummy task for taskrunner.
 
@@ -18,52 +17,54 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-from logic.generic_task import InterruptableTask
+
 import time
 
+from logic.generic_task import InterruptableTask
+
+
 class Task(InterruptableTask):
-    """ Dummy task, does nothing. """
+    """Dummy task, does nothing."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print('Task {0} added!'.format(self.name))
+        print(f"Task {self.name} added!")
         self.ctr = 0
 
     def startTask(self):
-        """ Dummy start """
-        print('Start')
+        """Dummy start"""
+        print("Start")
         self.ctr = 0
 
     def runTaskStep(self):
-        """ Dummy step """
+        """Dummy step"""
         time.sleep(0.1)
-        print('one task step', self.ctr)
+        print("one task step", self.ctr)
         self.ctr += 1
-        self._result = '{0} lines printed!'.format(self.ctr)
+        self._result = f"{self.ctr} lines printed!"
         return self.ctr < 50
 
     def pauseTask(self):
-        """ Dummy pause """
+        """Dummy pause"""
         time.sleep(1)
-        print('paused task')
+        print("paused task")
 
     def resumeTask(self):
-        """ Dummy resume """
+        """Dummy resume"""
         time.sleep(1)
-        print('resumed task')
+        print("resumed task")
 
     def cleanupTask(self):
-        """ Dummy cleanup """
+        """Dummy cleanup"""
         print(self._result)
-        print('task cleaned up')
+        print("task cleaned up")
 
     def checkExtraStartPrerequisites(self):
-        """ Check extra start prerequisites, there are none """
-        print('things needed for task to start')
+        """Check extra start prerequisites, there are none"""
+        print("things needed for task to start")
         return True
 
     def checkExtraPausePrerequisites(self):
-        """ Check extra pause prerequisites, there are none """
-        print('things needed for task to pause')
+        """Check extra pause prerequisites, there are none"""
+        print("things needed for task to pause")
         return True
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 StatusVar object for qudi modules to allow storing of application status variables on disk.
 These variables get stored during deactivation of qudi modules and loaded back in during activation.
@@ -25,19 +24,21 @@ import copy
 
 
 class StatusVar:
-    """ This class defines a status variable that is loaded before activation
-        and saved after deactivation.
+    """This class defines a status variable that is loaded before activation
+    and saved after deactivation.
     """
 
-    def __init__(self, name=None, default=None, *, var_name=None, constructor=None, representer=None):
+    def __init__(
+        self, name=None, default=None, *, var_name=None, constructor=None, representer=None
+    ):
         """
-            @param name: identifier of the status variable when stored
-            @param default: default value for the status variable when a
-                saved version is not present
-            @param constructor: constructor function for variable, do loading type checks or conversion here
-            @param representer: representer function for status variable, do saving conversion here
-            @param var_name: name of the variable inside a running module. Only set this
-                if you know what you are doing!
+        @param name: identifier of the status variable when stored
+        @param default: default value for the status variable when a
+            saved version is not present
+        @param constructor: constructor function for variable, do loading type checks or conversion here
+        @param representer: representer function for status variable, do saving conversion here
+        @param var_name: name of the variable inside a running module. Only set this
+            if you know what you are doing!
         """
         self.var_name = var_name
         if name is None:
@@ -50,31 +51,35 @@ class StatusVar:
         self.default = default
 
     def copy(self, **kwargs):
-        """ Create a new instance of StatusVar with copied and updated values.
+        """Create a new instance of StatusVar with copied and updated values.
 
-            @param kwargs: Additional or overridden parameters for the constructor of this class
+        @param kwargs: Additional or overridden parameters for the constructor of this class
         """
-        newargs = {'name': copy.copy(self.name), 'default': copy.copy(self.default),
-                   'constructor': self.constructor_function, 'representer': self.representer_function,
-                   'var_name': copy.copy(self.var_name)}
+        newargs = {
+            "name": copy.copy(self.name),
+            "default": copy.copy(self.default),
+            "constructor": self.constructor_function,
+            "representer": self.representer_function,
+            "var_name": copy.copy(self.var_name),
+        }
         newargs.update(kwargs)
         return StatusVar(**newargs)
 
     def constructor(self, func):
-        """ This is the decorator for declaring constructor function for this StatusVar.
+        """This is the decorator for declaring constructor function for this StatusVar.
 
-            @param func: constructor function for this StatusVar
-            @return: return the original function so this can be used as a decorator
+        @param func: constructor function for this StatusVar
+        @return: return the original function so this can be used as a decorator
         """
         if callable(func):
             self.constructor_function = func
         return func
 
     def representer(self, func):
-        """ This is the decorator for declaring a representer function for this StatusVar.
+        """This is the decorator for declaring a representer function for this StatusVar.
 
-            @param func: representer function for this StatusVar
-            @return: return the original function so this can be used as a decorator
+        @param func: representer function for this StatusVar
+        @return: return the original function so this can be used as a decorator
         """
         if callable(func):
             self.representer_function = func

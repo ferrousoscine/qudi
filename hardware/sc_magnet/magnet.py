@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Hardware file for the Superconducting Magnet (SCM)
 
@@ -19,18 +18,19 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-
-import socket
-from core.module import Base
-from core.configoption import ConfigOption
-import numpy as np
-from interface.magnet_interface import MagnetInterface
-from collections import OrderedDict
 import re
+import socket
+from collections import OrderedDict
+
+import numpy as np
+
+from core.configoption import ConfigOption
+from core.module import Base
+from interface.magnet_interface import MagnetInterface
 
 
 class Magnet(Base, MagnetInterface):
-    """ Magnet positioning software for superconducting magnet.
+    """Magnet positioning software for superconducting magnet.
 
     Enables precise positioning of the magnetic field in spherical coordinates
     with the angle theta, phi and the radius rho.
@@ -53,25 +53,26 @@ class Magnet(Base, MagnetInterface):
         magnet_rho_constr: 1.2
 
     """
-    # config opts
-    port = ConfigOption('magnet_port', missing='error')
 
-    ip_addr_x = ConfigOption('magnet_IP_address_x', missing='error')
-    ip_addr_y = ConfigOption('magnet_IP_address_y', missing='error')
-    ip_addr_z = ConfigOption('magnet_IP_address_z', missing='error')
+    # config opts
+    port = ConfigOption("magnet_port", missing="error")
+
+    ip_addr_x = ConfigOption("magnet_IP_address_x", missing="error")
+    ip_addr_y = ConfigOption("magnet_IP_address_y", missing="error")
+    ip_addr_z = ConfigOption("magnet_IP_address_z", missing="error")
 
     # default waiting time of the pc after a message was sent to the magnet
-    waitingtime = ConfigOption('magnet_waitingtime', 0.01)
+    waitingtime = ConfigOption("magnet_waitingtime", 0.01)
 
     # Constraints of the superconducting magnet in T
     # Normally you should get and set constraints in the
     # function get_constraints(). The problem is here that
     # the constraint rho is no constant and is dependent on the
     # current theta and phi value.
-    x_constr = ConfigOption('magnet_x_constr', 1.0)
-    y_constr = ConfigOption('magnet_y_constr', 1.0)
-    z_constr = ConfigOption('magnet_z_constr', 3.0)
-    rho_constr = ConfigOption('magnet_rho_constr', 1.2)
+    x_constr = ConfigOption("magnet_x_constr", 1.0)
+    y_constr = ConfigOption("magnet_y_constr", 1.0)
+    z_constr = ConfigOption("magnet_z_constr", 3.0)
+    rho_constr = ConfigOption("magnet_rho_constr", 1.2)
 
     def __init__(self, **kwargs):
         """Here the connections to the power supplies and to the counter are established"""
@@ -79,15 +80,15 @@ class Magnet(Base, MagnetInterface):
         socket.setdefaulttimeout(3)
         try:
             self.soc_x = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.timeout:
+        except TimeoutError:
             self.log.error("socket timeout for coil in x-direction")
         try:
             self.soc_y = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.timeout:
+        except TimeoutError:
             self.log.error("socket timeout for coil in y-direction")
         try:
             self.soc_z = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.timeout:
+        except TimeoutError:
             self.log.error("socket timeout for coil in z-direction")
 
         # This is saves in which interval the input theta was in the last movement
@@ -113,15 +114,19 @@ class Magnet(Base, MagnetInterface):
         self.soc_y.connect((self.ip_addr_y, self.port))
         self.soc_z.connect((self.ip_addr_z, self.port))
 
-#       sending a signal to all coils to receive an answer to cut off the
-#       useless welcome message.
-        ask_dict = {'x': "STATE?\n", 'y': "STATE?\n", 'z': "STATE?\n"}
+        #       sending a signal to all coils to receive an answer to cut off the
+        #       useless welcome message.
+        ask_dict = {"x": "STATE?\n", "y": "STATE?\n", "z": "STATE?\n"}
         answ_dict = self.ask(ask_dict)
-        self.log.info("Magnet in state: {0}".format(answ_dict))
-#       sending a command to the magnet to turn into SI units regarding
-#       field units.
+        self.log.info(f"Magnet in state: {answ_dict}")
+        #       sending a command to the magnet to turn into SI units regarding
+        #       field units.
         self.heat_all_switches()
-        tell_dict = {'x': 'CONF:FIELD:UNITS 1', 'y': 'CONF:FIELD:UNITS 1', 'z': 'CONF:FIELD:UNITS 1'}
+        tell_dict = {
+            "x": "CONF:FIELD:UNITS 1",
+            "y": "CONF:FIELD:UNITS 1",
+            "z": "CONF:FIELD:UNITS 1",
+        }
         self.tell(tell_dict)
 
     def on_deactivate(self):
@@ -135,7 +140,7 @@ class Magnet(Base, MagnetInterface):
         @param string myutf8 the message to be encoded
         @return the encoded message in bytes
         """
-        return myutf8.encode('utf-8')
+        return myutf8.encode("utf-8")
 
     def byte_to_utf8(self, mybytes):
         """
@@ -145,10 +150,10 @@ class Magnet(Base, MagnetInterface):
         """
         return mybytes.decode()
 
-# =========================== Magnet Functionality Core ====================================
+    # =========================== Magnet Functionality Core ====================================
 
     def get_constraints(self):
-        """ Retrieve the hardware constraints from the magnet driving device.
+        """Retrieve the hardware constraints from the magnet driving device.
 
         @return dict: dict with constraints for the magnet hardware. These
                       constraints will be passed via the logic to the GUI so
@@ -171,29 +176,53 @@ class Magnet(Base, MagnetInterface):
         """
         constraints = OrderedDict()
         pos_dict = self.get_pos()
-        coord_list = [pos_dict['rho'], pos_dict['theta'], pos_dict['phi']]
-        pos_max_dict = self.rho_pos_max({'rad': coord_list})
+        coord_list = [pos_dict["rho"], pos_dict["theta"], pos_dict["phi"]]
+        pos_max_dict = self.rho_pos_max({"rad": coord_list})
 
         # get the constraints for the x axis:
-        axis0 = {'label': 'rho', 'unit': 'T', 'pos_min': 0, 'pos_max': pos_max_dict['rho'], 'pos_step': 300000,
-                 'vel_min': 0, 'vel_max': 0.0404 * 0.01799, 'vel_step': 10 ** 4}
+        axis0 = {
+            "label": "rho",
+            "unit": "T",
+            "pos_min": 0,
+            "pos_max": pos_max_dict["rho"],
+            "pos_step": 300000,
+            "vel_min": 0,
+            "vel_max": 0.0404 * 0.01799,
+            "vel_step": 10**4,
+        }
 
         # In fact position constraints for rho is dependent on theta and phi, which would need
-# the use of an additional function to calculate
-# going to change the return value to a function rho_max_pos which needs the current theta and
-# phi position
+        # the use of an additional function to calculate
+        # going to change the return value to a function rho_max_pos which needs the current theta and
+        # phi position
         # get the constraints for the x axis:
-        axis1 = {'label': 'theta', 'unit': 'rad', 'pos_min': -1000, 'pos_max': 1000, 'pos_step': 36000, 'vel_min': 0,
-                 'vel_max': 0.0404 * 0.01799, 'vel_step': 10 ** 4}
+        axis1 = {
+            "label": "theta",
+            "unit": "rad",
+            "pos_min": -1000,
+            "pos_max": 1000,
+            "pos_step": 36000,
+            "vel_min": 0,
+            "vel_max": 0.0404 * 0.01799,
+            "vel_step": 10**4,
+        }
 
         # get the constraints for the x axis:
-        axis2 = {'label': 'phi', 'unit': 'rad', 'pos_min': -1000, 'pos_max': 1000, 'pos_step': 92000, 'vel_min': 0,
-                 'vel_max': 0.0380 * 0.07028, 'vel_step': 10 ** 4}
+        axis2 = {
+            "label": "phi",
+            "unit": "rad",
+            "pos_min": -1000,
+            "pos_max": 1000,
+            "pos_step": 92000,
+            "vel_min": 0,
+            "vel_max": 0.0380 * 0.07028,
+            "vel_step": 10**4,
+        }
 
         # assign the parameter container for x to a name which will identify it
-        constraints[axis0['label']] = axis0
-        constraints[axis1['label']] = axis1
-        constraints[axis2['label']] = axis2
+        constraints[axis0["label"]] = axis0
+        constraints[axis1["label"]] = axis1
+        constraints[axis2["label"]] = axis2
 
         return constraints
 
@@ -203,25 +232,26 @@ class Magnet(Base, MagnetInterface):
                                       with an appropriate command for the magnet
         """
         internal_counter = 0
-        if param_dict.get('x') is not None:
-            if not param_dict['x'].endswith('\n'):
-                param_dict['x'] += '\n'
-            self.soc_x.send(self.utf8_to_byte(param_dict['x']))
+        if param_dict.get("x") is not None:
+            if not param_dict["x"].endswith("\n"):
+                param_dict["x"] += "\n"
+            self.soc_x.send(self.utf8_to_byte(param_dict["x"]))
             internal_counter += 1
-        if param_dict.get('y') is not None:
-            if not param_dict['y'].endswith('\n'):
-                param_dict['y'] += '\n'
-            self.soc_y.send(self.utf8_to_byte(param_dict['y']))
+        if param_dict.get("y") is not None:
+            if not param_dict["y"].endswith("\n"):
+                param_dict["y"] += "\n"
+            self.soc_y.send(self.utf8_to_byte(param_dict["y"]))
             internal_counter += 1
-        if param_dict.get('z') is not None:
-            if not param_dict['z'].endswith('\n'):
-                param_dict['z'] += '\n'
-            self.soc_z.send(self.utf8_to_byte(param_dict['z']))
+        if param_dict.get("z") is not None:
+            if not param_dict["z"].endswith("\n"):
+                param_dict["z"] += "\n"
+            self.soc_z.send(self.utf8_to_byte(param_dict["z"]))
             internal_counter += 1
 
         if internal_counter == 0:
-            self.log.warning('no parameter_dict was given therefore the '
-                    'function tell() call was useless')
+            self.log.warning(
+                "no parameter_dict was given therefore the function tell() call was useless"
+            )
 
     def ask(self, param_dict):
         """Asks the magnet a 'question' and returns an answer from it.
@@ -236,56 +266,57 @@ class Magnet(Base, MagnetInterface):
         """
 
         answer_dict = {}
-        if param_dict.get('x') is not None:
-            if not param_dict['x'].endswith('\n'):
-                param_dict['x'] += '\n'
+        if param_dict.get("x") is not None:
+            if not param_dict["x"].endswith("\n"):
+                param_dict["x"] += "\n"
                 # repeat this block to get out crappy messages.
-            self.soc_x.send(self.utf8_to_byte(param_dict['x']))
+            self.soc_x.send(self.utf8_to_byte(param_dict["x"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['x'] = self.byte_to_utf8(self.soc_x.recv(1024))  # receive an answer
-            self.soc_x.send(self.utf8_to_byte(param_dict['x']))
+            answer_dict["x"] = self.byte_to_utf8(self.soc_x.recv(1024))  # receive an answer
+            self.soc_x.send(self.utf8_to_byte(param_dict["x"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['x'] = self.byte_to_utf8(self.soc_x.recv(1024))  # receive an answer
+            answer_dict["x"] = self.byte_to_utf8(self.soc_x.recv(1024))  # receive an answer
 
-            answer_dict['x'] = answer_dict['x'].replace('\r', '')
-            answer_dict['x'] = answer_dict['x'].replace('\n', '')
-        if param_dict.get('y') is not None:
-            if not param_dict['y'].endswith('\n'):
-                param_dict['y'] += '\n'
-            self.soc_y.send(self.utf8_to_byte(param_dict['y']))
+            answer_dict["x"] = answer_dict["x"].replace("\r", "")
+            answer_dict["x"] = answer_dict["x"].replace("\n", "")
+        if param_dict.get("y") is not None:
+            if not param_dict["y"].endswith("\n"):
+                param_dict["y"] += "\n"
+            self.soc_y.send(self.utf8_to_byte(param_dict["y"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['y'] = self.byte_to_utf8(self.soc_y.recv(1024))  # receive an answer
-            self.soc_y.send(self.utf8_to_byte(param_dict['y']))
+            answer_dict["y"] = self.byte_to_utf8(self.soc_y.recv(1024))  # receive an answer
+            self.soc_y.send(self.utf8_to_byte(param_dict["y"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['y'] = self.byte_to_utf8(self.soc_y.recv(1024))  # receive an answer
-            answer_dict['y'] = answer_dict['y'].replace('\r', '')
-            answer_dict['y'] = answer_dict['y'].replace('\n', '')
-        if param_dict.get('z') is not None:
-            if not param_dict['z'].endswith('\n'):
-                param_dict['z'] += '\n'
-            self.soc_z.send(self.utf8_to_byte(param_dict['z']))
+            answer_dict["y"] = self.byte_to_utf8(self.soc_y.recv(1024))  # receive an answer
+            answer_dict["y"] = answer_dict["y"].replace("\r", "")
+            answer_dict["y"] = answer_dict["y"].replace("\n", "")
+        if param_dict.get("z") is not None:
+            if not param_dict["z"].endswith("\n"):
+                param_dict["z"] += "\n"
+            self.soc_z.send(self.utf8_to_byte(param_dict["z"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['z'] = self.byte_to_utf8(self.soc_z.recv(1024))  # receive an answer
-            self.soc_z.send(self.utf8_to_byte(param_dict['z']))
+            answer_dict["z"] = self.byte_to_utf8(self.soc_z.recv(1024))  # receive an answer
+            self.soc_z.send(self.utf8_to_byte(param_dict["z"]))
             # time.sleep(self.waitingtime)                   # you need to wait until magnet generating
             # an answer.
-            answer_dict['z'] = self.byte_to_utf8(self.soc_z.recv(1024))  # receive an answer
-            answer_dict['z'] = answer_dict['z'].replace('\r', '')
-            answer_dict['z'] = answer_dict['z'].replace('\n', '')
+            answer_dict["z"] = self.byte_to_utf8(self.soc_z.recv(1024))  # receive an answer
+            answer_dict["z"] = answer_dict["z"].replace("\r", "")
+            answer_dict["z"] = answer_dict["z"].replace("\n", "")
 
         if len(answer_dict) == 0:
-            self.log.warning('no parameter_dict was given therefore the '
-                             'function call ask() was useless')
+            self.log.warning(
+                "no parameter_dict was given therefore the function call ask() was useless"
+            )
 
         return answer_dict
 
     def get_status(self, param_list=None):
-        """ Get the status of the position
+        """Get the status of the position
 
         @param list param_list: optional, if a specific status of an axis
                                 is desired, then the labels of the needed
@@ -306,38 +337,34 @@ class Magnet(Base, MagnetInterface):
         for axes in status_plural:
             status = status_plural[axes]
             translated_status = -1
-            if status == '1':
+            if status == "1":
                 translated_status = 1
-            elif status == '2':
+            elif status == "2" or status == "3":
                 translated_status = 0
-            elif status == '3':
-                translated_status = 0
-            elif status == '4':
+            elif status == "4":
                 translated_status = 1
-            elif status == '5':
+            elif status == "5":
                 translated_status = 0
-            elif status == '6':
+            elif status == "6":
                 translated_status = 1
-            elif status == '7':
+            elif status == "7":
                 translated_status = -1
-            elif status == '8':
+            elif status == "8":
                 translated_status = 0
-            elif status == '9':
-                translated_status = 1
-            elif status == '10':
+            elif status == "9" or status == "10":
                 translated_status = 1
             status_dict[axes] = translated_status
         # adjusting to the axis problem
-        axes = ['rho', 'theta', 'phi']
-        return_dict = {axes[i] : status_dict[old_key] for i, old_key in enumerate(status_dict)}
+        axes = ["rho", "theta", "phi"]
+        return_dict = {axes[i]: status_dict[old_key] for i, old_key in enumerate(status_dict)}
 
         return return_dict
 
     def heat_switch(self, axis):
-        """ This function enables heating of the PJSwitch,  which is a necessary
-            step to conduct current to the coils.
-            @param string axis: desired axis (x, y, z)
-            """
+        """This function enables heating of the PJSwitch,  which is a necessary
+        step to conduct current to the coils.
+        @param string axis: desired axis (x, y, z)
+        """
         if axis == "x":
             self.soc_x.send(self.utf8_to_byte("PS 1\n"))
         elif axis == "y":
@@ -348,16 +375,16 @@ class Magnet(Base, MagnetInterface):
             self.log.error("In function heat_switch only 'x', 'y' and 'z' are possible axes")
 
     def heat_all_switches(self):
-        """ Just a convenience function to heat all switches at once,  as it is unusual
-            to only apply a magnetic field in one direction"""
+        """Just a convenience function to heat all switches at once,  as it is unusual
+        to only apply a magnetic field in one direction"""
         self.heat_switch("x")
         self.heat_switch("y")
         self.heat_switch("z")
 
     def cool_switch(self, axis):
-        """ Turns off the heating of the PJSwitch,  axis depending on user input
-            @param string axis: desired axis (x, y, z)
-            """
+        """Turns off the heating of the PJSwitch,  axis depending on user input
+        @param string axis: desired axis (x, y, z)
+        """
         if axis == "x":
             self.soc_x.send(self.utf8_to_byte("PS 0\n"))
         elif axis == "y":
@@ -368,7 +395,7 @@ class Magnet(Base, MagnetInterface):
             self.log.error("In function cool_switch only 'x', 'y' and 'z' are possible axes")
 
     def cool_all_switches(self):
-        """ Just a convenience function to cool all switches at once This will take 600s."""
+        """Just a convenience function to cool all switches at once This will take 600s."""
 
         self.cool_switch("x")
         self.cool_switch("y")
@@ -382,21 +409,23 @@ class Magnet(Base, MagnetInterface):
         """
         # need to ask if the PJSwitch is on
         answ_dict = {}
-        answ_dict = self.ask({'x': "PS?", 'y': "PS?", 'z': "PS?"})
-        if answ_dict['x'] == answ_dict['y'] == answ_dict['z']:
-            if answ_dict['x'] == '0':
+        answ_dict = self.ask({"x": "PS?", "y": "PS?", "z": "PS?"})
+        if answ_dict["x"] == answ_dict["y"] == answ_dict["z"]:
+            if answ_dict["x"] == "0":
                 self.heat_all_switches()
             else:
                 self.cool_all_switches()
         else:
-            self.log.warning('can not correctly turn on/ turn off magnet, '
-                'because not all coils are in the same state in function '
-                'initialize')
+            self.log.warning(
+                "can not correctly turn on/ turn off magnet, "
+                "because not all coils are in the same state in function "
+                "initialize"
+            )
             return -1
 
         return 0
 
-# how to realize this function ?
+    # how to realize this function ?
     def idle_magnet(self):
         """
         Cool all coils of the superconducting magnet to achieve maximum accuracy after aligning.
@@ -436,76 +465,77 @@ class Magnet(Base, MagnetInterface):
         return 0
 
     def target_field_setpoint(self, param_dict):
-        """ Function to set the target field (in T), which will be reached through the
-            function ramp(self, param_list).
+        """Function to set the target field (in T), which will be reached through the
+        function ramp(self, param_list).
 
-            @param dict param_dict: Contains as keys the axes to be set e.g. 'x' or 'y'
-            and the items are the float values for the new field generated by the coil of
-            that axis.
-            @return int: error code (0:OK, -1:error)
-            """
+        @param dict param_dict: Contains as keys the axes to be set e.g. 'x' or 'y'
+        and the items are the float values for the new field generated by the coil of
+        that axis.
+        @return int: error code (0:OK, -1:error)
+        """
 
         field_dict = self.get_current_field()
         mode = self.mode
 
-        if param_dict.get('x') is not None:
-            field_dict['x'] = param_dict['x']
-        if param_dict.get('y') is not None:
-            field_dict['y'] = param_dict['y']
-        if param_dict.get('z') is not None:
-            field_dict['z'] = param_dict['z']
-        if param_dict.get('x') is None and param_dict.get('x') is None and param_dict.get('x') is None:
-            self.log.warning('no valid axis was supplied in '
-                    'target_field_setpoint')
+        if param_dict.get("x") is not None:
+            field_dict["x"] = param_dict["x"]
+        if param_dict.get("y") is not None:
+            field_dict["y"] = param_dict["y"]
+        if param_dict.get("z") is not None:
+            field_dict["z"] = param_dict["z"]
+        if (
+            param_dict.get("x") is None
+            and param_dict.get("x") is None
+            and param_dict.get("x") is None
+        ):
+            self.log.warning("no valid axis was supplied in target_field_setpoint")
             return -1
 
-        new_coord = [field_dict['x'], field_dict['y'], field_dict['z']]
-        check_var = self.check_constraints({mode: {'cart': new_coord}})
+        new_coord = [field_dict["x"], field_dict["y"], field_dict["z"]]
+        check_var = self.check_constraints({mode: {"cart": new_coord}})
         if check_var:
-            if param_dict.get('x') is not None:
-                self.soc_x.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict['x']) + "\n"))
-            if param_dict.get('y') is not None:
-                self.soc_y.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict['y']) + "\n"))
-            if param_dict.get('z') is not None:
-                self.soc_z.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict['z']) + "\n"))
+            if param_dict.get("x") is not None:
+                self.soc_x.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict["x"]) + "\n"))
+            if param_dict.get("y") is not None:
+                self.soc_y.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict["y"]) + "\n"))
+            if param_dict.get("z") is not None:
+                self.soc_z.send(self.utf8_to_byte("CONF:FIELD:TARG " + str(param_dict["z"]) + "\n"))
 
         else:
-            self.log.warning('resulting field would be too high in '
-                    'target_field_setpoint')
+            self.log.warning("resulting field would be too high in target_field_setpoint")
             return -1
 
         return 0
 
     def ramp(self, param_list=None):
-        """ function to ramp the magnetic field in the direction(s)  to the target field values
+        """function to ramp the magnetic field in the direction(s)  to the target field values
 
-            @param list param_list: This param is optional. If supplied it has to
-            contain the labels for the axes, which should be ramped (only cartesian makes sense here),
-            else all axes will be ramped.
-            @return int: error code (0:OK, -1:error)
-            """
+        @param list param_list: This param is optional. If supplied it has to
+        contain the labels for the axes, which should be ramped (only cartesian makes sense here),
+        else all axes will be ramped.
+        @return int: error code (0:OK, -1:error)
+        """
         if param_list is None:
             self.soc_x.send(self.utf8_to_byte("RAMP\n"))
             self.soc_y.send(self.utf8_to_byte("RAMP\n"))
             self.soc_z.send(self.utf8_to_byte("RAMP\n"))
         else:
-            if 'x' in param_list:
+            if "x" in param_list:
                 self.soc_x.send(self.utf8_to_byte("RAMP\n"))
-            elif 'y' in param_list:
+            elif "y" in param_list:
                 self.soc_y.send(self.utf8_to_byte("RAMP\n"))
-            elif 'z' in param_list:
+            elif "z" in param_list:
                 self.soc_z.send(self.utf8_to_byte("RAMP\n"))
             else:
-                self.log.warning('in function ramp your definition of '
-                'param_list was incorrect')
+                self.log.warning("in function ramp your definition of param_list was incorrect")
                 return -1
         return 0
 
     def ramp_to_zero(self, axis):
-        """ Function to ramp down a specific coil to zero current
+        """Function to ramp down a specific coil to zero current
 
-            @param axis: string axis: (allowed inputs 'x', 'y' and 'z')
-            """
+        @param axis: string axis: (allowed inputs 'x', 'y' and 'z')
+        """
 
         if axis == "x":
             self.soc_x.send(self.utf8_to_byte("ZERO\n"))
@@ -517,7 +547,7 @@ class Magnet(Base, MagnetInterface):
             self.log.error("In function ramp_to_zero only 'x', 'y' and 'z' are possible axes")
 
     def calibrate(self, param_list=None):
-        """ Calibrates the stage. In the case of the super conducting magnet
+        """Calibrates the stage. In the case of the super conducting magnet
             this just means moving all or a user specified coil to zero magnetic field.
 
         @param dict param_list: param_list: optional, if a specific calibration
@@ -537,14 +567,14 @@ class Magnet(Base, MagnetInterface):
             self.ramp_to_zero("y")
             self.ramp_to_zero("z")
         else:
-            if 'x' in param_list:
+            if "x" in param_list:
                 self.ramp_to_zero("x")
-            elif 'y' in param_list:
+            elif "y" in param_list:
                 self.ramp_to_zero("y")
-            elif 'z' in param_list:
+            elif "z" in param_list:
                 self.ramp_to_zero("z")
             else:
-                self.log.error('no valid axis was supplied')
+                self.log.error("no valid axis was supplied")
                 return -1
 
         return 0
@@ -567,37 +597,36 @@ class Magnet(Base, MagnetInterface):
 
         answ_dict = {}
         coord_list = []
-        transform_dict = {'cart': {'rad': coord_list}}
+        transform_dict = {"cart": {"rad": coord_list}}
         answ_dict = self.get_current_field()
-        coord_list.append(answ_dict['x'])
-        coord_list.append(answ_dict['y'])
-        coord_list.append(answ_dict['z'])
+        coord_list.append(answ_dict["x"])
+        coord_list.append(answ_dict["y"])
+        coord_list.append(answ_dict["z"])
 
         coord_list = self.transform_coordinates(transform_dict)
-        label_list = ['rho', 'theta', 'phi']
+        label_list = ["rho", "theta", "phi"]
 
-        if param_dict.get('rho') is not None:
-            coord_list[0] = param_dict['rho']
-        if param_dict.get('theta') is not None:
-            coord_list[1] = param_dict['theta']
-        if param_dict.get('phi') is not None:
-            coord_list[2] = param_dict['phi']
+        if param_dict.get("rho") is not None:
+            coord_list[0] = param_dict["rho"]
+        if param_dict.get("theta") is not None:
+            coord_list[1] = param_dict["theta"]
+        if param_dict.get("phi") is not None:
+            coord_list[2] = param_dict["phi"]
         for key in param_dict.keys():
-                if key not in label_list:
-                    self.log.warning("The key "+key+" provided is no valid key in set_coordinates.")
-                    return -1
+            if key not in label_list:
+                self.log.warning("The key " + key + " provided is no valid key in set_coordinates.")
+                return -1
 
-        transform_dict = {'rad': {'cart': coord_list}}
+        transform_dict = {"rad": {"cart": coord_list}}
         coord_list = self.transform_coordinates(transform_dict)
-        set_point_dict = {'x': coord_list[0], 'y': coord_list[1],
-                          'z': coord_list[2]}
+        set_point_dict = {"x": coord_list[0], "y": coord_list[1], "z": coord_list[2]}
 
         check_val = self.target_field_setpoint(set_point_dict)
 
         return check_val
 
     def move_abs(self, param_dict):
-        """ Moves stage to absolute position (absolute movement)
+        """Moves stage to absolute position (absolute movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, that should be changed. Usage:
@@ -617,13 +646,13 @@ class Magnet(Base, MagnetInterface):
         mode = self.mode
 
         param_dict = self.update_coordinates(param_dict)
-        coord_list.append(param_dict['rho'])
-        coord_list.append(param_dict['theta'])
-        coord_list.append(param_dict['phi'])
+        coord_list.append(param_dict["rho"])
+        coord_list.append(param_dict["theta"])
+        coord_list.append(param_dict["phi"])
 
         # lets adjust theta
-        theta = param_dict['theta']
-        phi = param_dict['phi']
+        theta = param_dict["theta"]
+        phi = param_dict["phi"]
 
         # switch variable decides what has to be done ( in intervals [2*k*np.pi, 2k+1*np.pi] the movement would
         # be ok ( no rotation in phi ). In the other intervals one has to see if there was a movement before this
@@ -644,7 +673,7 @@ class Magnet(Base, MagnetInterface):
             # get into the correct interval
             theta -= np.pi * (inter1 - 1)
             # now mirror at the center of the interval
-            theta = np.pi/2 - (theta - np.pi/2)
+            theta = np.pi / 2 - (theta - np.pi / 2)
         # interval was correct
         if switch:
             self._inter = inter1
@@ -655,19 +684,17 @@ class Magnet(Base, MagnetInterface):
             # I will leave the code here for now, when somebody in the future wants to extend this function
             # to allow both behaviors he can use the existing code.
             # theta was in a correct interval before but isn't now ( change of interval )
-            self.log.debug('need rotation around phi to adjust for negative theta value')
-            self.log.debug('old int: {0}, new int: {1}'.format(self._inter, inter1))
-            if int(np.abs(self._inter - inter1)) is 1:
-                phi += np.pi
-
-            # theta wasn't in a correct interval before and is still in the same interval ( in this case do nothing )
-            elif int(np.abs(self._inter - inter1)) is 0:
+            self.log.debug("need rotation around phi to adjust for negative theta value")
+            self.log.debug(f"old int: {self._inter}, new int: {inter1}")
+            if int(np.abs(self._inter - inter1)) == 1 or int(np.abs(self._inter - inter1)) == 0:
                 phi += np.pi
 
             else:
-                self.log.warning("There was a difference in intervals larger "
-                                 "than one between two consecutive movements. This is not supported "
-                                 "yet.{0}".format(self._inter - inter1))
+                self.log.warning(
+                    "There was a difference in intervals larger "
+                    "than one between two consecutive movements. This is not supported "
+                    f"yet.{self._inter - inter1}"
+                )
             self._inter = inter1
 
         # adjust the phi values so they are in the right interval. They might be in the wrong interval
@@ -679,12 +706,12 @@ class Magnet(Base, MagnetInterface):
 
         phi -= 2 * np.pi * (inter2 - 1)
 
-        self.log.debug('show old dictionary: {0}'.format(param_dict))
+        self.log.debug(f"show old dictionary: {param_dict}")
         # set the corrected values
-        param_dict['theta'] = theta
-        param_dict['phi'] = phi
-        constr_dict = {mode: {'rad': coord_list}}
-        self.log.debug('show new dictionary: {0}'.format(param_dict))
+        param_dict["theta"] = theta
+        param_dict["phi"] = phi
+        constr_dict = {mode: {"rad": coord_list}}
+        self.log.debug(f"show new dictionary: {param_dict}")
         check_bool = self.check_constraints(constr_dict)
         if check_bool:
             check_1 = self.set_coordinates(param_dict)
@@ -694,13 +721,13 @@ class Magnet(Base, MagnetInterface):
             return -1
 
         if check_1 is check_2:
-            if check_1 is 0:
+            if check_1 == 0:
                 return 0
         else:
             return -1
 
     def move_rel(self, param_dict):
-        """ Moves stage in given direction (in spheric coordinates with theta and
+        """Moves stage in given direction (in spheric coordinates with theta and
             phi in radian)
 
         @param dict param_dict: dictionary, which passes all the relevant
@@ -716,72 +743,75 @@ class Magnet(Base, MagnetInterface):
 
         answ_dict = self.get_current_field()
 
-        coord_list.append(answ_dict['x'])
-        coord_list.append(answ_dict['y'])
-        coord_list.append(answ_dict['z'])
+        coord_list.append(answ_dict["x"])
+        coord_list.append(answ_dict["y"])
+        coord_list.append(answ_dict["z"])
 
-        transform_dict = {'cart': {'rad': coord_list}}
+        transform_dict = {"cart": {"rad": coord_list}}
 
         coord_list = self.transform_coordinates(transform_dict)
-        label_list = ['rho', 'theta', 'phi']
-        if param_dict.get('rho') is not None:
-            coord_list[0] += param_dict['rho']
-        if param_dict.get('theta') is not None:
-            coord_list[1] += param_dict['theta']
-        if param_dict.get('phi') is not None:
-            coord_list[2] += param_dict['phi']
+        label_list = ["rho", "theta", "phi"]
+        if param_dict.get("rho") is not None:
+            coord_list[0] += param_dict["rho"]
+        if param_dict.get("theta") is not None:
+            coord_list[1] += param_dict["theta"]
+        if param_dict.get("phi") is not None:
+            coord_list[2] += param_dict["phi"]
 
         for key in param_dict.keys():
             if key not in label_list:
-                self.log.warning("The key "+key+" provided is no valid key in set_coordinates.")
+                self.log.warning("The key " + key + " provided is no valid key in set_coordinates.")
                 return -1
-        new_coord_dict = {'rho': coord_list[0], 'theta': coord_list[1],
-                          'phi': coord_list[2]}
+        new_coord_dict = {"rho": coord_list[0], "theta": coord_list[1], "phi": coord_list[2]}
         check_val = self.move_abs(new_coord_dict)
         return check_val
 
     def transform_coordinates(self, param_dict):
-        """ Function for generic coordinate transformation.
-            This is a refactoring to the old functions (4) to be
-            replaced by just one function
-            @param dict param_dict: contains a param_dict, which contains
-            a list of values to be transformed. The transformation depends
-            on the keys of the first and the second dictionary.
-            Possible keys are: "deg", "rad", "cart"
-            for example if the first key is deg and the second is cartesian
-            then the values in the list will be transformed from deg to
-            cartesian.
+        """Function for generic coordinate transformation.
+        This is a refactoring to the old functions (4) to be
+        replaced by just one function
+        @param dict param_dict: contains a param_dict, which contains
+        a list of values to be transformed. The transformation depends
+        on the keys of the first and the second dictionary.
+        Possible keys are: "deg", "rad", "cart"
+        for example if the first key is deg and the second is cartesian
+        then the values in the list will be transformed from deg to
+        cartesian.
 
-            Ordering of the values should be [x,y,z] (cartesian)
-            or [rho, theta, phi] for deg or rad
-            @return list containing the transformed values
+        Ordering of the values should be [x,y,z] (cartesian)
+        or [rho, theta, phi] for deg or rad
+        @return list containing the transformed values
         """
 
         # here all the possible cases for transformations
         # are checked
-        if param_dict.get('deg') is not None:
-            if param_dict['deg'].get('rad') is not None:
+        if param_dict.get("deg") is not None:
+            if param_dict["deg"].get("rad") is not None:
                 try:
-                    rho, theta, phi = param_dict['deg'].get('rad')
+                    rho, theta, phi = param_dict["deg"].get("rad")
                 except ValueError:
-                    self.log.error('Supplied input list for transform_coordinates has to be of length 3: returning initial values')
+                    self.log.error(
+                        "Supplied input list for transform_coordinates has to be of length 3: returning initial values"
+                    )
                     return [-1, -1, -1]
 
-                theta = theta*np.pi/180
-                phi = phi*np.pi/180
+                theta = theta * np.pi / 180
+                phi = phi * np.pi / 180
                 return_list = [rho, theta, phi]
                 return return_list
 
-            if param_dict['deg'].get('cart') is not None:
+            if param_dict["deg"].get("cart") is not None:
                 cartesian_list = []
                 try:
-                    rho, theta, phi = param_dict['deg'].get('cart')
+                    rho, theta, phi = param_dict["deg"].get("cart")
                 except ValueError:
-                    self.log.error('Supplied input list for transform_coordinates has to be of length 3: returning [-1,-1,-1]')
+                    self.log.error(
+                        "Supplied input list for transform_coordinates has to be of length 3: returning [-1,-1,-1]"
+                    )
                     return [-1, -1, -1]
-            # transformations that should probably be revisited.
-            # They are there in case the theta and phi values
-            # are not in the correct range.
+                # transformations that should probably be revisited.
+                # They are there in case the theta and phi values
+                # are not in the correct range.
                 while theta >= 180:
                     phi += 180
                     theta = 360 - theta
@@ -796,68 +826,78 @@ class Magnet(Base, MagnetInterface):
                 while phi < 0:
                     phi += 360
 
-                cartesian_list.append(rho * np.sin(theta * 2 * np.pi / 360)
-                                      * np.cos(phi * 2 * np.pi / 360))
-                cartesian_list.append(rho * np.sin(theta * 2 * np.pi / 360)
-                                      * np.sin(phi * 2 * np.pi / 360))
+                cartesian_list.append(
+                    rho * np.sin(theta * 2 * np.pi / 360) * np.cos(phi * 2 * np.pi / 360)
+                )
+                cartesian_list.append(
+                    rho * np.sin(theta * 2 * np.pi / 360) * np.sin(phi * 2 * np.pi / 360)
+                )
                 cartesian_list.append(rho * np.cos(theta * 2 * np.pi / 360))
 
                 return cartesian_list
-        if param_dict.get('rad') is not None:
-            if param_dict['rad'].get('deg') is not None:
+        if param_dict.get("rad") is not None:
+            if param_dict["rad"].get("deg") is not None:
                 try:
-                    rho, theta, phi = param_dict['rad']['deg']
+                    rho, theta, phi = param_dict["rad"]["deg"]
                 except ValueError:
-                    self.log.error("Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]")
-                    return [-1,-1,-1]
-                theta = 180*theta/np.pi
-                phi = 180*phi/np.pi
+                    self.log.error(
+                        "Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]"
+                    )
+                    return [-1, -1, -1]
+                theta = 180 * theta / np.pi
+                phi = 180 * phi / np.pi
                 return_list = [rho, theta, phi]
                 return return_list
-            if param_dict['rad'].get('cart') is not None:
+            if param_dict["rad"].get("cart") is not None:
                 try:
-                    rho, theta, phi = param_dict['rad']['cart']
+                    rho, theta, phi = param_dict["rad"]["cart"]
                 except ValueError:
-                    self.log.error("Supplied input list for transf has to be of length 3: returning [-1, -1, -1]")
-                    return [-1,-1,-1]
+                    self.log.error(
+                        "Supplied input list for transf has to be of length 3: returning [-1, -1, -1]"
+                    )
+                    return [-1, -1, -1]
                 x_val = rho * np.sin(theta) * np.cos(phi)
                 y_val = rho * np.sin(theta) * np.sin(phi)
                 z_val = rho * np.cos(theta)
                 return_list = [x_val, y_val, z_val]
                 return return_list
 
-        if param_dict.get('cart') is not None:
-            if param_dict['cart'].get('deg') is not None:
+        if param_dict.get("cart") is not None:
+            if param_dict["cart"].get("deg") is not None:
                 try:
-                    x_val, y_val, z_val = param_dict['cart']['deg']
+                    x_val, y_val, z_val = param_dict["cart"]["deg"]
                 except ValueError:
-                    self.log.error("Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]")
-                    return [-1,-1,-1]
-                rho = np.sqrt(x_val ** 2 + y_val ** 2 + z_val ** 2)
+                    self.log.error(
+                        "Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]"
+                    )
+                    return [-1, -1, -1]
+                rho = np.sqrt(x_val**2 + y_val**2 + z_val**2)
                 if rho == 0:
                     theta = 0
                 else:
-                    theta = np.arccos(z_val/rho) * 360/(2 * np.pi)
+                    theta = np.arccos(z_val / rho) * 360 / (2 * np.pi)
                 if x_val == 0 and y_val == 0:
                     phi = 0
                 else:
-                    phi = np.arctan2(y_val, x_val) * 360/(2 * np.pi)
+                    phi = np.arctan2(y_val, x_val) * 360 / (2 * np.pi)
                 if phi < 0:
                     phi += 360
                 return_list = [rho, theta, phi]
                 return return_list
 
-            if param_dict['cart'].get('rad') is not None:
+            if param_dict["cart"].get("rad") is not None:
                 try:
-                    x_val, y_val, z_val = param_dict['cart']['rad']
+                    x_val, y_val, z_val = param_dict["cart"]["rad"]
                 except ValueError:
-                    self.log.error("Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]")
-                    return [-1,-1,-1]
-                rho = np.sqrt(x_val ** 2 + y_val ** 2 + z_val ** 2)
+                    self.log.error(
+                        "Supplied input list for transform_coordinates has to be of length 3: returning [-1, -1, -1]"
+                    )
+                    return [-1, -1, -1]
+                rho = np.sqrt(x_val**2 + y_val**2 + z_val**2)
                 if rho == 0:
                     theta = 0
                 else:
-                    theta = np.arccos(z_val/rho)
+                    theta = np.arccos(z_val / rho)
 
                 if x_val == 0 and y_val == 0:
                     phi = 0
@@ -869,16 +909,16 @@ class Magnet(Base, MagnetInterface):
                 return return_list
 
     def get_current_field(self):
-        """ Function that asks the magnet for the current field strength in each direction
+        """Function that asks the magnet for the current field strength in each direction
 
-            @param:
+        @param:
 
-            @param x : representing the field strength in x direction
-            @param y : representing the field strength in y direction
-                          float z : representing the field strength in z direction
+        @param x : representing the field strength in x direction
+        @param y : representing the field strength in y direction
+                      float z : representing the field strength in z direction
 
-            """
-        ask_dict = {'x': "FIELD:MAG?\n", 'y': "FIELD:MAG?\n", 'z': "FIELD:MAG?\n"}
+        """
+        ask_dict = {"x": "FIELD:MAG?\n", "y": "FIELD:MAG?\n", "z": "FIELD:MAG?\n"}
         answ_dict = self.ask(ask_dict)
         # having always a weird bug, where the response of the magnet
         # doesn't make sense, as it is always the same way I try to
@@ -887,27 +927,27 @@ class Magnet(Base, MagnetInterface):
         # pattern to recognize decimal numbers ( There is one issue here e.g. (0.01940.01345) gives one match
         # with 0.01940. Don't think it will matter much.)
 
-        my_pattern = re.compile('[-+]?[0-9][.][0-9]+')
+        my_pattern = re.compile("[-+]?[0-9][.][0-9]+")
         try:
-            answ_dict['x'] = float(answ_dict['x'])
+            answ_dict["x"] = float(answ_dict["x"])
         except ValueError:
-            match_list = re.findall(my_pattern, answ_dict['x'])
-            answ_dict['x'] = float(match_list[0])
+            match_list = re.findall(my_pattern, answ_dict["x"])
+            answ_dict["x"] = float(match_list[0])
         try:
-            answ_dict['y'] = float(answ_dict['y'])
+            answ_dict["y"] = float(answ_dict["y"])
         except ValueError:
-            match_list = re.findall(my_pattern, answ_dict['y'])
-            answ_dict['y'] = float(match_list[0])
+            match_list = re.findall(my_pattern, answ_dict["y"])
+            answ_dict["y"] = float(match_list[0])
         try:
-            answ_dict['z'] = float(answ_dict['z'])
+            answ_dict["z"] = float(answ_dict["z"])
         except ValueError:
-            match_list = re.findall(my_pattern, answ_dict['z'])
-            answ_dict['z'] = float(match_list[0])
+            match_list = re.findall(my_pattern, answ_dict["z"])
+            answ_dict["z"] = float(match_list[0])
 
         return answ_dict
 
     def get_pos(self, param_list=None):
-        """ Gets current position of the stage
+        """Gets current position of the stage
 
         @param list param_list: optional, if a specific position of an axis
                                 is desired, then the labels of the needed
@@ -919,62 +959,59 @@ class Magnet(Base, MagnetInterface):
                       position. Given in spheric coordinates with Units T, rad , rad.
         """
 
-
-
-
         mypos = {}
         mypos1 = {}
 
         answ_dict = self.get_current_field()
-        coord_list = [answ_dict['x'], answ_dict['y'], answ_dict['z']]
-        rho, theta, phi = self.transform_coordinates({'cart': {'rad': coord_list}})
-        mypos1['rho'] = rho
-        mypos1['theta'] = theta
-        mypos1['phi'] = phi
+        coord_list = [answ_dict["x"], answ_dict["y"], answ_dict["z"]]
+        rho, theta, phi = self.transform_coordinates({"cart": {"rad": coord_list}})
+        mypos1["rho"] = rho
+        mypos1["theta"] = theta
+        mypos1["phi"] = phi
 
         if param_list is None:
             return mypos1
 
         else:
             if "rho" in param_list:
-                mypos['rho'] = mypos1['rho']
+                mypos["rho"] = mypos1["rho"]
             if "theta" in param_list:
-                mypos['theta'] = mypos1['theta']
+                mypos["theta"] = mypos1["theta"]
             if "phi" in param_list:
-                mypos['phi'] = mypos1['phi']
+                mypos["phi"] = mypos1["phi"]
 
         return mypos
 
     def stop_hard(self, param_list=None):
-        """ function that pauses the heating of a specific coil depending on
-            the elements in param_list.
+        """function that pauses the heating of a specific coil depending on
+        the elements in param_list.
 
-            @param list param_list: Can contain elements 'x', 'y' or 'z'. In the case no list is supplied the heating
-            of all coils is stopped
-            @return integer: 0 everything is ok and -1 an error occured.
-            """
+        @param list param_list: Can contain elements 'x', 'y' or 'z'. In the case no list is supplied the heating
+        of all coils is stopped
+        @return integer: 0 everything is ok and -1 an error occured.
+        """
         if not param_list:
             self.soc_x.send(self.utf8_to_byte("PAUSE\n"))
             self.soc_y.send(self.utf8_to_byte("PAUSE\n"))
             self.soc_z.send(self.utf8_to_byte("PAUSE\n"))
         elif len(param_list) > 0:
-            self.log.warning('Some useless parameters were passed.')
+            self.log.warning("Some useless parameters were passed.")
             return -1
         else:
-            if 'x' in param_list:
+            if "x" in param_list:
                 self.soc_x.send(self.utf8_to_byte("PAUSE\n"))
-                param_list.remove('x')
-            if 'y' in param_list:
+                param_list.remove("x")
+            if "y" in param_list:
                 self.soc_y.send(self.utf8_to_byte("PAUSE\n"))
-                param_list.remove('y')
-            if 'z' in param_list:
+                param_list.remove("y")
+            if "z" in param_list:
                 self.soc_z.send(self.utf8_to_byte("PAUSE\n"))
-                param_list.remove('z')
+                param_list.remove("z")
 
         return 0
 
     def abort(self):
-        """ Stops movement of the stage
+        """Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
@@ -984,27 +1021,27 @@ class Magnet(Base, MagnetInterface):
 
         return ab
 
-    def ask_status(self, param_list = None):
-        """ Function that returns the status of the coils ('x','y' and 'z') given in the
-            param_dict
+    def ask_status(self, param_list=None):
+        """Function that returns the status of the coils ('x','y' and 'z') given in the
+        param_dict
 
-            @param list param_list: string (elements allowed  'x', 'y' and 'z')
-            for which the status should be returned. Can be None, then
-            the answer is the same as for the list ['x','y','z'].
+        @param list param_list: string (elements allowed  'x', 'y' and 'z')
+        for which the status should be returned. Can be None, then
+        the answer is the same as for the list ['x','y','z'].
 
-            @return state: returns a string, which contains the number '1' to '10' representing
-            the state, the magnet is in.
+        @return state: returns a string, which contains the number '1' to '10' representing
+        the state, the magnet is in.
 
-            For further information on the meaning of the numbers see
-            translated_get_status()
-            """
+        For further information on the meaning of the numbers see
+        translated_get_status()
+        """
         ask_dict = {}
 
         for i_dea in range(2):
             if not param_list:
-                ask_dict['x'] = "STATE?\n"
-                ask_dict['y'] = "STATE?\n"
-                ask_dict['z'] = "STATE?\n"
+                ask_dict["x"] = "STATE?\n"
+                ask_dict["y"] = "STATE?\n"
+                ask_dict["z"] = "STATE?\n"
             else:
                 for axis in param_list:
                     ask_dict[axis] = "STATE?\n"
@@ -1018,16 +1055,16 @@ class Magnet(Base, MagnetInterface):
         return answer_dict
 
     def translated_get_status(self, param_list=None):
-        """ Just a translation of the numbers according to the
-            manual supplied by American Magnets, Inc.
+        """Just a translation of the numbers according to the
+        manual supplied by American Magnets, Inc.
 
-            @param list param_list: string (elements allowed  'x', 'y' and 'z')
-            for which the translated status should be returned. Can be None, then
-            the answer is the same as for the list ['x','y','z']
+        @param list param_list: string (elements allowed  'x', 'y' and 'z')
+        for which the translated status should be returned. Can be None, then
+        the answer is the same as for the list ['x','y','z']
 
-            @return dictionary status_dict: keys are the elements of param_list and the items contain the
-            message for the user.
-            """
+        @return dictionary status_dict: keys are the elements of param_list and the items contain the
+        message for the user.
+        """
         status_dict = self.ask_status(param_list)
 
         for myiter in status_dict.keys():
@@ -1040,28 +1077,30 @@ class Magnet(Base, MagnetInterface):
                         stateval //= 10
                     stateval = str(stateval)
 
-                if stateval == '1':
-                    translated_status = 'RAMPING to target field/current'
-                elif stateval == '2':
-                    translated_status = 'HOLDING at the target field/current'
-                elif stateval == '3':
-                    translated_status = 'PAUSED'
-                elif stateval == '4':
-                    translated_status = 'Ramping in MANUAL UP mode'
-                elif stateval == '5':
-                    translated_status = 'Ramping in MANUAL DOWN mode'
-                elif stateval == '6':
-                    translated_status = 'ZEROING CURRENT (in progress)'
-                elif stateval == '7':
-                    translated_status = 'Quench detected'
-                elif stateval == '8':
-                    translated_status = 'At ZERO current'
-                elif stateval == '9':
-                    translated_status = 'Heating persistent switch'
-                elif stateval == '10':
-                    translated_status = 'Cooling persistent switch'
+                if stateval == "1":
+                    translated_status = "RAMPING to target field/current"
+                elif stateval == "2":
+                    translated_status = "HOLDING at the target field/current"
+                elif stateval == "3":
+                    translated_status = "PAUSED"
+                elif stateval == "4":
+                    translated_status = "Ramping in MANUAL UP mode"
+                elif stateval == "5":
+                    translated_status = "Ramping in MANUAL DOWN mode"
+                elif stateval == "6":
+                    translated_status = "ZEROING CURRENT (in progress)"
+                elif stateval == "7":
+                    translated_status = "Quench detected"
+                elif stateval == "8":
+                    translated_status = "At ZERO current"
+                elif stateval == "9":
+                    translated_status = "Heating persistent switch"
+                elif stateval == "10":
+                    translated_status = "Cooling persistent switch"
                 else:
-                    self.log.warning('Something went wrong in ask_status as the statevalue was not between 1 and 10!')
+                    self.log.warning(
+                        "Something went wrong in ask_status as the statevalue was not between 1 and 10!"
+                    )
                     return -1
             except ValueError:
                 self.log.warning("Sometimes the magnet returns nonsense after a request")
@@ -1078,57 +1117,78 @@ class Magnet(Base, MagnetInterface):
     # direction.
 
     def set_velocity(self, param_dict):
-        """ Function to change the ramp rate  in T/s (ampere per second)
-            @param dict: contains as keys the different cartesian axes ('x', 'y', 'z')
-                         and the dict contains list of parameters, that have to be supplied.
-                         In this case this is segment, ramp_rate and maxval.
-                         How does this work? The maxval for the current marks the endpoint
-                         and in between you have several segments with differen ramp_rates.
+        """Function to change the ramp rate  in T/s (ampere per second)
+        @param dict: contains as keys the different cartesian axes ('x', 'y', 'z')
+                     and the dict contains list of parameters, that have to be supplied.
+                     In this case this is segment, ramp_rate and maxval.
+                     How does this work? The maxval for the current marks the endpoint
+                     and in between you have several segments with differen ramp_rates.
 
-            @return int: error code (0:OK, -1:error)
+        @return int: error code (0:OK, -1:error)
 
-            """
+        """
         tell_dict = {}
         return_val = 0
         internal_counter = 0
         constraint_dict = self.get_constraints()
 
-        if param_dict.get('x') is not None:
+        if param_dict.get("x") is not None:
             param_list = list()
             param_list.append(1)  # the segment
-            param_list.append(param_dict['x'])
+            param_list.append(param_dict["x"])
             param_list.append(1)  # the upper bound of the velocity
 
-            constraint_x = constraint_dict['rho']['vel_max']
+            constraint_x = constraint_dict["rho"]["vel_max"]
             if constraint_x > param_list[1]:
-                tell_dict['x'] = 'CONF:RAMP:RATE:FIELD:' + str(param_list[0]) + ", " + str(param_list[1]) + ", " + str(param_list[2])
+                tell_dict["x"] = (
+                    "CONF:RAMP:RATE:FIELD:"
+                    + str(param_list[0])
+                    + ", "
+                    + str(param_list[1])
+                    + ", "
+                    + str(param_list[2])
+                )
             else:
                 self.log.warning("constraint vel_max was violated in set_velocity with axis = 'x'")
 
             internal_counter += 1
 
-        if param_dict.get('y') is not None:
+        if param_dict.get("y") is not None:
             param_list = list()
             param_list.append(1)  # the segment
-            param_list.append(param_dict['y'])
+            param_list.append(param_dict["y"])
             param_list.append(1)  # the upper bound of the velocity
 
-            constraint_y = constraint_dict['theta']['vel_max']
+            constraint_y = constraint_dict["theta"]["vel_max"]
             if constraint_y > param_list[1]:
-                tell_dict['y'] = 'CONF:RAMP:RATE:FIELD:' + str(param_list[0]) + ", " + str(param_list[1]) + ", " + str(param_list[2])
+                tell_dict["y"] = (
+                    "CONF:RAMP:RATE:FIELD:"
+                    + str(param_list[0])
+                    + ", "
+                    + str(param_list[1])
+                    + ", "
+                    + str(param_list[2])
+                )
             else:
                 self.log.warning("constraint vel_max was violated in set_velocity with axis = 'y'")
             internal_counter += 1
 
-        if param_dict.get('z') is not None:
+        if param_dict.get("z") is not None:
             param_list = list()
             param_list.append(1)  # the segment
-            param_list.append(param_dict['z'])
+            param_list.append(param_dict["z"])
             param_list.append(3)  # the upper bound of the velocity
 
-            constraint_z = constraint_dict['phi']['vel_max']
+            constraint_z = constraint_dict["phi"]["vel_max"]
             if constraint_z > param_list[1]:
-                tell_dict['z'] = 'CONF:RAMP:RATE:FIELD:' + str(param_list[0]) + ", " + str(param_list[1]) + ", " + str(param_list[2])
+                tell_dict["z"] = (
+                    "CONF:RAMP:RATE:FIELD:"
+                    + str(param_list[0])
+                    + ", "
+                    + str(param_list[1])
+                    + ", "
+                    + str(param_list[2])
+                )
             else:
                 self.log.warning("constraint vel_max was violated in set_velocity with axis = 'z'")
             internal_counter += 1
@@ -1136,13 +1196,13 @@ class Magnet(Base, MagnetInterface):
         if internal_counter > 0:
             self.tell(tell_dict)
         else:
-            self.log.warning('There was no statement supplied in change_ramp_rate')
+            self.log.warning("There was no statement supplied in change_ramp_rate")
             return_val = -1
 
         return return_val
 
     def get_velocity(self, param_list=None):
-        """ Gets the current velocity for all connected axes.
+        """Gets the current velocity for all connected axes.
 
         @param dict param_list: optional, if a specific velocity of an axis
                                 is desired, then the labels of the needed
@@ -1156,19 +1216,19 @@ class Magnet(Base, MagnetInterface):
         return_dict = {}
 
         if param_list is None:
-            ask_dict['x'] = "RAMP:RATE:FIELD:1?"
-            ask_dict['y'] = "RAMP:RATE:FIELD:1?"
-            ask_dict['z'] = "RAMP:RATE:FIELD:1?"
+            ask_dict["x"] = "RAMP:RATE:FIELD:1?"
+            ask_dict["y"] = "RAMP:RATE:FIELD:1?"
+            ask_dict["z"] = "RAMP:RATE:FIELD:1?"
             answ_dict = self.ask(ask_dict)
-            return_dict['x'] = float(answ_dict['x'].split(',')[0])
-            return_dict['y'] = float(answ_dict['y'].split(',')[0])
-            return_dict['z'] = float(answ_dict['z'].split(',')[0])
+            return_dict["x"] = float(answ_dict["x"].split(",")[0])
+            return_dict["y"] = float(answ_dict["y"].split(",")[0])
+            return_dict["z"] = float(answ_dict["z"].split(",")[0])
         else:
             for axis in param_list:
                 ask_dict[axis] = "RAMP:RATE:FIELD:1?"
             answ_dict = self.ask(ask_dict)
             for axis in param_list:
-                return_dict[axis] = float(answ_dict[axis].split(',')[0])
+                return_dict[axis] = float(answ_dict[axis].split(",")[0])
 
         return return_dict
 
@@ -1189,12 +1249,13 @@ class Magnet(Base, MagnetInterface):
         # This helps to just reuse this function for the check of 'deg' and 'rad' cases.
 
         def check_cart_constraints(coord_list, mode):
-
             my_boolean = True
             try:
                 x_val, y_val, z_val = coord_list
             except ValueError:
-                self.log.error("In check_constraints list has not the right amount of elements (3).")
+                self.log.error(
+                    "In check_constraints list has not the right amount of elements (3)."
+                )
                 return [-1, -1, -1]
             if mode == "normal_mode":
                 if np.abs(x_val) > self.x_constr:
@@ -1204,7 +1265,6 @@ class Magnet(Base, MagnetInterface):
                     my_boolean = False
 
                 if np.abs(z_val) > self.x_constr:
-
                     my_boolean = False
 
                 field_magnitude = np.sqrt(x_val**2 + y_val**2 + z_val**2)
@@ -1219,50 +1279,56 @@ class Magnet(Base, MagnetInterface):
                 # 3T * cos(5°)
                 height_cone = 2.9886
 
-                if (np.abs(z_val) <= height_cone) and ((x_val**2 + y_val**2) <= z_val**2):
-                    my_boolean = True
-                elif x_val**2 + y_val**2 + (z_val - height_cone)**2 <= self.rho_constr:
-                    my_boolean = True
-                elif x_val**2 + y_val**2 + (z_val + height_cone)**2 <= self.rho_constr:
+                if (
+                    (np.abs(z_val) <= height_cone)
+                    and ((x_val**2 + y_val**2) <= z_val**2)
+                    or x_val**2 + y_val**2 + (z_val - height_cone) ** 2 <= self.rho_constr
+                    or x_val**2 + y_val**2 + (z_val + height_cone) ** 2 <= self.rho_constr
+                ):
                     my_boolean = True
 
                 if not my_boolean:
-                    self.log.warning("In check_constraints your settings don't lie in the allowed cone. See the "
-                                "function for more information")
+                    self.log.warning(
+                        "In check_constraints your settings don't lie in the allowed cone. See the "
+                        "function for more information"
+                    )
             return my_boolean
 
         return_val = False
 
-
-        if param_dict.get('normal_mode') is not None:
-            if param_dict['normal_mode'].get("cart") is not None:
-                return_val = check_cart_constraints(param_dict['normal_mode']["cart"], 'normal_mode')
-            if param_dict['normal_mode'].get("rad") is not None:
-                transform_dict = {'rad': {'cart': param_dict['normal_mode']["rad"]}}
+        if param_dict.get("normal_mode") is not None:
+            if param_dict["normal_mode"].get("cart") is not None:
+                return_val = check_cart_constraints(
+                    param_dict["normal_mode"]["cart"], "normal_mode"
+                )
+            if param_dict["normal_mode"].get("rad") is not None:
+                transform_dict = {"rad": {"cart": param_dict["normal_mode"]["rad"]}}
                 cart_coord = self.transform_coordinates(transform_dict)
-                return_val = check_cart_constraints(cart_coord, 'normal_mode')
+                return_val = check_cart_constraints(cart_coord, "normal_mode")
 
             # ok degree mode here won't work properly, because I don't check the move constraints
-            if param_dict['normal_mode'].get("deg") is not None:
-                transform_dict = {'deg': {'cart': param_dict['normal_mode']["deg"]}}
+            if param_dict["normal_mode"].get("deg") is not None:
+                transform_dict = {"deg": {"cart": param_dict["normal_mode"]["deg"]}}
                 cart_coord = self.transform_coordinates(transform_dict)
-                return_val = check_cart_constraints(cart_coord, 'normal_mode')
+                return_val = check_cart_constraints(cart_coord, "normal_mode")
 
-        elif param_dict.get('z_mode') is not None:
-            if param_dict['z_mode'].get("cart") is not None:
-                return_val = check_cart_constraints(param_dict['z_mode']["cart"], 'z_mode')
+        elif param_dict.get("z_mode") is not None:
+            if param_dict["z_mode"].get("cart") is not None:
+                return_val = check_cart_constraints(param_dict["z_mode"]["cart"], "z_mode")
 
-            if param_dict['z_mode'].get("rad") is not None:
-                transform_dict = {'rad':{'cart': param_dict['z_mode']["rad"]}}
+            if param_dict["z_mode"].get("rad") is not None:
+                transform_dict = {"rad": {"cart": param_dict["z_mode"]["rad"]}}
                 cart_coord = self.transform_coordinates(transform_dict)
-                return_val = check_cart_constraints(cart_coord, 'z_mode')
+                return_val = check_cart_constraints(cart_coord, "z_mode")
 
-            if param_dict['z_mode'].get("deg") is not None:
-                transform_dict = {'deg': {'cart': param_dict['z_mode']["deg"]}}
+            if param_dict["z_mode"].get("deg") is not None:
+                transform_dict = {"deg": {"cart": param_dict["z_mode"]["deg"]}}
                 cart_coord = self.transform_coordinates(transform_dict)
-                return_val = check_cart_constraints(cart_coord, 'z_mode')
+                return_val = check_cart_constraints(cart_coord, "z_mode")
         else:
-            self.log.warning("no valid key was provided, therefore nothing happened in function check_constraints.")
+            self.log.warning(
+                "no valid key was provided, therefore nothing happened in function check_constraints."
+            )
         return return_val
 
     def rho_pos_max(self, param_dict):
@@ -1286,26 +1352,25 @@ class Magnet(Base, MagnetInterface):
         # we need to find the
         # intersection between the vector and the cube (Sadly this will need
         # 6 cases, just like a dice), else we are finished.
-        pos_max_dict = {'rho': -1, 'theta': -1, 'phi': 2 * np.pi}
+        pos_max_dict = {"rho": -1, "theta": -1, "phi": 2 * np.pi}
         param_dict = {self.mode: param_dict}
 
         if param_dict.get("z_mode") is not None:
-            pos_max_dict['theta'] = np.pi*5/180  # 5° cone
+            pos_max_dict["theta"] = np.pi * 5 / 180  # 5° cone
             if self.check_constraints(param_dict):
-                pos_max_dict['rho'] = self.z_constr
+                pos_max_dict["rho"] = self.z_constr
             else:
-                pos_max_dict['rho'] = 0.0
+                pos_max_dict["rho"] = 0.0
         elif param_dict.get("normal_mode") is not None:
-            pos_max_dict['theta'] = np.pi
+            pos_max_dict["theta"] = np.pi
             if param_dict["normal_mode"].get("cart") is not None:
-                transform_dict = {'cart': {'rad': param_dict["normal_mode"].get("cart")}}
+                transform_dict = {"cart": {"rad": param_dict["normal_mode"].get("cart")}}
                 coord_dict_rad = self.transform_coordinates(transform_dict)
-                coord_dict_rad = {'rad': coord_dict_rad}
-                coord_dict_rad['rad'][0] = self.rho_constr
-                transform_dict = {'rad': {'cart': coord_dict_rad['rad']}}
+                coord_dict_rad = {"rad": coord_dict_rad}
+                coord_dict_rad["rad"][0] = self.rho_constr
+                transform_dict = {"rad": {"cart": coord_dict_rad["rad"]}}
                 coord_dict_cart = self.transform_coordinates(transform_dict)
-                coord_dict_cart = {'normal_mode': {'cart': coord_dict_cart}}
-
+                coord_dict_cart = {"normal_mode": {"cart": coord_dict_cart}}
 
             elif param_dict["normal_mode"].get("rad") is not None:
                 # getting the coord list and transforming the coordinates to
@@ -1316,44 +1381,44 @@ class Magnet(Base, MagnetInterface):
                 # if the sphere is the valid constraint in the current direction.
                 coord_list = param_dict["normal_mode"]["rad"]
                 coord_dict_rad = param_dict["normal_mode"]
-                coord_dict_rad['rad'][0] = self.rho_constr
-                transform_dict = {'rad': {'cart': coord_dict_rad['rad']}}
+                coord_dict_rad["rad"][0] = self.rho_constr
+                transform_dict = {"rad": {"cart": coord_dict_rad["rad"]}}
                 coord_dict_cart = self.transform_coordinates(transform_dict)
-                coord_dict_cart = {'normal_mode': {'cart': coord_dict_cart}}
+                coord_dict_cart = {"normal_mode": {"cart": coord_dict_cart}}
 
             elif param_dict["normal_mode"].get("deg") is not None:
                 coord_list = param_dict["normal_mode"]["deg"]
                 coord_dict_deg = param_dict["normal_mode"]
-                coord_dict_deg['deg'][0] = self.rho_constr
-                coord_dict_rad = self.transform_coordinates({'deg': {'rad': coord_dict_deg['deg']}})
-                coord_dict_rad = {'rad': coord_dict_rad}
-                transform_dict = {'rad': {'cart': coord_dict_rad['rad']}}
+                coord_dict_deg["deg"][0] = self.rho_constr
+                coord_dict_rad = self.transform_coordinates({"deg": {"rad": coord_dict_deg["deg"]}})
+                coord_dict_rad = {"rad": coord_dict_rad}
+                transform_dict = {"rad": {"cart": coord_dict_rad["rad"]}}
                 coord_dict_cart = self.transform_coordinates(transform_dict)
-                coord_dict_cart = {'normal_mode': {'cart': coord_dict_cart}}
+                coord_dict_cart = {"normal_mode": {"cart": coord_dict_cart}}
 
             my_boolean = self.check_constraints(coord_dict_cart)
 
             if my_boolean:
-                pos_max_dict['rho'] = self.rho_constr
+                pos_max_dict["rho"] = self.rho_constr
             else:
-                    # now I need to find out, which plane I need to check
-                phi = coord_dict_rad['rad'][2]
-                theta = coord_dict_rad['rad'][1]
+                # now I need to find out, which plane I need to check
+                phi = coord_dict_rad["rad"][2]
+                theta = coord_dict_rad["rad"][1]
                 # Sides of the rectangular intersecting with position vector
-                if (np.pi/4 <= theta) and (theta < np.pi - np.pi/4):
-                    if (7*np.pi/4 < phi < 2*np.pi) or (0 <= phi <= np.pi/4):
-                        pos_max_dict['rho'] = self.x_constr/(np.cos(phi)*np.sin(theta))
-                    elif (np.pi/4 < phi) and (phi <= 3*np.pi/4):
-                        pos_max_dict['rho'] = self.y_constr / (np.sin(phi)*np.sin(theta))
-                    elif (3*np.pi/4 < phi) and (phi <= 5*np.pi/4):
-                        pos_max_dict['rho'] = -self.x_constr/(np.cos(phi)*np.sin(theta))
-                    elif (5*np.pi/4 < phi) and (phi <= 7*np.pi/4):
-                        pos_max_dict['rho'] = -self.y_constr / (np.sin(phi)*np.sin(theta))
+                if (np.pi / 4 <= theta) and (theta < np.pi - np.pi / 4):
+                    if (7 * np.pi / 4 < phi < 2 * np.pi) or (0 <= phi <= np.pi / 4):
+                        pos_max_dict["rho"] = self.x_constr / (np.cos(phi) * np.sin(theta))
+                    elif (np.pi / 4 < phi) and (phi <= 3 * np.pi / 4):
+                        pos_max_dict["rho"] = self.y_constr / (np.sin(phi) * np.sin(theta))
+                    elif (3 * np.pi / 4 < phi) and (phi <= 5 * np.pi / 4):
+                        pos_max_dict["rho"] = -self.x_constr / (np.cos(phi) * np.sin(theta))
+                    elif (5 * np.pi / 4 < phi) and (phi <= 7 * np.pi / 4):
+                        pos_max_dict["rho"] = -self.y_constr / (np.sin(phi) * np.sin(theta))
                     # Top and bottom of the rectangular
-                elif (0 <= theta) and (theta < np.pi/4):
-                    pos_max_dict['rho'] = self.x_constr / np.cos(theta)
-                elif (3*np.pi/4 <= theta) and (theta <= np.pi):
-                    pos_max_dict['rho'] = - self.x_constr / np.cos(theta)
+                elif (theta >= 0) and (theta < np.pi / 4):
+                    pos_max_dict["rho"] = self.x_constr / np.cos(theta)
+                elif (3 * np.pi / 4 <= theta) and (theta <= np.pi):
+                    pos_max_dict["rho"] = -self.x_constr / np.cos(theta)
         return pos_max_dict
 
     def update_coordinates(self, param_dict):
@@ -1374,9 +1439,8 @@ class Magnet(Base, MagnetInterface):
 
         return param_dict
 
-
     def set_magnet_idle_state(self, magnet_idle=True):
-        """ Set the magnet to couple/decouple to/from the control.
+        """Set the magnet to couple/decouple to/from the control.
 
         @param bool magnet_idle: if True then magnet will be set to idle and
                                  each movement command will be ignored from the
@@ -1389,9 +1453,8 @@ class Magnet(Base, MagnetInterface):
         """
         pass
 
-
     def get_magnet_idle_state(self):
-        """ Retrieve the current state of the magnet, whether it is idle or not.
+        """Retrieve the current state of the magnet, whether it is idle or not.
 
         @return bool: the actual state which was set in the magnet hardware.
                         True = idle, decoupled from control

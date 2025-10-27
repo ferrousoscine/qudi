@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Execution tree for auto measurements
 
@@ -20,63 +19,64 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import os
-import pyqtgraph.configfile as configfile
-
 from collections import OrderedDict
+
+import pyqtgraph.configfile as configfile
+from qtpy import QtCore
+
 from core.connector import Connector
 from logic.generic_logic import GenericLogic
-from qtpy import QtCore
 
 
 class TreeItem:
-    """ Item in a TreeModel.
-    """
-    def __init__(self, data, parent=None):
-        """ Create TreeItem.
+    """Item in a TreeModel."""
 
-            @param data object: data stored in TreeItem
-            @param parent Treeitem: parent of this item
+    def __init__(self, data, parent=None):
+        """Create TreeItem.
+
+        @param data object: data stored in TreeItem
+        @param parent Treeitem: parent of this item
         """
         self.parentItem = parent
         self.itemData = data
         self.childItems = []
 
     def appendChild(self, item):
-        """ Append child node to tree item.
+        """Append child node to tree item.
 
-            @param item :
+        @param item :
         """
         self.childItems.append(item)
 
     def child(self, row):
-        """ Get child item for specific index
+        """Get child item for specific index
 
-            @param row int: row index for child item
+        @param row int: row index for child item
 
-            @return : child item in given row
+        @return : child item in given row
         """
         return self.childItems[row]
 
     def childCount(self):
-        """ Get number of children.
+        """Get number of children.
 
-            @return int: number of children
+        @return int: number of children
         """
         return len(self.childItems)
 
     def columnCount(self):
-        """ Return number of columns.
+        """Return number of columns.
 
-            @return int: number of columns in data
+        @return int: number of columns in data
         """
         return len(self.itemData)
 
     def data(self, column):
-        """ Get data from a given column.
+        """Get data from a given column.
 
-            @para, column int: column index
+        @para, column int: column index
 
-            @return : data stored in column
+        @return : data stored in column
         """
         try:
             return self.itemData[column]
@@ -84,16 +84,16 @@ class TreeItem:
             return None
 
     def parent(self):
-        """ Get parent item.
+        """Get parent item.
 
-            @return TreeItem: parent item
+        @return TreeItem: parent item
         """
         return self.parentItem
 
     def row(self):
-        """ Get our own row index.
+        """Get our own row index.
 
-            @return int: row index in parent item
+        @return int: row index in parent item
         """
         if self.parentItem:
             return self.parentItem.childItems.index(self)
@@ -102,20 +102,20 @@ class TreeItem:
 
 
 class TreeModel(QtCore.QAbstractItemModel):
-    """ A tree model for storing TreeItems in a tree structure.
-    """
-    def __init__(self, parent=None):
-        """ Create a TreeModel.
+    """A tree model for storing TreeItems in a tree structure."""
 
-            @param parent TreeModel: parent model
+    def __init__(self, parent=None):
+        """Create a TreeModel.
+
+        @param parent TreeModel: parent model
         """
         super(TreeModel, self).__init__(parent)
         self.rootItem = TreeItem(("Title", "Summary"))
 
     def columnCount(self, parent):
-        """ Return number of columns.
+        """Return number of columns.
 
-            @param parent TreeModel: prent model
+        @param parent TreeModel: prent model
         """
         if parent.isValid():
             return parent.internalPointer().columnCount()
@@ -123,10 +123,10 @@ class TreeModel(QtCore.QAbstractItemModel):
             return self.rootItem.columnCount()
 
     def data(self, index, role):
-        """ Retrieve data from model.
+        """Retrieve data from model.
 
-            @param index QModelIndex: index of data
-            @param role QtRole: role for data
+        @param index QModelIndex: index of data
+        @param role QtRole: role for data
         """
         if not index.isValid():
             return None
@@ -139,11 +139,11 @@ class TreeModel(QtCore.QAbstractItemModel):
         return item.data(index.column())
 
     def flags(self, index):
-        """ Get flags for item at index.
+        """Get flags for item at index.
 
-            @param index QModelIndex: index for item
+        @param index QModelIndex: index for item
 
-            @return flags: Qt model flags
+        @return flags: Qt model flags
         """
         if not index.isValid():
             return QtCore.Qt.NoItemFlags
@@ -151,11 +151,11 @@ class TreeModel(QtCore.QAbstractItemModel):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     def headerData(self, section, orientation, role):
-        """ Header for this model.
+        """Header for this model.
 
-            @param section QModelIndex: index for header data
-            @param orientation: header orientation
-            @param role: Qt role for header
+        @param section QModelIndex: index for header data
+        @param orientation: header orientation
+        @param role: Qt role for header
         """
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return self.rootItem.data(section)
@@ -163,13 +163,13 @@ class TreeModel(QtCore.QAbstractItemModel):
         return None
 
     def index(self, row, column, parent):
-        """ Make QModelIndex from row and column number.
+        """Make QModelIndex from row and column number.
 
-            @param row int: row number
-            @param column int: column number
-            @param parent QAbstractModel: model parent
+        @param row int: row number
+        @param column int: column number
+        @param parent QAbstractModel: model parent
 
-            @return QModelIndex: index for item at position
+        @return QModelIndex: index for item at position
         """
         if not self.hasIndex(row, column, parent):
             return QtCore.QModelIndex()
@@ -186,11 +186,11 @@ class TreeModel(QtCore.QAbstractItemModel):
             return QtCore.QModelIndex()
 
     def parent(self, index):
-        """ Get parent index for item at index.
+        """Get parent index for item at index.
 
-            @param index QModelIndex: index for item
+        @param index QModelIndex: index for item
 
-            @return QModelIndex: index for parent
+        @return QModelIndex: index for parent
         """
         if not index.isValid():
             return QtCore.QModelIndex()
@@ -204,9 +204,9 @@ class TreeModel(QtCore.QAbstractItemModel):
         return self.createIndex(parentItem.row(), 0, parentItem)
 
     def rowCount(self, parent):
-        """ Return number of rows in model.
+        """Return number of rows in model.
 
-            @return int: number of rowa
+        @return int: number of rowa
         """
         if parent.column() > 0:
             return 0
@@ -219,10 +219,10 @@ class TreeModel(QtCore.QAbstractItemModel):
         return parentItem.childCount()
 
     def loadExecTree(self, tree, parent=None):
-        """ Load a tree from a nested dictionary into the model.
+        """Load a tree from a nested dictionary into the model.
 
-            @param tree dict: dictionary tree to be loaded
-            @param parent TreeItem: root item for loaded tree
+        @param tree dict: dictionary tree to be loaded
+        @param parent TreeItem: root item for loaded tree
         """
         if not isinstance(parent, TreeItem):
             self.rootItem = TreeItem(("Title", "Summary"))
@@ -231,26 +231,26 @@ class TreeModel(QtCore.QAbstractItemModel):
             self.recursiveLoad(tree, parent)
 
     def recursiveLoad(self, tree, parent):
-        """ Recursively load a tree from a nested dictionary into the model.
+        """Recursively load a tree from a nested dictionary into the model.
 
-            @param tree dict: dictionary for (sub)tree to be loaded
-            @param parent TreeItem: root item for loaded (sub)tree
+        @param tree dict: dictionary for (sub)tree to be loaded
+        @param parent TreeItem: root item for loaded (sub)tree
         """
-        for key,value in tree.items():
+        for key, value in tree.items():
             if isinstance(value, OrderedDict):
-                newchild = TreeItem([key, 'branch'], parent)
+                newchild = TreeItem([key, "branch"], parent)
                 parent.appendChild(newchild)
                 self.recursiveLoad(value, newchild)
             else:
-                newchild = TreeItem([key, 'leaf'], parent)
+                newchild = TreeItem([key, "leaf"], parent)
                 parent.appendChild(newchild)
 
     def recursiveSave(self, parent):
-        """ Save TreeModel into nested dict.
+        """Save TreeModel into nested dict.
 
-            @param parent TreeItem: parent item
+        @param parent TreeItem: parent item
 
-            @return dict: dictionary containing tree
+        @return dict: dictionary containing tree
         """
         if parent.childCount() > 0:
             retdict = OrderedDict()
@@ -263,19 +263,17 @@ class TreeModel(QtCore.QAbstractItemModel):
 
 
 class AutomationLogic(GenericLogic):
-    """ Logic module agreggating multiple hardware switches.
-    """
-    
-    taskrunner = Connector(interface='TaskRunner')
+    """Logic module agreggating multiple hardware switches."""
+
+    taskrunner = Connector(interface="TaskRunner")
 
     sigRepeat = QtCore.Signal()
 
     def on_activate(self):
-        """ Prepare logic module for work.
-        """
+        """Prepare logic module for work."""
         self._taskrunner = self.taskrunner()
-        #stuff = "a\txyz\n    b\tx\n    c\ty\n        d\tw\ne\tm\n"
-        #tr = OrderedDict([
+        # stuff = "a\txyz\n    b\tx\n    c\ty\n        d\tw\ne\tm\n"
+        # tr = OrderedDict([
         #    ('a', OrderedDict([
         #        ('f', OrderedDict([
         #            ('g', 5)
@@ -286,23 +284,20 @@ class AutomationLogic(GenericLogic):
         #    ('c', 2),
         #    ('d', 3),
         #    ('e', 4)
-        #])
+        # ])
         self.model = TreeModel()
-        #self.model.loadExecTree(tr)
-        self.loadAutomation('auto.cfg')
+        # self.model.loadExecTree(tr)
+        self.loadAutomation("auto.cfg")
 
     def on_deactivate(self):
-        """ Deactivate modeule.
-        """
+        """Deactivate modeule."""
         print(self.model.recursiveSave(self.model.rootItem))
 
-
     def loadAutomation(self, path):
-        """ Load automation config into model.
+        """Load automation config into model.
 
-            @param path str: file path
+        @param path str: file path
         """
         if os.path.isfile(path):
             configdict = configfile.readConfigFile(path)
             self.model.loadExecTree(configdict)
-

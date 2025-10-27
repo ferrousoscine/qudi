@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module controls the Stanford Instruments CTC100 temperature
 controller (also rebranded as CryoVac TIC500, etc).
@@ -20,13 +19,14 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from core.module import Base
-from core.configoption import ConfigOption
 import visa
+
+from core.configoption import ConfigOption
+from core.module import Base
 
 
 class CTC100(Base):
-    """ This module implements communication with CTC100 temperature controllers
+    """This module implements communication with CTC100 temperature controllers
     or clones/licensed devices.
 
     ATTENTION: This module is untested and very likely broken.
@@ -41,120 +41,119 @@ class CTC100(Base):
     """
 
     # config options
-    _interface = ConfigOption('interface', missing='error')
+    _interface = ConfigOption("interface", missing="error")
 
     def on_activate(self):
-        """ Activate modeule
-        """
+        """Activate modeule"""
         self.connect(self._interface)
 
     def on_deactivate(self):
-        """ Deactivate modeule
-        """
+        """Deactivate modeule"""
         self.disconnect()
 
     def connect(self, interface):
-        """ Connect to Instrument.
+        """Connect to Instrument.
 
-            @param str interface: visa interface identifier
+        @param str interface: visa interface identifier
 
-            @return bool: connection success
+        @return bool: connection success
         """
         try:
             self.rm = visa.ResourceManager()
-            self.inst = self.rm.open_resource(interface, baud_rate=9600, term_chars='\n', send_end=True)
-        except visa.VisaIOError as e:
+            self.inst = self.rm.open_resource(
+                interface, baud_rate=9600, term_chars="\n", send_end=True
+            )
+        except visa.VisaIOError:
             self.log.exception("")
             return False
         else:
             return True
 
     def disconnect(self):
-        """ Close the connection to the instrument.
-        """
+        """Close the connection to the instrument."""
         self.inst.close()
         self.rm.close()
 
     def get_channel_names(self):
-        """ Get a list of channel names.
+        """Get a list of channel names.
 
-            @return list(str): list of channel names
+        @return list(str): list of channel names
         """
-        return self.inst.ask('getOutputNames?').split(', ')
+        return self.inst.ask("getOutputNames?").split(", ")
 
     def is_channel_selected(self, channel):
-        """ Check if a channel is selectes
+        """Check if a channel is selectes
 
-            @param str channel: channel name
+        @param str channel: channel name
 
-            @return bool: whether channel is selected
+        @return bool: whether channel is selected
         """
-        return self.inst.ask(channel.replace(" ", "") + '.selected?' ).split(' = ')[-1] == 'On'
+        return self.inst.ask(channel.replace(" ", "") + ".selected?").split(" = ")[-1] == "On"
 
     def is_output_on(self):
-        """ Check if device outputs are enabled.
+        """Check if device outputs are enabled.
 
-            @return bool: wheter device outputs are enabled
+        @return bool: wheter device outputs are enabled
         """
-        result = self.inst.ask('OutputEnable?').split()[2]
-        return result == 'On'
+        result = self.inst.ask("OutputEnable?").split()[2]
+        return result == "On"
 
     def get_temp_by_name(self, name):
-        """ Get temperature by name.
+        """Get temperature by name.
 
-            @return float: temperature value
+        @return float: temperature value
         """
-        return self.inst.ask_for_values('{}.value?'.format(name))[0]
+        return self.inst.ask_for_values(f"{name}.value?")[0]
 
     def get_all_outputs(self):
-        """ Get a list of all output names
+        """Get a list of all output names
 
-            @return list(str): output names
+        @return list(str): output names
         """
         names = self.get_channel_names()
-        raw = self.inst.ask('getOutputs?').split(', ')
+        raw = self.inst.ask("getOutputs?").split(", ")
         values = []
         for substr in raw:
             values.append(float(substr))
         return dict(zip(names, values))
 
     def get_selected_channels(self):
-        """ Get all selected channels.
+        """Get all selected channels.
 
-            @return dict: dict of channel_name: bool indicating selected channels
+        @return dict: dict of channel_name: bool indicating selected channels
         """
         names = self.get_channel_names()
         values = []
         for channel in names:
-                values.append(self.is_channel_selected(channel))
+            values.append(self.is_channel_selected(channel))
         return dict(zip(names, values))
 
     def channel_off(self, channel):
-        """ Turn off channel.
+        """Turn off channel.
 
-            @param channel str: name of channel to turn off
+        @param channel str: name of channel to turn off
         """
-        return self.inst.ask('{}.Off'.format(channel)).split(' = ')[1]
+        return self.inst.ask(f"{channel}.Off").split(" = ")[1]
 
     def enable_output(self):
-        """ Turn on all outputs.
+        """Turn on all outputs.
 
-            @return bool: whether turning on was successful
+        @return bool: whether turning on was successful
         """
         if self.is_output_on():
             return True
         else:
-            result = self.inst.ask('OutputEnable = On').split()[2]
-            return result == 'On'
+            result = self.inst.ask("OutputEnable = On").split()[2]
+            return result == "On"
 
     def disable_output(self):
-        """ Turn off all outputs.
+        """Turn off all outputs.
 
-            @return bool: whether turning off was successful
+        @return bool: whether turning off was successful
         """
         if self.is_output_on():
-            result = self.inst.ask('OutputEnable = Off').split()[2]
-            return result == 'Off'
+            result = self.inst.ask("OutputEnable = Off").split()[2]
+            return result == "Off"
         else:
             return True
 
@@ -183,4 +182,3 @@ class CTC100(Base):
 #
 #    def set_value(self, channel, value):
 #        return self.inst.ask_for_values('{}.Value = {}'.format(channel, value))[0]
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi counter logic class.
 
@@ -21,35 +20,36 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import copy
 import datetime
-import numpy as np
 import os
-import pylab as pb
 import time
-
 from collections import OrderedDict
+
+import numpy as np
+import pylab as pb
+from qtpy import QtCore
+
 from core.connector import Connector
 from core.util.network import netobtain
 from logic.generic_logic import GenericLogic
-from qtpy import QtCore
 
 
 class SingleShotLogic(GenericLogic):
-    """ This class brings raw data coming from fastcounter measurements (gated or ungated)
-        into trace form processable by the trace_analysis_logic.
+    """This class brings raw data coming from fastcounter measurements (gated or ungated)
+    into trace form processable by the trace_analysis_logic.
     """
 
     # declare connectors
-    savelogic = Connector(interface='SaveLogic')
-    fitlogic = Connector(interface='FitLogic')
-    fastcounter = Connector(interface='FastCounterInterface')
-    pulseextractionlogic = Connector(interface='PulseExtractionLogic')
-    pulsedmeasurementlogic = Connector(interface='PulsedMeasurementLogic')
-    traceanalysislogic1 = Connector(interface='TraceAnalysisLogic')
-    pulsegenerator = Connector(interface='PulserInterface')
-    scannerlogic = Connector(interface='ConfocalLogic')
-    optimizerlogic = Connector(interface='OptimizerLogic')
-    pulsedmasterlogic = Connector(interface='PulsedMasterLogic')
-    odmrlogic = Connector(interface='ODMRLogic')
+    savelogic = Connector(interface="SaveLogic")
+    fitlogic = Connector(interface="FitLogic")
+    fastcounter = Connector(interface="FastCounterInterface")
+    pulseextractionlogic = Connector(interface="PulseExtractionLogic")
+    pulsedmeasurementlogic = Connector(interface="PulsedMeasurementLogic")
+    traceanalysislogic1 = Connector(interface="TraceAnalysisLogic")
+    pulsegenerator = Connector(interface="PulserInterface")
+    scannerlogic = Connector(interface="ConfocalLogic")
+    optimizerlogic = Connector(interface="OptimizerLogic")
+    pulsedmasterlogic = Connector(interface="PulsedMasterLogic")
+    odmrlogic = Connector(interface="ODMRLogic")
 
     # add possible signals here
     sigHistogramUpdated = QtCore.Signal()
@@ -57,18 +57,18 @@ class SingleShotLogic(GenericLogic):
     sigTraceUpdated = QtCore.Signal()
 
     def __init__(self, config, **kwargs):
-        """ Create CounterLogic object with connectors.
+        """Create CounterLogic object with connectors.
 
         @param dict config: module configuration
         @param dict kwargs: optional parameters
         """
         super().__init__(config=config, **kwargs)
 
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
         for key in config.keys():
-            self.log.debug('{0}: {1}'.format(key, config[key]))
+            self.log.debug(f"{key}: {config[key]}")
 
         # initalize internal variables here
         self.hist_data = None
@@ -77,8 +77,7 @@ class SingleShotLogic(GenericLogic):
         self.data_dict = None
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
 
         self._fast_counter_device = self.fastcounter()
         self._pulse_generator_device = self.pulsegenerator()
@@ -96,9 +95,8 @@ class SingleShotLogic(GenericLogic):
         self.trace = None
         self.sigMeasurementFinished.connect(self.ssr_measurement_analysis)
 
-
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
+        """Deinitialisation performed during deactivation of the module.
 
         @param object e: Event class object from Fysom. A more detailed
                          explanation can be found in method activation.
@@ -109,7 +107,7 @@ class SingleShotLogic(GenericLogic):
     #                           Raw Data Analysis
     # =========================================================================
 
-    def get_data(self, fastcounter='fastcomtec'):
+    def get_data(self, fastcounter="fastcomtec"):
         """
         get the singleshot data from the fastcounter along with its shape
         @param: optional string fastcounter: Determines how the data is extracted from the fastcounter
@@ -119,7 +117,7 @@ class SingleShotLogic(GenericLogic):
         return_dict = OrderedDict()
 
         if not self._fast_counter_device.is_gated():
-            if fastcounter == 'fastcomtec':
+            if fastcounter == "fastcomtec":
                 settings = self._fast_counter_device.get_settings()
                 # check if settings object is coming from a remote connection
                 settings = netobtain(settings)
@@ -129,18 +127,17 @@ class SingleShotLogic(GenericLogic):
                 reps_per_row = settings.swpreset
                 raw_data = netobtain(self._fast_counter_device.get_data_trace(sweep_reset=True))
 
-
-                return_dict['n_rows'] = n_rows
-                return_dict['n_columns'] = n_columns
-                return_dict['reps_per_row'] = reps_per_row
-                return_dict['raw_data'] = raw_data
+                return_dict["n_rows"] = n_rows
+                return_dict["n_columns"] = n_columns
+                return_dict["reps_per_row"] = reps_per_row
+                return_dict["raw_data"] = raw_data
                 # needed to internally calculate the measurement time, unless the columns are
                 # always in ns ?
-                return_dict['bin_width'] = self._fast_counter_device.get_binwidth()
+                return_dict["bin_width"] = self._fast_counter_device.get_binwidth()
             else:
-                self.log.warning('other ungated counters are not implemented at the moment')
+                self.log.warning("other ungated counters are not implemented at the moment")
         else:
-            self.log.warning('using gated counter not implemented yet')
+            self.log.warning("using gated counter not implemented yet")
 
         self.data_dict = return_dict
 
@@ -154,8 +151,8 @@ class SingleShotLogic(GenericLogic):
         @return: list containing tupels of start and stop values of individual laser pulses
         """
 
-        data = self.data_dict['raw_data']
-        n_rows = self.data_dict['n_rows']
+        data = self.data_dict["raw_data"]
+        n_rows = self.data_dict["n_rows"]
 
         # we want to add up the pulses along the cycles axis
         shape = data.shape
@@ -164,17 +161,19 @@ class SingleShotLogic(GenericLogic):
         elif shape[1] == n_rows:
             axis = 1
         else:
-            self.log.debug('something went wrong in identifying the correct axis of data in find_laser '
-                           'of singleshot_logic')
+            self.log.debug(
+                "something went wrong in identifying the correct axis of data in find_laser "
+                "of singleshot_logic"
+            )
 
         summed_pulses = np.sum(data, axis)
 
         # TODO make the type of pulsed extraction adjustable
         self._pe_logic.number_of_lasers = n_laserpulses
-        self._pe_logic.extraction_settings['conv_std_dev'] = smoothing
-        return_dict = self._pe_logic.ungated_extraction_methods['conv_deriv'](summed_pulses)
-        rising_ind = return_dict['laser_indices_rising']
-        falling_ind = return_dict['laser_indices_falling']
+        self._pe_logic.extraction_settings["conv_std_dev"] = smoothing
+        return_dict = self._pe_logic.ungated_extraction_methods["conv_deriv"](summed_pulses)
+        rising_ind = return_dict["laser_indices_rising"]
+        falling_ind = return_dict["laser_indices_falling"]
 
         start_stop_tupel_list = []
         for jj, rising in enumerate(rising_ind):
@@ -194,15 +193,16 @@ class SingleShotLogic(GenericLogic):
         sum_single_pulses = []
         start_stop_tupel_list = self.find_laser(smoothing=smoothing, n_laserpulses=n_laserpulses)
         if self.data_dict:
-            data = self.data_dict['raw_data']
+            data = self.data_dict["raw_data"]
             for row in data:
-                laser_pulses = [np.sum(row[jj[0]:jj[1]]) for jj in start_stop_tupel_list]
+                laser_pulses = [np.sum(row[jj[0] : jj[1]]) for jj in start_stop_tupel_list]
                 sum_single_pulses.append(laser_pulses)
         else:
-            self.log.error('Pull data from fastcounting device using get_data function before trying to sum_laserpulse.')
+            self.log.error(
+                "Pull data from fastcounting device using get_data function before trying to sum_laserpulse."
+            )
 
         return np.array(sum_single_pulses)
-
 
     def get_normalized_signal(self, smoothing=10.0):
         """
@@ -216,9 +216,11 @@ class SingleShotLogic(GenericLogic):
 
         sum_single_pulses = self.sum_laserpulse()
         if sum_single_pulses.shape[1] == 2:
-            normalized_signal = np.array([(ii[0] - ii[1])/(ii[0] + ii[1]) for ii in sum_single_pulses])
+            normalized_signal = np.array(
+                [(ii[0] - ii[1]) / (ii[0] + ii[1]) for ii in sum_single_pulses]
+            )
         else:
-            self.log.warning('could not perform normalisation. Wrong number of laserpulses.')
+            self.log.warning("could not perform normalisation. Wrong number of laserpulses.")
 
         return normalized_signal
 
@@ -234,10 +236,12 @@ class SingleShotLogic(GenericLogic):
         if self.data_dict:
             data = self.data_dict
         else:
-            self.log.error('Pull data from fastcounting device using get_data function '
-                           'before trying to calc_all_binnings.')
+            self.log.error(
+                "Pull data from fastcounting device using get_data function "
+                "before trying to calc_all_binnings."
+            )
 
-        NN = data['n_rows']
+        NN = data["n_rows"]
         # this is just a guess value, at some point it doesn't make
         # sense anymore to further decrease the number of bins
         max_bin = NN // num_bins
@@ -253,12 +257,14 @@ class SingleShotLogic(GenericLogic):
                 temp_list = []
             jj = 0
             while jj < NN:
-                sum_ind = np.linspace(jj, jj + count_var - 1, count_var, dtype=np.int)
+                sum_ind = np.linspace(jj, jj + count_var - 1, count_var, dtype=int)
                 # make sure we don't try to adress not reserved memory
                 jj += count_var
                 if sum_ind[-1] < NN:
                     # normalize
-                    temp_list.append(np.array([np.sum(signal[sum_ind, 0]), np.sum(signal[sum_ind, 1])]))
+                    temp_list.append(
+                        np.array([np.sum(signal[sum_ind, 0]), np.sum(signal[sum_ind, 1])])
+                    )
                 else:
                     jj = NN
             count_var += 1
@@ -277,11 +283,10 @@ class SingleShotLogic(GenericLogic):
         bin_list = self.calc_all_binnings(num_bins=num_bins)
         normalized_bin_list = []
         for binning in bin_list:
-            normalized_binning = (binning[:, 0] - binning[:, 1])/(binning[:, 0] + binning[:, 1])
+            normalized_binning = (binning[:, 0] - binning[:, 1]) / (binning[:, 0] + binning[:, 1])
             normalized_bin_list.append(normalized_binning)
 
         return np.array(normalized_bin_list)
-
 
     def get_timetrace(self):
         """
@@ -302,9 +307,9 @@ class SingleShotLogic(GenericLogic):
             # what is a good estimate for the number of bins ?
             hist_y_val, hist_x_val = np.histogram(ii, bins=50)
             hist_data = np.array([hist_x_val, hist_y_val])
-            threshold_fit, fidelity, \
-            param_dict = self._traceanalysis_logic.calculate_threshold(hist_data=hist_data,
-                                                                       distr='gaussian_normalized')
+            threshold_fit, fidelity, param_dict = self._traceanalysis_logic.calculate_threshold(
+                hist_data=hist_data, distr="gaussian_normalized"
+            )
             param_dict_list.append(param_dict)
             fidelity_list.append(fidelity)
 
@@ -316,13 +321,20 @@ class SingleShotLogic(GenericLogic):
         timetrace = bin_list[ind]
 
         return timetrace
+
     # =========================================================================
     #                           Single Shot measurements
     # =========================================================================
 
     # TODO make more general for other devices
-    def do_singleshot(self, mw_dict=None, refocus=True, laser_wfm='LaserOn', singleshot_wfm='SSR_normalise_2MW',
-                      normalized=True):
+    def do_singleshot(
+        self,
+        mw_dict=None,
+        refocus=True,
+        laser_wfm="LaserOn",
+        singleshot_wfm="SSR_normalise_2MW",
+        normalized=True,
+    ):
         """
         For additional microwave usage this assumes an external signal generator. Could be also done with an
         additional pulser channel though.
@@ -330,11 +342,11 @@ class SingleShotLogic(GenericLogic):
         use_mw = False
         if mw_dict:
             use_mw = True
-            if mw_dict['freq']:
-                mw_freq = mw_dict['freq']
+            if mw_dict["freq"]:
+                mw_freq = mw_dict["freq"]
                 self._odmr_logic.set_frequency(frequency=mw_freq)
-            if mw_dict['power']:
-                mw_power = mw_dict['power']
+            if mw_dict["power"]:
+                mw_power = mw_dict["power"]
                 self._odmr_logic.set_power(mw_power)
         # set mw power
         # self._odmr_logic.set_power(mw_power)
@@ -376,8 +388,17 @@ class SingleShotLogic(GenericLogic):
     # therefore I'm going to include it here.
     # TODO include focusing on a single peak here
     # TODO refocus replaced through refocus frequency
-    def do_pulsed_odmr(self, measurement_time, controlled_vals_start, controlled_vals_incr, num_of_lasers,
-                       sequence_length_s, refocus=True, pulsedODMR_wfm='PulsedODMR', save_tag=''):
+    def do_pulsed_odmr(
+        self,
+        measurement_time,
+        controlled_vals_start,
+        controlled_vals_incr,
+        num_of_lasers,
+        sequence_length_s,
+        refocus=True,
+        pulsedODMR_wfm="PulsedODMR",
+        save_tag="",
+    ):
         """
         A function to do pulsed odmr. Important as exact transition frequencies are important.
         @param measurement_time:
@@ -394,16 +415,17 @@ class SingleShotLogic(GenericLogic):
         # TODO maybe this data is also differently available or units can be set within the logic
         alternating = False
 
-        controlled_vals = np.arange(controlled_vals_start,
-                                    controlled_vals_start + (controlled_vals_incr * num_of_lasers) - (
-                                    controlled_vals_incr / 2),
-                                    controlled_vals_incr)
+        controlled_vals = np.arange(
+            controlled_vals_start,
+            controlled_vals_start
+            + (controlled_vals_incr * num_of_lasers)
+            - (controlled_vals_incr / 2),
+            controlled_vals_incr,
+        )
 
-        self._pulsed_master_logic.measurement_sequence_settings_changed(controlled_vals,
-                                                                        num_of_lasers,
-                                                                        sequence_length_s,
-                                                                        laser_ignore_list,
-                                                                        alternating)
+        self._pulsed_master_logic.measurement_sequence_settings_changed(
+            controlled_vals, num_of_lasers, sequence_length_s, laser_ignore_list, alternating
+        )
         self._pm_logic._initialize_plots()
 
         self._pulse_generator_device.load_asset(pulsedODMR_wfm)
@@ -417,14 +439,18 @@ class SingleShotLogic(GenericLogic):
         signal = self._pm_logic.signal_plot_y
         # now everything is saved, lets do the fitting
         results = self._fit_logic.make_N14_fit(freqs, signal)
-        freq_peaks = np.array([results.params['l0_center'].value, results.params['l1_center'].value,
-                              results.params['l2_center'].value])
+        freq_peaks = np.array(
+            [
+                results.params["l0_center"].value,
+                results.params["l1_center"].value,
+                results.params["l2_center"].value,
+            ]
+        )
         if save_tag:
-            controlled_val_unit = 'Hz'
+            controlled_val_unit = "Hz"
             self._pulsed_master_logic.save_measurement_data(controlled_val_unit, save_tag)
 
         return freq_peaks
-
 
     def save_singleshot(self, tag=None, normalized=True, visualize=True):
         """
@@ -434,61 +460,61 @@ class SingleShotLogic(GenericLogic):
         will be saved.
         @return:
         """
-        filepath = self._save_logic.get_path_for_module(module_name='SingleShot')
+        filepath = self._save_logic.get_path_for_module(module_name="SingleShot")
         timestamp = datetime.datetime.now()
-        timestamp_str = timestamp.strftime('%Y%m%d-%H%M-%S')
+        timestamp_str = timestamp.strftime("%Y%m%d-%H%M-%S")
         if normalized:
             if tag is not None and len(tag) > 0:
-                filelabel2 = tag + '_' + timestamp_str + '_normalized_bin_list'
+                filelabel2 = tag + "_" + timestamp_str + "_normalized_bin_list"
             else:
-                filelabel2 = timestamp_str + '_normalized_bin_list'
+                filelabel2 = timestamp_str + "_normalized_bin_list"
 
             normalized_bin_list = self.calc_all_binnings_normalized()
             save_path2 = os.path.join(filepath, filelabel2)
             np.save(save_path2, normalized_bin_list)
             if visualize:
-                visualize_path = os.path.join(filepath, timestamp_str + '_visualize_bins')
+                visualize_path = os.path.join(filepath, timestamp_str + "_visualize_bins")
                 os.mkdir(visualize_path)
                 self.visualize_bin_list(normalized_bin_list, visualize_path)
 
         else:
             if tag is not None and len(tag) > 0:
-                filelabel1 = tag + '_' + timestamp_str + '_bin_list'
+                filelabel1 = tag + "_" + timestamp_str + "_bin_list"
             else:
-                filelabel1 = timestamp_str + '_bin_list'
+                filelabel1 = timestamp_str + "_bin_list"
 
             bin_list = self.calc_all_binnings()
             save_path1 = os.path.join(filepath, filelabel1)
             np.save(save_path1, bin_list)
 
         meta_data_dict = copy.deepcopy(self.data_dict)
-        meta_data_dict.pop('raw_data')
-        meta_path = os.path.join(filepath, timestamp_str + '_meta_data')
-        np.save(meta_path,meta_data_dict)
+        meta_data_dict.pop("raw_data")
+        meta_path = os.path.join(filepath, timestamp_str + "_meta_data")
+        np.save(meta_path, meta_data_dict)
         for key in meta_data_dict:
             meta_data_dict[key] = [meta_data_dict[key]]
-        self._save_logic.save_data(meta_data_dict, filepath=filepath, filelabel='meta_data')
-
+        self._save_logic.save_data(meta_data_dict, filepath=filepath, filelabel="meta_data")
 
         return
 
     # Helper methods
 
     def _do_optimize_pos(self):
-
         curr_pos = self._confocal_logic.get_position()
 
-        self._optimizer_logic.start_refocus(curr_pos, caller_tag='singleshot_logic')
+        self._optimizer_logic.start_refocus(curr_pos, caller_tag="singleshot_logic")
 
         # check just the state of the optimizer
-        while self._optimizer_logic.module_state() != 'idle':
+        while self._optimizer_logic.module_state() != "idle":
             time.sleep(0.5)
 
         # use the position to move the scanner
-        self._confocal_logic.set_position('magnet_logic',
-                                          self._optimizer_logic.optim_pos_x,
-                                          self._optimizer_logic.optim_pos_y,
-                                          self._optimizer_logic.optim_pos_z)
+        self._confocal_logic.set_position(
+            "magnet_logic",
+            self._optimizer_logic.optim_pos_x,
+            self._optimizer_logic.optim_pos_y,
+            self._optimizer_logic.optim_pos_z,
+        )
 
     def visualize_bin_list(self, bin_list, path):
         """
@@ -497,8 +523,8 @@ class SingleShotLogic(GenericLogic):
         # TODO use savelogic here
         for jj, bin_entry in enumerate(bin_list):
             hist_x, hist_y = self._traceanalysis_logic.calculate_histogram(bin_entry, num_bins=50)
-            pb.plot(hist_x[0:len(hist_y)], hist_y)
-            fname = 'bin_' + str(jj) + '.png'
+            pb.plot(hist_x[0 : len(hist_y)], hist_y)
+            fname = "bin_" + str(jj) + ".png"
             savepath = os.path.join(path, fname)
             pb.savefig(savepath)
             pb.close()
@@ -521,29 +547,32 @@ class SingleShotLogic(GenericLogic):
         data = normalized_bin_list[0]
         measurement = self.data_dict
         # also only the initial binning, needs to be adjusted then
-        time_axis = np.linspace(record_length * measurement['reps_per_row'],
-                                record_length * (measurement['reps_per_row'] + 1), measurement['n_rows'])
+        time_axis = np.linspace(
+            record_length * measurement["reps_per_row"],
+            record_length * (measurement["reps_per_row"] + 1),
+            measurement["n_rows"],
+        )
         # update the histogram in the gui
         self.do_calculate_histogram(data)
 
         # update the trace in the gui
         self._do_calculate_trace(time_axis, data)
 
-
-
     def do_calculate_histogram(self, data):
-        """ Passes all the needed parameters to the appropriated methods.
+        """Passes all the needed parameters to the appropriated methods.
 
         @return:
         """
-        self.hist_data = self._traceanalysis_logic.calculate_histogram(data, self._traceanalysis_logic._hist_num_bins)
+        self.hist_data = self._traceanalysis_logic.calculate_histogram(
+            data, self._traceanalysis_logic._hist_num_bins
+        )
 
         self.sigHistogramUpdated.emit()
 
     def do_calculate_trace(self, time_axis, data):
-
         self.trace = np.array([time_axis, data])
         self.sigTraceUpdated.emit()
+
     # # now make time trace ( usually what you get from the gated counter )
     # # with the addition of the normalisation
     # # the fidelity depends on the binning, so it may be smart to calculate

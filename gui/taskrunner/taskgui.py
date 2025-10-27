@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi task runner GUI.
 
@@ -21,27 +20,24 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 
+from qtpy import QtCore, QtWidgets, uic
+
 from core.connector import Connector
 from gui.guibase import GUIBase
-from qtpy import QtWidgets
-from qtpy import QtCore
-from qtpy import uic
 
 
 class TaskGui(GUIBase):
-    """ A grephical interface to mofe switches by hand and change their calibration.
-    """
+    """A grephical interface to mofe switches by hand and change their calibration."""
 
     # declare connectors
-    tasklogic = Connector(interface='TaskRunner')
+    tasklogic = Connector(interface="TaskRunner")
 
     sigRunTaskFromList = QtCore.Signal(object)
     sigPauseTaskFromList = QtCore.Signal(object)
     sigStopTaskFromList = QtCore.Signal(object)
 
     def on_activate(self):
-        """Create all UI objects and show the window.
-        """
+        """Create all UI objects and show the window."""
         self._mw = TaskMainWindow()
         self.restoreWindowPos(self._mw)
         self.logic = self.tasklogic()
@@ -57,13 +53,11 @@ class TaskGui(GUIBase):
         self.show()
 
     def show(self):
-        """Make sure that the window is visible and at the top.
-        """
+        """Make sure that the window is visible and at the top."""
         self._mw.show()
 
     def on_deactivate(self):
-        """ Hide window and stop ipython console.
-        """
+        """Hide window and stop ipython console."""
         self.saveWindowPos(self._mw)
         self._mw.close()
 
@@ -91,16 +85,16 @@ class TaskGui(GUIBase):
             return
 
         if len(selected) >= 1:
-            state = self.logic.model.storage[selected[0].row()]['object'].current
-            if state == 'stopped':
+            state = self.logic.model.storage[selected[0].row()]["object"].current
+            if state == "stopped":
                 self._mw.actionStart_Task.setEnabled(True)
                 self._mw.actionStop_Task.setEnabled(False)
                 self._mw.actionPause_Task.setEnabled(False)
-            elif state == 'running':
+            elif state == "running":
                 self._mw.actionStart_Task.setEnabled(False)
                 self._mw.actionStop_Task.setEnabled(True)
                 self._mw.actionPause_Task.setEnabled(True)
-            elif state == 'paused':
+            elif state == "paused":
                 self._mw.actionStart_Task.setEnabled(True)
                 self._mw.actionStop_Task.setEnabled(False)
                 self._mw.actionPause_Task.setEnabled(True)
@@ -109,18 +103,17 @@ class TaskGui(GUIBase):
                 self._mw.actionStop_Task.setEnabled(False)
                 self._mw.actionPause_Task.setEnabled(False)
 
+
 class TaskMainWindow(QtWidgets.QMainWindow):
-    """ Helper class for window loaded from UI file.
-    """
+    """Helper class for window loaded from UI file."""
+
     def __init__(self):
-        """ Create the switch GUI window.
-        """
+        """Create the switch GUI window."""
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_taskgui.ui')
+        ui_file = os.path.join(this_dir, "ui_taskgui.ui")
 
         # Load it
         super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
-

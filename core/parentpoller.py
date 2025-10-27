@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Parent poller mechanism from IPython.
 
@@ -22,54 +21,56 @@ Copyright (c) 2015 IPython Development Team.
 See documentation/BSDLicense_IPython.md for details.
 Also distributable under the terms of the Modified BSD License.
 """
+
 import ctypes
+import logging
 import os
 import platform
 import signal
 import time
 from _thread import interrupt_main
 from threading import Thread
-import logging
+
 logger = logging.getLogger(__name__)
 
+
 def waitForClose():
-    """ Wait for program to close on its own and print some old school meme in the meantime.
-    """
+    """Wait for program to close on its own and print some old school meme in the meantime."""
     time.sleep(1)
-    print('> Mechanic: Somebody set us up the bomb.')
+    print("> Mechanic: Somebody set us up the bomb.")
     time.sleep(2)
-    print('> CATS: All your base are belong to us.')
+    print("> CATS: All your base are belong to us.")
     time.sleep(2)
-    print('> CATS: You have no chance to survive make your time.')
+    print("> CATS: You have no chance to survive make your time.")
     time.sleep(2)
-    print('> Captain: Take off every \'ZIG\'.')
+    print("> Captain: Take off every 'ZIG'.")
     time.sleep(2)
-    print('> Captain: For great justice.')
+    print("> Captain: For great justice.")
 
 
 class ParentPollerUnix(Thread):
-    """ A Unix-specific daemon thread that terminates the program immediately
+    """A Unix-specific daemon thread that terminates the program immediately
     when the parent process no longer exists.
     """
 
     def __init__(self, quitfunction=None):
-        """ Create the parentpoller.
+        """Create the parentpoller.
 
-            @param callable quitfunction: function to run before exiting
+        @param callable quitfunction: function to run before exiting
         """
         super().__init__()
         self.daemon = True
         self.quitfunction = quitfunction
 
     def run(self):
-        """ Run the parentpoller.
-        """
+        """Run the parentpoller."""
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
+
         while True:
             try:
                 if os.getppid() == 1:
-                    if hasattr(self.quitfunction, '__call__'):
+                    if hasattr(self.quitfunction, "__call__"):
                         self.quitfunction()
                     waitForClose()
                     os._exit(1)
@@ -81,13 +82,13 @@ class ParentPollerUnix(Thread):
 
 
 class ParentPollerWindows(Thread):
-    """ A Windows-specific daemon thread that listens for a special event that
+    """A Windows-specific daemon thread that listens for a special event that
     signals an interrupt and, optionally, terminates the program immediately
     when the parent process no longer exists.
     """
 
     def __init__(self, quitfunction=None, interrupt_handle=None, parent_handle=None):
-        """ Create the poller. At least one of the optional parameters must be
+        """Create the poller. At least one of the optional parameters must be
         provided.
 
         Parameters
@@ -100,19 +101,18 @@ class ParentPollerWindows(Thread):
             If provided, the program will terminate immediately when this
             handle is signaled.
         """
-        assert(interrupt_handle or parent_handle)
+        assert interrupt_handle or parent_handle
         super().__init__()
         self.daemon = True
         self.interrupt_handle = interrupt_handle
         self.parent_handle = parent_handle
 
     def run(self):
-        """ Run the poll loop. This method never returns.
-        """
+        """Run the poll loop. This method never returns."""
         try:
-            from _winapi import WAIT_OBJECT_0, INFINITE
+            from _winapi import INFINITE, WAIT_OBJECT_0
         except ImportError:
-            from _subprocess import WAIT_OBJECT_0, INFINITE
+            from _subprocess import INFINITE, WAIT_OBJECT_0
 
         # Build the list of handle to listen on.
         handles = []
@@ -121,15 +121,16 @@ class ParentPollerWindows(Thread):
         if self.parent_handle:
             handles.append(self.parent_handle)
         arch = platform.architecture()[0]
-        c_int = ctypes.c_int64 if arch.startswith('64') else ctypes.c_int
+        c_int = ctypes.c_int64 if arch.startswith("64") else ctypes.c_int
 
         # Listen forever.
         while True:
             result = ctypes.windll.kernel32.WaitForMultipleObjects(
-                len(handles),                            # nCount
-                (c_int * len(handles))(*handles),        # lpHandles
-                False,                                   # bWaitAll
-                INFINITE)                                # dwMilliseconds
+                len(handles),  # nCount
+                (c_int * len(handles))(*handles),  # lpHandles
+                False,  # bWaitAll
+                INFINITE,
+            )  # dwMilliseconds
 
             if WAIT_OBJECT_0 <= result < len(handles):
                 handle = handles[result - WAIT_OBJECT_0]
@@ -141,7 +142,7 @@ class ParentPollerWindows(Thread):
                         interrupt_main()
 
                 elif handle == self.parent_handle:
-                    if hasattr(self.quitfunction, '__call__'):
+                    if hasattr(self.quitfunction, "__call__"):
                         self.quitfunction()
                     waitForClose()
                     os._exit(1)

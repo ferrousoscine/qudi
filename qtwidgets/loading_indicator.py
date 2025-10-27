@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains custom QWidgets to show (animated) loading indicators.
 
@@ -20,11 +18,11 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtWidgets, QtCore, QtGui
+from qtpy import QtCore, QtGui, QtWidgets
 
 
 class CircleLoadingIndicator(QtWidgets.QWidget):
-    """ Simple circular loading indicator.
+    """Simple circular loading indicator.
     You can customize cycle period, indicator arc length and width.
     Animation will automatically start (stop) upon showing (hiding) the widget.
     The widget can be arbitrarily resized but the actual indicator will always maintain 1:1 aspect
@@ -35,16 +33,17 @@ class CircleLoadingIndicator(QtWidgets.QWidget):
     Indicator width ratio can be any value 0 < x <= 0.5
     """
 
-    def __init__(self, *args, cycle_time=1.2, indicator_length=960, indicator_width_ratio=0.2,
-                 **kwargs):
+    def __init__(
+        self, *args, cycle_time=1.2, indicator_length=960, indicator_width_ratio=0.2, **kwargs
+    ):
         """
         @param float cycle_time: The animation time in seconds for a full cycle
         @param int indicator_length: Length of the indicator arc in 1/16th of a degree
         @param float indicator_width_ratio: Ratio of the indicator arc width WRT widget size
         """
-        assert cycle_time > 0, 'cycle_time must be larger than 0'
-        assert 0 < indicator_length < 5760, 'indicator_length must be >0 and <5760'
-        assert 0 < indicator_width_ratio <= 0.5, 'indicator_width_ratio must be >0 and <=0.5'
+        assert cycle_time > 0, "cycle_time must be larger than 0"
+        assert 0 < indicator_length < 5760, "indicator_length must be >0 and <5760"
+        assert 0 < indicator_width_ratio <= 0.5, "indicator_width_ratio must be >0 and <=0.5"
         super().__init__(*args, **kwargs)
         self.setMinimumSize(6, 6)
         self.setMouseTracking(False)
@@ -99,7 +98,7 @@ class CircleLoadingIndicator(QtWidgets.QWidget):
     def showEvent(self, ev):
         super().showEvent(ev)
         if self.__animation is None:
-            self.__animation = QtCore.QPropertyAnimation(self, b'indicator_position', self)
+            self.__animation = QtCore.QPropertyAnimation(self, b"indicator_position", self)
             self.__animation.setDuration(self._cycle_time_ms)
             self.__animation.setStartValue(0)
             self.__animation.setEndValue(-5760)
@@ -130,5 +129,6 @@ class CircleLoadingIndicator(QtWidgets.QWidget):
         self.__pen.setWidth(line_width)
 
     def __update_size_hint(self):
-        self.__size_hint = QtCore.QSize(min(self.width(), self.height()),
-                                        min(self.width(), self.height()))
+        self.__size_hint = QtCore.QSize(
+            min(self.width(), self.height()), min(self.width(), self.height())
+        )

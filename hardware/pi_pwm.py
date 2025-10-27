@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 A module to control the QO Raspberry Pi based H-Bridge hardware.
 
@@ -19,17 +18,16 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-
-from core.module import Base
-from core.configoption import ConfigOption
-from interface.process_control_interface import ProcessControlInterface
-from core.util.mutex import Mutex
-
 import RPi.GPIO as GPIO
+
+from core.configoption import ConfigOption
+from core.module import Base
+from core.util.mutex import Mutex
+from interface.process_control_interface import ProcessControlInterface
 
 
 class PiPWM(Base, ProcessControlInterface):
-    """ Hardware module for Raspberry Pi-based PWM controller.
+    """Hardware module for Raspberry Pi-based PWM controller.
 
     Example config for copy-paste:
 
@@ -39,18 +37,18 @@ class PiPWM(Base, ProcessControlInterface):
         frequency: 100 # in Hz
 
     """
-    channel = ConfigOption('channel', 0, missing='warn')
-    freq = ConfigOption('frequency', 100)
+
+    channel = ConfigOption("channel", 0, missing="warn")
+    freq = ConfigOption("frequency", 100)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #locking for thread safety
+        # locking for thread safety
         self.threadlock = Mutex()
 
     def on_activate(self):
-        """ Activate module.
-        """
+        """Activate module."""
         # pin mapping
         if self.channel == 0:
             self.inapin = 5
@@ -75,13 +73,11 @@ class PiPWM(Base, ProcessControlInterface):
         self.startPWM()
 
     def on_deactivate(self):
-        """ Deactivate module.
-        """
+        """Deactivate module."""
         self.stopPWM()
 
     def setupPins(self):
-        """ Set Raspberry Pi GPIO pins to the right mode.
-        """
+        """Set Raspberry Pi GPIO pins to the right mode."""
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.enapin, GPIO.OUT)
         GPIO.setup(self.enbpin, GPIO.OUT)
@@ -94,8 +90,7 @@ class PiPWM(Base, ProcessControlInterface):
         self.p = GPIO.PWM(self.pwmpin, self.freq)
 
     def startPWM(self):
-        """ Start the PWM output.
-        """
+        """Start the PWM output."""
         GPIO.output(self.fanpin, True)
         GPIO.output(self.enapin, True)
         GPIO.output(self.enbpin, True)
@@ -107,8 +102,7 @@ class PiPWM(Base, ProcessControlInterface):
         self.dutycycle = 0
 
     def stopPWM(self):
-        """ Stop the PWM output.
-        """
+        """Stop the PWM output."""
         # Stop PWM
         self.p.stop()
         GPIO.output(self.enapin, False)
@@ -118,9 +112,9 @@ class PiPWM(Base, ProcessControlInterface):
         GPIO.output(self.fanpin, False)
 
     def changeDutyCycle(self, duty):
-        """ Set the PWM duty cycle in percent.
+        """Set the PWM duty cycle in percent.
 
-            @param float duty: PWM duty cycle 0 < duty < 100
+        @param float duty: PWM duty cycle 0 < duty < 100
         """
         self.dutycycle = 0
         if duty >= 0:
@@ -132,47 +126,46 @@ class PiPWM(Base, ProcessControlInterface):
         self.p.ChangeDutyCycle(abs(duty))
 
     def set_control_value(self, value):
-        """ Set control value for this controller.
+        """Set control value for this controller.
 
-            @param float value: control value, in this case duty cycle in percent
+        @param float value: control value, in this case duty cycle in percent
         """
         with self.threadlock:
             self.changeDutyCycle(value)
 
     def get_control_value(self):
-        """ Get control value for this controller.
+        """Get control value for this controller.
 
-            @return float: control value, in this case duty cycle in percent
+        @return float: control value, in this case duty cycle in percent
         """
         return self.dutycycle
 
     def get_control_unit(self):
-        """ Get unit for control value.
+        """Get unit for control value.
 
-            @return tuple(str, str): short and text form of unit
+        @return tuple(str, str): short and text form of unit
         """
-        return '%', 'percent'
+        return "%", "percent"
 
     def get_control_limit(self):
-        """ Get minimum and maxuimum value for control value.
+        """Get minimum and maxuimum value for control value.
 
-            @return tuple(float, float): min and max control value
+        @return tuple(float, float): min and max control value
         """
         return -100, 100
 
 
 class PiPWMHalf(PiPWM):
-    """ PWM controller restricted to positive values.
-    """
+    """PWM controller restricted to positive values."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #locking for thread safety
+        # locking for thread safety
         self.threadlock = Mutex()
 
     def get_control_limit(self):
-        """ Get minimum and maxuimum value for control value.
+        """Get minimum and maxuimum value for control value.
 
-            @return tuple(float, float): min and max control value
+        @return tuple(float, float): min and max control value
         """
         return 0, 100

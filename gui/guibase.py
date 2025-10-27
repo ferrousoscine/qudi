@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi GUI module base class.
 
@@ -20,26 +18,26 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy.QtCore import QObject
-from core.module import BaseMixin
 import warnings
+
+from qtpy.QtCore import QObject
+
+from core.module import BaseMixin
 
 
 class GUIBaseMixin(BaseMixin):
-    """This is the GUI base class. It provides functions that every GUI module should have.
-    """
+    """This is the GUI base class. It provides functions that every GUI module should have."""
 
     def show(self):
-        warnings.warn('Every GUI module needs to reimplement the show() '
-                'function!')
+        warnings.warn("Every GUI module needs to reimplement the show() function!")
 
     def saveWindowPos(self, window):
-        self._statusVariables['pos_x'] = window.pos().x()
-        self._statusVariables['pos_y'] = window.pos().y()
+        self._statusVariables["pos_x"] = window.pos().x()
+        self._statusVariables["pos_y"] = window.pos().y()
 
     def restoreWindowPos(self, window):
-        if 'pos_x' in self._statusVariables and 'pos_y' in self._statusVariables:
-            window.move(self._statusVariables['pos_x'],  self._statusVariables['pos_y'])
+        if "pos_x" in self._statusVariables and "pos_y" in self._statusVariables:
+            window.move(self._statusVariables["pos_x"], self._statusVariables["pos_y"])
 
 
 class GUIBase(QObject, GUIBaseMixin):

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 A module for controlling processes via PID regulation.
 
@@ -21,17 +19,17 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import numpy as np
+from qtpy import QtCore
 
+from core.configoption import ConfigOption
 from core.connector import Connector
 from core.statusvariable import StatusVar
-from core.configoption import ConfigOption
 from core.util.mutex import Mutex
 from logic.generic_logic import GenericLogic
-from qtpy import QtCore
 
 
 class PIDLogic(GenericLogic):
-    """ Logic module to monitor and control a PID process
+    """Logic module to monitor and control a PID process
 
     Example config:
 
@@ -45,27 +43,26 @@ class PIDLogic(GenericLogic):
     """
 
     # declare connectors
-    controller = Connector(interface='PIDControllerInterface')
-    savelogic = Connector(interface='SaveLogic')
+    controller = Connector(interface="PIDControllerInterface")
+    savelogic = Connector(interface="SaveLogic")
 
     # status vars
-    bufferLength = StatusVar('bufferlength', 1000)
-    timestep = ConfigOption('timestep', 100e-3)  # timestep in seconds
+    bufferLength = StatusVar("bufferlength", 1000)
+    timestep = ConfigOption("timestep", 100e-3)  # timestep in seconds
 
     # signals
     sigUpdateDisplay = QtCore.Signal()
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
-        #number of lines in the matrix plot
+        # number of lines in the matrix plot
         self.NumberOfSecondsLog = 100
         self.threadlock = Mutex()
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self._controller = self.controller()
         self._save_logic = self.savelogic()
 
@@ -78,28 +75,24 @@ class PIDLogic(GenericLogic):
         self.timer.timeout.connect(self.loop)
 
     def on_deactivate(self):
-        """ Perform required deactivation. """
+        """Perform required deactivation."""
         pass
 
     def getBufferLength(self):
-        """ Get the current data buffer length.
-        """
+        """Get the current data buffer length."""
         return self.bufferLength
 
     def startLoop(self):
-        """ Start the data recording loop.
-        """
+        """Start the data recording loop."""
         self.enabled = True
         self.timer.start(self.timestep * 1000)  # in ms
 
     def stopLoop(self):
-        """ Stop the data recording loop.
-        """
+        """Stop the data recording loop."""
         self.enabled = False
 
     def loop(self):
-        """ Execute step in the data recording loop: save one of each control and process values
-        """
+        """Execute step in the data recording loop: save one of each control and process values"""
         self.history = np.roll(self.history, -1, axis=1)
         self.history[0, -1] = self._controller.get_process_value()
         self.history[1, -1] = self._controller.get_control_value()
@@ -109,115 +102,115 @@ class PIDLogic(GenericLogic):
             self.timer.start(self.timestep * 1000)  # in ms
 
     def getSavingState(self):
-        """ Return whether we are saving data
+        """Return whether we are saving data
 
-            @return bool: whether we are saving data right now
+        @return bool: whether we are saving data right now
         """
         return self.savingState
 
     def startSaving(self):
-        """ Start saving data.
+        """Start saving data.
 
-            Function does nothing right now.
+        Function does nothing right now.
         """
         pass
 
     def saveData(self):
-        """ Stop saving data and write data to file.
+        """Stop saving data and write data to file.
 
-            Function does nothing right now.
+        Function does nothing right now.
         """
         pass
 
     def setBufferLength(self, newBufferLength):
-        """ Change buffer length to new value.
+        """Change buffer length to new value.
 
-            @param int newBufferLength: new buffer length
+        @param int newBufferLength: new buffer length
         """
         self.bufferLength = newBufferLength
         self.history = np.zeros([3, self.bufferLength])
 
     def get_kp(self):
-        """ Return the proportional constant.
+        """Return the proportional constant.
 
-            @return float: proportional constant of PID controller
+        @return float: proportional constant of PID controller
         """
         return self._controller.get_kp()
 
     def set_kp(self, kp):
-        """ Set the proportional constant of the PID controller.
+        """Set the proportional constant of the PID controller.
 
-            @prarm float kp: proportional constant of PID controller
+        @prarm float kp: proportional constant of PID controller
         """
         return self._controller.set_kp(kp)
 
     def get_ki(self):
-        """ Get the integration constant of the PID controller
+        """Get the integration constant of the PID controller
 
-            @return float: integration constant of the PID controller
+        @return float: integration constant of the PID controller
         """
         return self._controller.get_ki()
 
     def set_ki(self, ki):
-        """ Set the integration constant of the PID controller.
+        """Set the integration constant of the PID controller.
 
-            @param float ki: integration constant of the PID controller
+        @param float ki: integration constant of the PID controller
         """
         return self._controller.set_ki(ki)
 
     def get_kd(self):
-        """ Get the derivative constant of the PID controller
+        """Get the derivative constant of the PID controller
 
-            @return float: the derivative constant of the PID controller
+        @return float: the derivative constant of the PID controller
         """
         return self._controller.get_kd()
 
     def set_kd(self, kd):
-        """ Set the derivative constant of the PID controller
+        """Set the derivative constant of the PID controller
 
-            @param float kd: the derivative constant of the PID controller
+        @param float kd: the derivative constant of the PID controller
         """
         return self._controller.set_kd(kd)
 
     def get_setpoint(self):
-        """ Get the current setpoint of the PID controller.
+        """Get the current setpoint of the PID controller.
 
-            @return float: current set point of the PID controller
+        @return float: current set point of the PID controller
         """
         return self.history[2, -1]
 
     def set_setpoint(self, setpoint):
-        """ Set the current setpoint of the PID controller.
+        """Set the current setpoint of the PID controller.
 
-            @param float setpoint: new set point of the PID controller
+        @param float setpoint: new set point of the PID controller
         """
         self._controller.set_setpoint(setpoint)
 
     def get_manual_value(self):
-        """ Return the control value for manual mode.
+        """Return the control value for manual mode.
 
-            @return float: control value for manual mode
+        @return float: control value for manual mode
         """
         return self._controller.get_manual_value()
 
     def set_manual_value(self, manualvalue):
-        """ Set the control value for manual mode.
+        """Set the control value for manual mode.
 
-            @param float manualvalue: control value for manual mode of controller
+        @param float manualvalue: control value for manual mode of controller
         """
         return self._controller.set_manual_value(manualvalue)
 
     def get_enabled(self):
-        """ See if the PID controller is controlling a process.
+        """See if the PID controller is controlling a process.
 
-            @return bool: whether the PID controller is preparing to or conreolling a process
+        @return bool: whether the PID controller is preparing to or conreolling a process
         """
         return self.enabled
 
     def set_enabled(self, enabled):
-        """ Set the state of the PID controller.
+        """Set the state of the PID controller.
 
-            @param bool enabled: desired state of PID controller
+        @param bool enabled: desired state of PID controller
         """
         if enabled and not self.enabled:
             self.startLoop()
@@ -225,31 +218,31 @@ class PIDLogic(GenericLogic):
             self.stopLoop()
 
     def get_control_limits(self):
-        """ Get the minimum and maximum value of the control actuator.
+        """Get the minimum and maximum value of the control actuator.
 
-            @return list(float): (minimum, maximum) values of the control actuator
+        @return list(float): (minimum, maximum) values of the control actuator
         """
         return self._controller.get_control_limits()
 
     def set_control_limits(self, limits):
-        """ Set the minimum and maximum value of the control actuator.
+        """Set the minimum and maximum value of the control actuator.
 
-            @param list(float) limits: (minimum, maximum) values of the control actuator
+        @param list(float) limits: (minimum, maximum) values of the control actuator
 
-            This function does nothing, control limits are handled by the control module
+        This function does nothing, control limits are handled by the control module
         """
         return self._controller.set_control_limits(limits)
 
     def get_pv(self):
-        """ Get current process input value.
+        """Get current process input value.
 
-            @return float: current process input value
+        @return float: current process input value
         """
         return self.history[0, -1]
 
     def get_cv(self):
-        """ Get current control output value.
+        """Get current control output value.
 
-            @return float: control output value
+        @return float: control output value
         """
         return self.history[1, -1]

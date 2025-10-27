@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 A hardware module for communicating with the fast counter FPGA.
 
@@ -19,16 +18,16 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from interface.fast_counter_interface import FastCounterInterface
 import numpy as np
 import TimeTagger as tt
-from core.module import Base
+
 from core.configoption import ConfigOption
-import os
+from core.module import Base
+from interface.fast_counter_interface import FastCounterInterface
 
 
 class TimeTaggerFastCounter(Base, FastCounterInterface):
-    """ Hardware class to controls a Time Tagger from Swabian Instruments.
+    """Hardware class to controls a Time Tagger from Swabian Instruments.
 
     Example config for copy-paste:
 
@@ -42,35 +41,35 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
 
     """
 
-    _channel_apd_0 = ConfigOption('timetagger_channel_apd_0', missing='error')
-    _channel_apd_1 = ConfigOption('timetagger_channel_apd_1', missing='error')
-    _channel_detect = ConfigOption('timetagger_channel_detect', missing='error')
-    _channel_sequence = ConfigOption('timetagger_channel_sequence', missing='error')
-    _sum_channels = ConfigOption('timetagger_sum_channels', True, missing='warn')
+    _channel_apd_0 = ConfigOption("timetagger_channel_apd_0", missing="error")
+    _channel_apd_1 = ConfigOption("timetagger_channel_apd_1", missing="error")
+    _channel_detect = ConfigOption("timetagger_channel_detect", missing="error")
+    _channel_sequence = ConfigOption("timetagger_channel_sequence", missing="error")
+    _sum_channels = ConfigOption("timetagger_sum_channels", True, missing="warn")
 
     def on_activate(self):
-        """ Connect and configure the access to the FPGA.
-        """
+        """Connect and configure the access to the FPGA."""
         self._tagger = tt.createTimeTagger()
         self._tagger.reset()
 
-        self._number_of_gates = int(100)
+        self._number_of_gates = 100
         self._bin_width = 1
-        self._record_length = int(4000)
+        self._record_length = 4000
 
         if self._sum_channels:
-            self._channel_combined = tt.Combiner(self._tagger, channels=[self._channel_apd_0, self._channel_apd_1])
+            self._channel_combined = tt.Combiner(
+                self._tagger, channels=[self._channel_apd_0, self._channel_apd_1]
+            )
             self._channel_apd = self._channel_combined.getChannel()
         else:
             self._channel_apd = self._channel_apd_0
 
-        self.log.info('TimeTagger (fast counter) configured to use  channel {0}'
-                      .format(self._channel_apd))
+        self.log.info(f"TimeTagger (fast counter) configured to use  channel {self._channel_apd}")
 
         self.statusvar = 0
 
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the Fast counting device.
+        """Retrieve the hardware constrains from the Fast counting device.
 
         @return dict: dict with keys being the constraint names as string and
                       items are the definition for the constaints.
@@ -107,7 +106,7 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
 
         # the unit of those entries are seconds per bin. In order to get the
         # current binwidth in seonds use the get_binwidth method.
-        constraints['hardware_binwidth_list'] = [1 / 1000e6]
+        constraints["hardware_binwidth_list"] = [1 / 1000e6]
 
         # TODO: think maybe about a software_binwidth_list, which will
         #      postprocess the obtained counts. These bins must be integer
@@ -116,16 +115,14 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
         return constraints
 
     def on_deactivate(self):
-        """ Deactivate the FPGA.
-        """
-        if self.module_state() == 'locked':
+        """Deactivate the FPGA."""
+        if self.module_state() == "locked":
             self.pulsed.stop()
         self.pulsed.clear()
         self.pulsed = None
 
     def configure(self, bin_width_s, record_length_s, number_of_gates=0):
-
-        """ Configuration of the fast counter.
+        """Configuration of the fast counter.
 
         @param float bin_width_s: Length of a single time bin in the time trace
                                   histogram in seconds.
@@ -152,14 +149,15 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
             sync_channel=tt.CHANNEL_UNUSED,
             binwidth=int(np.round(self._bin_width * 1000)),
             n_bins=int(self._record_length),
-            n_histograms=number_of_gates)
+            n_histograms=number_of_gates,
+        )
 
         self.pulsed.stop()
 
         return bin_width_s, record_length_s, number_of_gates
 
     def start_measure(self):
-        """ Start the fast counter. """
+        """Start the fast counter."""
         self.module_state.lock()
         self.pulsed.clear()
         self.pulsed.start()
@@ -167,35 +165,35 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
         return 0
 
     def stop_measure(self):
-        """ Stop the fast counter. """
-        if self.module_state() == 'locked':
+        """Stop the fast counter."""
+        if self.module_state() == "locked":
             self.pulsed.stop()
             self.module_state.unlock()
         self.statusvar = 1
         return 0
 
     def pause_measure(self):
-        """ Pauses the current measurement.
+        """Pauses the current measurement.
 
         Fast counter must be initially in the run state to make it pause.
         """
-        if self.module_state() == 'locked':
+        if self.module_state() == "locked":
             self.pulsed.stop()
             self.statusvar = 3
         return 0
 
     def continue_measure(self):
-        """ Continues the current measurement.
+        """Continues the current measurement.
 
         If fast counter is in pause state, then fast counter will be continued.
         """
-        if self.module_state() == 'locked':
+        if self.module_state() == "locked":
             self.pulsed.start()
             self.statusvar = 2
         return 0
 
     def is_gated(self):
-        """ Check the gated counting possibility.
+        """Check the gated counting possibility.
 
         Boolean return value indicates if the fast counter is a gated counter
         (TRUE) or not (FALSE).
@@ -203,7 +201,7 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
         return True
 
     def get_data_trace(self):
-        """ Polls the current timetrace data from the fast counter.
+        """Polls the current timetrace data from the fast counter.
 
         @return numpy.array: 2 dimensional array of dtype = int64. This counter
                              is gated the the return array has the following
@@ -214,13 +212,14 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
         care of in this hardware class. A possible overflow of the histogram
         bins must be caught here and taken care of.
         """
-        info_dict = {'elapsed_sweeps': None,
-                     'elapsed_time': None}  # TODO : implement that according to hardware capabilities
-        return np.array(self.pulsed.getData(), dtype='int64'), info_dict
-
+        info_dict = {
+            "elapsed_sweeps": None,
+            "elapsed_time": None,
+        }  # TODO : implement that according to hardware capabilities
+        return np.array(self.pulsed.getData(), dtype="int64"), info_dict
 
     def get_status(self):
-        """ Receives the current status of the Fast Counter and outputs it as
+        """Receives the current status of the Fast Counter and outputs it as
             return value.
 
         0 = unconfigured
@@ -232,7 +231,6 @@ class TimeTaggerFastCounter(Base, FastCounterInterface):
         return self.statusvar
 
     def get_binwidth(self):
-        """ Returns the width of a single timebin in the timetrace in seconds. """
+        """Returns the width of a single timebin in the timetrace in seconds."""
         width_in_seconds = self._bin_width * 1e-9
         return width_in_seconds
-

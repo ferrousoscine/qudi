@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Confocal-refocus task.
 
@@ -19,48 +18,47 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from logic.generic_task import InterruptableTask
 import time
 
+from logic.generic_task import InterruptableTask
+
+
 class Task(InterruptableTask):
-    """ This task does a confocal focus optimisation.
-    """
+    """This task does a confocal focus optimisation."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print('Task {0} added!'.format(self.name))
+        print(f"Task {self.name} added!")
 
     def startTask(self):
-        """ Get position from scanning device and do the refocus """
-        pos = self.ref['optimizer']._scanning_device.get_scanner_position()
-        self.ref['optimizer'].start_refocus(pos, 'task')
+        """Get position from scanning device and do the refocus"""
+        pos = self.ref["optimizer"]._scanning_device.get_scanner_position()
+        self.ref["optimizer"].start_refocus(pos, "task")
         # self.ref['optimizer'].start_refocus(caller_tag='task')
 
     def runTaskStep(self):
-        """ Wait for refocus to finish. """
+        """Wait for refocus to finish."""
         time.sleep(0.1)
-        return self.ref['optimizer'].isstate('locked')
+        return self.ref["optimizer"].isstate("locked")
 
     def pauseTask(self):
-        """ pausing a refocus is forbidden """
+        """pausing a refocus is forbidden"""
         pass
 
     def resumeTask(self):
-        """ pausing a refocus is forbidden """
+        """pausing a refocus is forbidden"""
         pass
 
     def cleanupTask(self):
-        """ nothing to clean up, optimizer can do that by itself """
+        """nothing to clean up, optimizer can do that by itself"""
 
     def checkExtraStartPrerequisites(self):
-        """ Check whether anything we need is locked. """
-        print('things needed for task to start')
-        return (
-            not self.ref['optimizer']._scanning_device.isstate('locked')
-            and not self.ref['optimizer'].isstate('locked')
-            )
+        """Check whether anything we need is locked."""
+        print("things needed for task to start")
+        return not self.ref["optimizer"]._scanning_device.isstate("locked") and not self.ref[
+            "optimizer"
+        ].isstate("locked")
 
     def checkExtraPausePrerequisites(self):
-        """ pausing a refocus is forbidden """
+        """pausing a refocus is forbidden"""
         return False
-

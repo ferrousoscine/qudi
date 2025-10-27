@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains item delegates for the pulse editor QTableView/model.
 
@@ -22,13 +20,17 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
-from gui.pulsed.pulsed_custom_widgets import MultipleCheckboxWidget, AnalogParametersWidget#, FlagChannelsWidget
+
+from gui.pulsed.pulsed_custom_widgets import (
+    AnalogParametersWidget,
+    MultipleCheckboxWidget,
+)  # , FlagChannelsWidget
 from qtwidgets.scientific_spinbox import ScienDSpinBox
 
 
 class CheckBoxItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent, data_access_role=QtCore.Qt.DisplayRole):
@@ -125,8 +127,8 @@ class CheckBoxItemDelegate(QtGui.QStyledItemDelegate):
 
 
 class SpinBoxItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent, item_dict=None, data_access_role=QtCore.Qt.DisplayRole):
@@ -165,12 +167,12 @@ class SpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         needed any longer.
         """
         editor = QtGui.QSpinBox(parent=parent)
-        if 'min' in self.item_dict:
-            editor.setMinimum(self.item_dict['min'])
-        if 'max' in self.item_dict:
-            editor.setMaximum(self.item_dict['max'])
-        if 'unit' in self.item_dict:
-            editor.setSuffix(self.item_dict['unit'])
+        if "min" in self.item_dict:
+            editor.setMinimum(self.item_dict["min"])
+        if "max" in self.item_dict:
+            editor.setMaximum(self.item_dict["max"])
+        if "unit" in self.item_dict:
+            editor.setSuffix(self.item_dict["unit"])
         editor.setGeometry(option.rect)
         editor.editingFinished.connect(self.commitAndCloseEditor)
         return editor
@@ -198,7 +200,7 @@ class SpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         """
         data = index.data(self._access_role)
         if not isinstance(data, (np.integer, int)):
-            data = self.item_dict['init_val']
+            data = self.item_dict["init_val"]
         editor.blockSignals(True)
         editor.setValue(int(data))
         editor.blockSignals(False)
@@ -228,12 +230,12 @@ class SpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         r = option.rect
         painter.translate(r.topLeft())
         widget = QtGui.QSpinBox()
-        if 'min' in self.item_dict:
-            widget.setMinimum(self.item_dict['min'])
-        if 'max' in self.item_dict:
-            widget.setMaximum(self.item_dict['max'])
-        if 'unit' in self.item_dict:
-            widget.setSuffix(self.item_dict['unit'])
+        if "min" in self.item_dict:
+            widget.setMinimum(self.item_dict["min"])
+        if "max" in self.item_dict:
+            widget.setMaximum(self.item_dict["max"])
+        if "unit" in self.item_dict:
+            widget.setSuffix(self.item_dict["unit"])
         widget.setGeometry(r)
         widget.setValue(index.data(self._access_role))
         widget.render(painter)
@@ -241,8 +243,8 @@ class SpinBoxItemDelegate(QtGui.QStyledItemDelegate):
 
 
 class ScienDSpinBoxItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent, item_dict, data_access_role=QtCore.Qt.DisplayRole):
@@ -280,14 +282,14 @@ class ScienDSpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         needed any longer.
         """
         editor = ScienDSpinBox(parent=parent)
-        if 'min' in self.item_dict:
-            editor.setMinimum(self.item_dict['min'])
-        if 'max' in self.item_dict:
-            editor.setMaximum(self.item_dict['max'])
-        if 'dec' in self.item_dict:
-            editor.setDecimals(self.item_dict['dec'])
-        if 'unit' in self.item_dict:
-            editor.setSuffix(self.item_dict['unit'])
+        if "min" in self.item_dict:
+            editor.setMinimum(self.item_dict["min"])
+        if "max" in self.item_dict:
+            editor.setMaximum(self.item_dict["max"])
+        if "dec" in self.item_dict:
+            editor.setDecimals(self.item_dict["dec"])
+        if "unit" in self.item_dict:
+            editor.setSuffix(self.item_dict["unit"])
         editor.setGeometry(option.rect)
         editor.editingFinished.connect(self.commitAndCloseEditor)
         return editor
@@ -315,7 +317,7 @@ class ScienDSpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         """
         data = index.data(self._access_role)
         if not isinstance(data, float):
-            data = self.item_dict['init_val']
+            data = self.item_dict["init_val"]
         editor.blockSignals(True)
         editor.setValue(data)
         editor.blockSignals(False)
@@ -345,10 +347,10 @@ class ScienDSpinBoxItemDelegate(QtGui.QStyledItemDelegate):
         r = option.rect
         painter.translate(r.topLeft())
         widget = ScienDSpinBox()
-        if 'dec' in self.item_dict:
-            widget.setDecimals(self.item_dict['dec'])
-        if 'unit' in self.item_dict:
-            widget.setSuffix(self.item_dict['unit'])
+        if "dec" in self.item_dict:
+            widget.setDecimals(self.item_dict["dec"])
+        if "unit" in self.item_dict:
+            widget.setSuffix(self.item_dict["unit"])
         widget.setGeometry(r)
         widget.setValue(index.data(self._access_role))
         widget.render(painter)
@@ -356,12 +358,13 @@ class ScienDSpinBoxItemDelegate(QtGui.QStyledItemDelegate):
 
 
 class ComboBoxItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
-    def __init__(self, parent, item_list, data_access_role=QtCore.Qt.DisplayRole,
-                 size=QtCore.QSize(80, 50)):
+    def __init__(
+        self, parent, item_list, data_access_role=QtCore.Qt.DisplayRole, size=QtCore.QSize(80, 50)
+    ):
         super().__init__(parent)
         self._item_list = item_list
         self._access_role = data_access_role
@@ -449,12 +452,11 @@ class ComboBoxItemDelegate(QtGui.QStyledItemDelegate):
 
 
 class MultipleCheckboxItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent, label_list, data_access_role=QtCore.Qt.DisplayRole):
-
         super().__init__(parent)
         self._label_list = list() if label_list is None else list(label_list)
         self._access_role = data_access_role
@@ -541,8 +543,8 @@ class MultipleCheckboxItemDelegate(QtGui.QStyledItemDelegate):
 
 
 class AnalogParametersItemDelegate(QtGui.QStyledItemDelegate):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent, data_access_roles=None):

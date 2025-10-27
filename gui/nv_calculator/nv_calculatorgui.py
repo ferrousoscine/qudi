@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi console GUI module.
 
@@ -21,18 +20,17 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 
+from qtpy import QtCore, QtWidgets, uic
+
 from core.module import Connector
 from gui.guibase import GUIBase
-from qtpy import QtWidgets
-from qtpy import QtCore
-from qtpy import uic
 
 
 class NVCalculatorGui(GUIBase):
-    _modclass = 'NVCalculatorGui'
-    _modtype = 'gui'
+    _modclass = "NVCalculatorGui"
+    _modtype = "gui"
     ## declare connectors
-    nv_calculatorlogic = Connector(interface='NVCalculatorLogic')
+    nv_calculatorlogic = Connector(interface="NVCalculatorLogic")
 
     sigCalParamsChanged = QtCore.Signal(float, float, bool)
     sigManualDipsChanged = QtCore.Signal(float, float)
@@ -40,8 +38,7 @@ class NVCalculatorGui(GUIBase):
     sigManualNMRChanged = QtCore.Signal(bool)
 
     def on_activate(self):
-        """Create all UI objects and show the window.
-        """
+        """Create all UI objects and show the window."""
         self._mw = NVCalculatorMainWindow()
         self.calculator = self.nv_calculatorlogic()
 
@@ -54,9 +51,9 @@ class NVCalculatorGui(GUIBase):
         self._mw.freq2_DoubleSpinBox.setValue(self.calculator.freq2)
         self._mw.lac_CheckBox.setChecked(self.calculator.lac)
         # fit source setting
-        self._mw.fit_source_comboBox.addItem('no source')
-        self._mw.fit_source_comboBox.addItem('CW_ODMR')
-        self._mw.fit_source_comboBox.addItem('pulsed')
+        self._mw.fit_source_comboBox.addItem("no source")
+        self._mw.fit_source_comboBox.addItem("CW_ODMR")
+        self._mw.fit_source_comboBox.addItem("pulsed")
         self._mw.fit_source_comboBox.activated.connect(self.update_source)
         ########################################################################
         #                       Connect signals                                #
@@ -70,37 +67,55 @@ class NVCalculatorGui(GUIBase):
         self._mw.manual_field_DoubleSpinBox.editingFinished.connect(self.change_manual_field)
 
         # Internal trigger signals
-        self._mw.a_field_PushButton.clicked.connect(self.calculator.auto_dips, QtCore.Qt.QueuedConnection)
-        self._mw.m_field_PushButton.clicked.connect(self.calculator.manual_dips, QtCore.Qt.QueuedConnection)
+        self._mw.a_field_PushButton.clicked.connect(
+            self.calculator.auto_dips, QtCore.Qt.QueuedConnection
+        )
+        self._mw.m_field_PushButton.clicked.connect(
+            self.calculator.manual_dips, QtCore.Qt.QueuedConnection
+        )
 
-        self._mw.nmr_auto_PushButton.clicked.connect(self.auto_calculate_nmr, QtCore.Qt.QueuedConnection)
-        self._mw.nmr_manual_PushButton.clicked.connect(self.manual_calculate_nmr, QtCore.Qt.QueuedConnection)
-        self._mw.odmr1nmr_manual_PushButton.clicked.connect(self.use_single_freq, QtCore.Qt.QueuedConnection)
+        self._mw.nmr_auto_PushButton.clicked.connect(
+            self.auto_calculate_nmr, QtCore.Qt.QueuedConnection
+        )
+        self._mw.nmr_manual_PushButton.clicked.connect(
+            self.manual_calculate_nmr, QtCore.Qt.QueuedConnection
+        )
+        self._mw.odmr1nmr_manual_PushButton.clicked.connect(
+            self.use_single_freq, QtCore.Qt.QueuedConnection
+        )
 
         # send signals to logic
-        self.sigCalParamsChanged.connect(self.calculator.set_field_params, QtCore.Qt.QueuedConnection)
-        self.sigManualDipsChanged.connect(self.calculator.set_manual_dip_values, QtCore.Qt.QueuedConnection)
-        self.sigMaualFieldChanged.connect(self.calculator.set_manual_field, QtCore.Qt.QueuedConnection)
+        self.sigCalParamsChanged.connect(
+            self.calculator.set_field_params, QtCore.Qt.QueuedConnection
+        )
+        self.sigManualDipsChanged.connect(
+            self.calculator.set_manual_dip_values, QtCore.Qt.QueuedConnection
+        )
+        self.sigMaualFieldChanged.connect(
+            self.calculator.set_manual_field, QtCore.Qt.QueuedConnection
+        )
 
         # Update signals coming from logic
         self.calculator.sigFieldaCalUpdated.connect(self.a_update_field, QtCore.Qt.QueuedConnection)
         self.calculator.sigFieldmCalUpdated.connect(self.m_update_field, QtCore.Qt.QueuedConnection)
-        self.calculator.sigFieldParamsUpdated.connect(self.update_field_params, QtCore.Qt.QueuedConnection)
+        self.calculator.sigFieldParamsUpdated.connect(
+            self.update_field_params, QtCore.Qt.QueuedConnection
+        )
         self.calculator.sigDataSourceUpdated.connect(self.update_source, QtCore.Qt.QueuedConnection)
-        self.calculator.sigManualFieldUpdated.connect(self.update_manual_field, QtCore.Qt.QueuedConnection)
+        self.calculator.sigManualFieldUpdated.connect(
+            self.update_manual_field, QtCore.Qt.QueuedConnection
+        )
         self.calculator.sigNMRUpdated.connect(self.update_nmr, QtCore.Qt.QueuedConnection)
 
         self.restoreWindowPos(self._mw)
         self.show()
 
     def show(self):
-        """Make sure that the window is visible and at the top.
-        """
+        """Make sure that the window is visible and at the top."""
         self._mw.show()
 
     def on_deactivate(self):
-        """ Hide window and stop ipython console.
-        """
+        """Hide window and stop ipython console."""
         self.saveWindowPos(self._mw)
         self.sigCalParamsChanged.disconnect()
         self.sigManualDipsChanged.disconnect()
@@ -115,13 +130,15 @@ class NVCalculatorGui(GUIBase):
     def a_update_field(self, b_field, angle):
         """Update calculated magnetic field and the NV-B angle, from a 2-dip fitting"""
         self._mw.a_field_alignment_DisplayWidget.setPlainText(
-            'Magnetic field: {0} Gauss\nNV-B angle: {1} degree'.format(b_field, angle))
+            f"Magnetic field: {b_field} Gauss\nNV-B angle: {angle} degree"
+        )
         return
 
     def m_update_field(self, b_field, angle):
         """Update calculated magnetic field and the NV-B angle, from user input values"""
         self._mw.m_field_alignment_DisplayWidget.setPlainText(
-            'Magnetic field: {0} Gauss\nNV-B angle: {1} degree'.format(b_field, angle))
+            f"Magnetic field: {b_field} Gauss\nNV-B angle: {angle} degree"
+        )
         return
 
     def update_source(self, index):
@@ -130,25 +147,25 @@ class NVCalculatorGui(GUIBase):
         return
 
     def update_field_params(self, param_dict):
-        param = param_dict.get('ZFS')
+        param = param_dict.get("ZFS")
         if param is not None:
             self._mw.zfs_DoubleSpinBox.blockSignals(True)
             self._mw.zfs_DoubleSpinBox.setValue(param)
             self._mw.zfs_DoubleSpinBox.blockSignals(False)
 
-        param = param_dict.get('strain')
+        param = param_dict.get("strain")
         if param is not None:
             self._mw.e_DoubleSpinBox.blockSignals(True)
             self._mw.e_DoubleSpinBox.setValue(param)
             self._mw.e_DoubleSpinBox.blockSignals(False)
 
-        param = param_dict.get('freq1')
+        param = param_dict.get("freq1")
         if param is not None:
             self._mw.freq1_DoubleSpinBox.blockSignals(True)
             self._mw.freq1_DoubleSpinBox.setValue(param)
             self._mw.freq1_DoubleSpinBox.blockSignals(False)
 
-        param = param_dict.get('freq2')
+        param = param_dict.get("freq2")
         if param is not None:
             self._mw.freq2_DoubleSpinBox.blockSignals(True)
             self._mw.freq2_DoubleSpinBox.setValue(param)
@@ -172,7 +189,7 @@ class NVCalculatorGui(GUIBase):
         return
 
     def change_field_param(self):
-        """ Change the zero-field-splitting value of NV center, for the calculation of field"""
+        """Change the zero-field-splitting value of NV center, for the calculation of field"""
         zfs = self._mw.zfs_DoubleSpinBox.value()
         e = self._mw.e_DoubleSpinBox.value()
         lac = self._mw.lac_CheckBox.isChecked()
@@ -180,14 +197,14 @@ class NVCalculatorGui(GUIBase):
         return
 
     def change_dip_values(self):
-        """ Change the dip values manuly for field calculation"""
+        """Change the dip values manuly for field calculation"""
         freq1 = self._mw.freq1_DoubleSpinBox.value()
         freq2 = self._mw.freq2_DoubleSpinBox.value()
         self.sigManualDipsChanged.emit(freq1, freq2)
         return
 
     def change_manual_field(self):
-        """ Change the field values manualy for NMR calculation"""
+        """Change the field values manualy for NMR calculation"""
         manual_field = self._mw.manual_field_DoubleSpinBox.value()
         self.sigMaualFieldChanged.emit(manual_field)
         return
@@ -211,13 +228,12 @@ class NVCalculatorGui(GUIBase):
 
 
 class NVCalculatorMainWindow(QtWidgets.QMainWindow):
-    """ Create the Calculator GUI window.
-    """
+    """Create the Calculator GUI window."""
 
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_nv_calculator.ui')
+        ui_file = os.path.join(this_dir, "ui_nv_calculator.ui")
 
         # Load it
         super().__init__()

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains a touch-like toggle switch.
 
@@ -19,19 +18,19 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtWidgets, QtCore, QtGui
+from qtpy import QtCore, QtGui, QtWidgets
 
 
 class ToggleSwitch(QtWidgets.QAbstractButton):
-    """ A mobile/touch inspired toggle switch to switch between two states.
+    """A mobile/touch inspired toggle switch to switch between two states.
     Using default settings, this switch will resize horizontally. If you want a fixed size switch,
     please set the horizontal size policy to Fixed.
 
     """
 
     def __init__(self, parent=None, off_state=None, on_state=None, thumb_track_ratio=1):
-        assert off_state is None or isinstance(off_state, str), 'off_state must be str or None'
-        assert on_state is None or isinstance(on_state, str), 'on_state must be str or None'
+        assert off_state is None or isinstance(off_state, str), "off_state must be str or None"
+        assert on_state is None or isinstance(on_state, str), "on_state must be str or None"
         super().__init__(parent=parent)
 
         # remember state names
@@ -77,10 +76,10 @@ class ToggleSwitch(QtWidgets.QAbstractButton):
             self._text_width = 0
         else:
             metrics = QtGui.QFontMetrics(self._text_font)
-            self._text_width = max(metrics.width(f' {text} ') for text in self._state_names if text)
+            self._text_width = max(metrics.width(f" {text} ") for text in self._state_names if text)
         self._size_hint = QtCore.QSize(
             4 * self._track_radius + 2 * self._track_margin + self._text_width,
-            2 * self._track_radius + 2 * self._track_margin
+            2 * self._track_radius + 2 * self._track_margin,
         )
         self.setMinimumSize(self._size_hint)
 
@@ -144,37 +143,43 @@ class ToggleSwitch(QtWidgets.QAbstractButton):
         # draw track
         p.setBrush(track_brush)
         p.setOpacity(track_opacity)
-        p.drawRoundedRect(self._track_margin,
-                          self.height()/2 - self._track_radius,
-                          self.width() - 2 * self._track_margin,
-                          2 * self._track_radius,
-                          self._track_radius,
-                          self._track_radius)
+        p.drawRoundedRect(
+            self._track_margin,
+            self.height() / 2 - self._track_radius,
+            self.width() - 2 * self._track_margin,
+            2 * self._track_radius,
+            self._track_radius,
+            self._track_radius,
+        )
         # draw text if necessary
         state_str = self.current_state
         if state_str is not None and self._track_margin == 0:
             p.setPen(text_color)
             p.setOpacity(1.0)
             p.setFont(self._text_font)
-            p.drawText(self._track_margin,
-                       self.height() / 2 - self._track_radius,
-                       self.width() - 2 * self._track_margin,
-                       2 * self._track_radius,
-                       QtCore.Qt.AlignCenter,
-                       state_str)
+            p.drawText(
+                self._track_margin,
+                self.height() / 2 - self._track_radius,
+                self.width() - 2 * self._track_margin,
+                2 * self._track_radius,
+                QtCore.Qt.AlignCenter,
+                state_str,
+            )
         # draw thumb
         p.setPen(QtCore.Qt.NoPen)
         p.setBrush(thumb_brush)
         p.setOpacity(1.0)
-        p.drawEllipse(self._thumb_position - self._thumb_radius,
-                      self.height()/2 - self._thumb_radius,
-                      2 * self._thumb_radius,
-                      2 * self._thumb_radius)
+        p.drawEllipse(
+            self._thumb_position - self._thumb_radius,
+            self.height() / 2 - self._thumb_radius,
+            2 * self._thumb_radius,
+            2 * self._thumb_radius,
+        )
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         if event.button() == QtCore.Qt.LeftButton:
-            anim = QtCore.QPropertyAnimation(self, b'thumb_position', self)
+            anim = QtCore.QPropertyAnimation(self, b"thumb_position", self)
             anim.setDuration(200)
             anim.setStartValue(self._thumb_position)
             anim.setEndValue(self._thumb_end)

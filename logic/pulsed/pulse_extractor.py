@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi helper classes for the extraction of laser pulses.
 
@@ -19,13 +18,13 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import importlib
+import inspect
 import os
 import sys
-import inspect
-import importlib
 
-from core.util.modules import get_main_dir
 from core.util.helpers import natural_sort
+from core.util.modules import get_main_dir
 
 
 class PulseExtractorBase:
@@ -36,12 +35,13 @@ class PulseExtractorBase:
 
     See BasicPulseExtractor class for an example usage.
     """
+
     def __init__(self, pulsedmeasurementlogic):
         self.__pulsedmeasurementlogic = pulsedmeasurementlogic
 
     @property
     def is_gated(self):
-        return self.__pulsedmeasurementlogic.fast_counter_settings.get('is_gated')
+        return self.__pulsedmeasurementlogic.fast_counter_settings.get("is_gated")
 
     @property
     def measurement_settings(self):
@@ -94,7 +94,7 @@ class PulseExtractor(PulseExtractorBase):
         self._current_extraction_method = None
 
         # import path for extraction modules from default directory (logic.pulse_extraction_methods)
-        path_list = [os.path.join(get_main_dir(), 'logic', 'pulsed', 'pulse_extraction_methods')]
+        path_list = [os.path.join(get_main_dir(), "logic", "pulsed", "pulse_extraction_methods")]
         # import path for extraction modules from non-default directory if a path has been given
         if isinstance(pulsedmeasurementlogic.extraction_import_path, str):
             path_list.append(pulsedmeasurementlogic.extraction_import_path)
@@ -120,8 +120,11 @@ class PulseExtractor(PulseExtractorBase):
         # Update from parameter_dict if handed over
         if isinstance(pulsedmeasurementlogic.extraction_parameters, dict):
             # Delete unused parameters
-            params = [p for p in pulsedmeasurementlogic.extraction_parameters if
-                      p not in self._parameters and p != 'method']
+            params = [
+                p
+                for p in pulsedmeasurementlogic.extraction_parameters
+                if p not in self._parameters and p != "method"
+            ]
             for param in params:
                 del pulsedmeasurementlogic.extraction_parameters[param]
             # Update parameter dict and current method
@@ -146,7 +149,7 @@ class PulseExtractor(PulseExtractorBase):
         settings_dict = self._get_extraction_method_kwargs(method)
 
         # Attach current extraction method name
-        settings_dict['method'] = self._current_extraction_method
+        settings_dict["method"] = self._current_extraction_method
         return settings_dict
 
     @extraction_settings.setter
@@ -164,18 +167,22 @@ class PulseExtractor(PulseExtractorBase):
         # go through all key-value pairs in settings_dict and update self._parameters and
         # self._current_extraction_method accordingly. Ignore unknown parameters.
         for parameter, value in settings_dict.items():
-            if parameter == 'method':
+            if parameter == "method":
                 if (value in self._gated_extraction_methods and self.is_gated) or (
-                        value in self._ungated_extraction_methods and not self.is_gated):
+                    value in self._ungated_extraction_methods and not self.is_gated
+                ):
                     self._current_extraction_method = value
                 else:
-                    self.log.error('Extraction method "{0}" could not be found in PulseExtractor.'
-                                   ''.format(value))
+                    self.log.error(
+                        f'Extraction method "{value}" could not be found in PulseExtractor.'
+                    )
             elif parameter in self._parameters:
                 self._parameters[parameter] = value
             else:
-                self.log.warning('No extraction parameter "{0}" found in PulseExtractor.\n'
-                                 'Parameter will be ignored.'.format(parameter))
+                self.log.warning(
+                    f'No extraction parameter "{parameter}" found in PulseExtractor.\n'
+                    "Parameter will be ignored."
+                )
         return
 
     @property
@@ -199,7 +206,7 @@ class PulseExtractor(PulseExtractorBase):
         @return dict: full set of parameters and currently selected extraction method.
         """
         settings_dict = self._parameters.copy()
-        settings_dict['method'] = self._current_extraction_method
+        settings_dict["method"] = self._current_extraction_method
         return settings_dict
 
     def extract_laser_pulses(self, count_data):
@@ -212,11 +219,15 @@ class PulseExtractor(PulseExtractorBase):
         @return dict: result dictionary of the extraction method
         """
         if count_data.ndim > 1 and not self.is_gated:
-            self.log.error('"is_gated" flag is set to False but the count data to extract laser '
-                           'pulses from is in the format of a gated timetrace (2D numpy array).')
+            self.log.error(
+                '"is_gated" flag is set to False but the count data to extract laser '
+                "pulses from is in the format of a gated timetrace (2D numpy array)."
+            )
         elif count_data.ndim == 1 and self.is_gated:
-            self.log.error('"is_gated" flag is set to True but the count data to extract laser '
-                           'pulses from is in the format of an ungated timetrace (1D numpy array).')
+            self.log.error(
+                '"is_gated" flag is set to True but the count data to extract laser '
+                "pulses from is in the format of an ungated timetrace (1D numpy array)."
+            )
 
         if self.is_gated:
             extraction_method = self._gated_extraction_methods[self._current_extraction_method]
@@ -238,7 +249,7 @@ class PulseExtractor(PulseExtractorBase):
         kwargs_dict = dict()
         method_signature = inspect.signature(method)
         for name in method_signature.parameters.keys():
-            if name == 'count_data':
+            if name == "count_data":
                 continue
 
             default = method_signature.parameters[name].default
@@ -262,14 +273,18 @@ class PulseExtractor(PulseExtractorBase):
         class_list = list()
         for path in paths:
             if not os.path.exists(path):
-                self.log.error('Unable to import extraction methods from "{0}".\n'
-                               'Path does not exist.'.format(path))
+                self.log.error(
+                    f'Unable to import extraction methods from "{path}".\nPath does not exist.'
+                )
                 continue
             # Get all python modules to import from.
             # The assumption is that in the directory pulse_extraction_methods, there are
             # *.py files, which contain only extractor classes!
-            module_list = [name[:-3] for name in os.listdir(path) if
-                           os.path.isfile(os.path.join(path, name)) and name.endswith('.py')]
+            module_list = [
+                name[:-3]
+                for name in os.listdir(path)
+                if os.path.isfile(os.path.join(path, name)) and name.endswith(".py")
+            ]
 
             # append import path to sys.path
             if path not in sys.path:
@@ -278,7 +293,7 @@ class PulseExtractor(PulseExtractorBase):
             # Go through all modules and create instances of each class found.
             for module_name in module_list:
                 # import module
-                mod = importlib.import_module('{0}'.format(module_name))
+                mod = importlib.import_module(f"{module_name}")
                 importlib.reload(mod)
                 # get all extractor class references defined in the module
                 tmp_list = [m[1] for m in inspect.getmembers(mod, self.is_extractor_class)]
@@ -297,9 +312,9 @@ class PulseExtractor(PulseExtractorBase):
         self._gated_extraction_methods = dict()
         for instance in instance_list:
             for method_name, method_ref in inspect.getmembers(instance, inspect.ismethod):
-                if method_name.startswith('gated_'):
+                if method_name.startswith("gated_"):
                     self._gated_extraction_methods[method_name[6:]] = method_ref
-                elif method_name.startswith('ungated_'):
+                elif method_name.startswith("ungated_"):
                     self._ungated_extraction_methods[method_name[8:]] = method_ref
         return
 

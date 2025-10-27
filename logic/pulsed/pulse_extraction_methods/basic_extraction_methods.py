@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains basic pulse extraction methods for Qudi.
 
@@ -26,9 +25,8 @@ from logic.pulsed.pulse_extractor import PulseExtractorBase
 
 
 class BasicPulseExtractor(PulseExtractorBase):
-    """
+    """ """
 
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -48,9 +46,11 @@ class BasicPulseExtractor(PulseExtractorBase):
                       and falling flanks.
         """
         # Create return dictionary
-        return_dict = {'laser_counts_arr': np.zeros(0, dtype='int64'),
-                       'laser_indices_rising': -1,
-                       'laser_indices_falling': -1}
+        return_dict = {
+            "laser_counts_arr": np.zeros(0, dtype="int64"),
+            "laser_indices_rising": -1,
+            "laser_indices_falling": -1,
+        }
 
         # sum up all gated timetraces to ease flank detection
         timetrace_sum = np.sum(count_data, 0)
@@ -66,26 +66,29 @@ class BasicPulseExtractor(PulseExtractorBase):
             conv_deriv = np.zeros(conv.size)
 
         # get indices of rising and falling flank
-        rising_ind, falling_ind = sorted([int(np.clip(conv_deriv.argmax() - flank_width, 0, len(timetrace_sum))),
-                                          int(np.clip(conv_deriv.argmin() + flank_width, 0, len(timetrace_sum)))
-                                          ])
+        rising_ind, falling_ind = sorted(
+            [
+                int(np.clip(conv_deriv.argmax() - flank_width, 0, len(timetrace_sum))),
+                int(np.clip(conv_deriv.argmin() + flank_width, 0, len(timetrace_sum))),
+            ]
+        )
 
         # If gaussian smoothing or derivative failed, the returned array only contains zeros.
         # Check for that and return also only zeros to indicate a failed pulse extraction.
         if len(conv_deriv.nonzero()[0]) == 0:
-            laser_arr = np.zeros(count_data.shape, dtype='int64')
+            laser_arr = np.zeros(count_data.shape, dtype="int64")
         else:
             # slice the data array to cut off anything but laser pulses
             laser_arr = count_data[:, rising_ind:falling_ind]
 
-        return_dict['laser_counts_arr'] = laser_arr.astype('int64')
-        return_dict['laser_indices_rising'] = rising_ind
-        return_dict['laser_indices_falling'] = falling_ind
+        return_dict["laser_counts_arr"] = laser_arr.astype("int64")
+        return_dict["laser_indices_rising"] = rising_ind
+        return_dict["laser_indices_falling"] = falling_ind
 
         return return_dict
 
     def ungated_conv_deriv(self, count_data, conv_std_dev=20.0):
-        """ Detects the laser pulses in the ungated timetrace data and extracts
+        """Detects the laser pulses in the ungated timetrace data and extracts
             them.
 
         @param numpy.ndarray count_data: The raw timetrace data (1D) from an ungated fast counter
@@ -125,11 +128,13 @@ class BasicPulseExtractor(PulseExtractorBase):
             laser pulse (rule of thumb: conv_std_dev < laser_length/10).
         """
         # Create return dictionary
-        return_dict = {'laser_counts_arr': np.empty(0, dtype='int64'),
-                       'laser_indices_rising': np.empty(0, dtype='int64'),
-                       'laser_indices_falling': np.empty(0, dtype='int64')}
+        return_dict = {
+            "laser_counts_arr": np.empty(0, dtype="int64"),
+            "laser_indices_rising": np.empty(0, dtype="int64"),
+            "laser_indices_falling": np.empty(0, dtype="int64"),
+        }
 
-        number_of_lasers = self.measurement_settings.get('number_of_lasers')
+        number_of_lasers = self.measurement_settings.get("number_of_lasers")
         if not isinstance(number_of_lasers, int):
             return return_dict
 
@@ -146,7 +151,7 @@ class BasicPulseExtractor(PulseExtractorBase):
         # if gaussian smoothing or derivative failed, the returned array only contains zeros.
         # Check for that and return also only zeros to indicate a failed pulse extraction.
         if len(conv_deriv.nonzero()[0]) == 0:
-            return_dict['laser_counts_arr'] = np.zeros((number_of_lasers, 10), dtype='int64')
+            return_dict["laser_counts_arr"] = np.zeros((number_of_lasers, 10), dtype="int64")
             return return_dict
 
         # use a reference for array, because the exact position of the peaks or dips
@@ -163,8 +168,8 @@ class BasicPulseExtractor(PulseExtractorBase):
 
         # initialize arrays to contain indices for all rising and falling
         # flanks, respectively
-        rising_ind = np.empty(number_of_lasers, dtype='int64')
-        falling_ind = np.empty(number_of_lasers, dtype='int64')
+        rising_ind = np.empty(number_of_lasers, dtype="int64")
+        falling_ind = np.empty(number_of_lasers, dtype="int64")
 
         # Find as many rising and falling flanks as there are laser pulses in
         # the trace:
@@ -239,59 +244,60 @@ class BasicPulseExtractor(PulseExtractorBase):
         laser_length = np.max(falling_ind - rising_ind)
 
         # initialize the empty output array
-        laser_arr = np.zeros((number_of_lasers, laser_length), dtype='int64')
+        laser_arr = np.zeros((number_of_lasers, laser_length), dtype="int64")
         # slice the detected laser pulses of the timetrace and save them in the
         # output array according to the found rising edge
         for i in range(number_of_lasers):
             if rising_ind[i] + laser_length > count_data.size:
-                lenarr = count_data[rising_ind[i]:].size
-                laser_arr[i, 0:lenarr] = count_data[rising_ind[i]:]
+                lenarr = count_data[rising_ind[i] :].size
+                laser_arr[i, 0:lenarr] = count_data[rising_ind[i] :]
             else:
-                laser_arr[i] = count_data[rising_ind[i]:rising_ind[i] + laser_length]
+                laser_arr[i] = count_data[rising_ind[i] : rising_ind[i] + laser_length]
 
-        return_dict['laser_counts_arr'] = laser_arr.astype('int64')
-        return_dict['laser_indices_rising'] = rising_ind
-        return_dict['laser_indices_falling'] = falling_ind
+        return_dict["laser_counts_arr"] = laser_arr.astype("int64")
+        return_dict["laser_indices_rising"] = rising_ind
+        return_dict["laser_indices_falling"] = falling_ind
         return return_dict
 
-    def ungated_threshold(self, count_data, count_threshold=10, min_laser_length=200e-9,
-                          threshold_tolerance=20e-9):
+    def ungated_threshold(
+        self, count_data, count_threshold=10, min_laser_length=200e-9, threshold_tolerance=20e-9
+    ):
         """
         Detects the laser pulses in the ungated timetrace data and extracts them.
-    
+
         @param numpy.ndarray count_data: The raw timetrace data (1D) from an ungated fast counter
-        @param count_threshold: 
-        @param min_laser_length: 
-        @param threshold_tolerance: 
-        
+        @param count_threshold:
+        @param min_laser_length:
+        @param threshold_tolerance:
+
         @return 2D numpy.ndarray:   2D array, the extracted laser pulses of the timetrace.
                                     dimensions: 0: laser number, 1: time bin
-    
+
         Procedure:
             Threshold detection:
             ---------------
-    
+
             All count data from the time trace is compared to a threshold value.
             Values above the threshold are considered to belong to a laser pulse.
             If the length of a pulse would be below the minimum length the pulse is discarded.
-            If a number of bins which are below the threshold is smaller than the number of bins 
-            making the threshold_tolerance then they are still considered to belong to a laser 
+            If a number of bins which are below the threshold is smaller than the number of bins
+            making the threshold_tolerance then they are still considered to belong to a laser
             pulse.
         """
         return_dict = dict()
 
-        number_of_lasers = self.measurement_settings.get('number_of_lasers')
-        counter_bin_width = self.fast_counter_settings.get('bin_width')
+        number_of_lasers = self.measurement_settings.get("number_of_lasers")
+        counter_bin_width = self.fast_counter_settings.get("bin_width")
 
         if not isinstance(number_of_lasers, int):
-            return_dict['laser_indices_rising'] = np.zeros(1, dtype='int64')
-            return_dict['laser_indices_falling'] = np.zeros(1, dtype='int64')
-            return_dict['laser_counts_arr'] = np.zeros((1, 3000), dtype='int64')
+            return_dict["laser_indices_rising"] = np.zeros(1, dtype="int64")
+            return_dict["laser_indices_falling"] = np.zeros(1, dtype="int64")
+            return_dict["laser_counts_arr"] = np.zeros((1, 3000), dtype="int64")
             return return_dict
         else:
-            return_dict['laser_indices_rising'] = np.zeros(number_of_lasers, dtype='int64')
-            return_dict['laser_indices_falling'] = np.zeros(number_of_lasers, dtype='int64')
-            return_dict['laser_counts_arr'] = np.zeros((number_of_lasers, 3000), dtype='int64')
+            return_dict["laser_indices_rising"] = np.zeros(number_of_lasers, dtype="int64")
+            return_dict["laser_indices_falling"] = np.zeros(number_of_lasers, dtype="int64")
+            return_dict["laser_counts_arr"] = np.zeros((number_of_lasers, 3000), dtype="int64")
 
         # Convert length in seconds into length in time bins
         threshold_tolerance = round(threshold_tolerance / counter_bin_width)
@@ -302,8 +308,9 @@ class BasicPulseExtractor(PulseExtractorBase):
 
         # get all indices with consecutive numbering (bin chains not interrupted by
         # values < threshold
-        index_list = np.split(bigger_indices,
-                              np.where(np.diff(bigger_indices) >= threshold_tolerance)[0] + 1)
+        index_list = np.split(
+            bigger_indices, np.where(np.diff(bigger_indices) >= threshold_tolerance)[0] + 1
+        )
         for i, index_group in enumerate(index_list):
             if index_group.size > 0:
                 start, end = index_list[i][0], index_list[i][-1]
@@ -311,8 +318,9 @@ class BasicPulseExtractor(PulseExtractorBase):
         consecutive_indices_unfiltered = index_list
 
         # sort out all groups shorter than minimum laser length
-        consecutive_indices = [item for item in consecutive_indices_unfiltered if
-                               len(item) > min_laser_length]
+        consecutive_indices = [
+            item for item in consecutive_indices_unfiltered if len(item) > min_laser_length
+        ]
 
         # Check if the number of lasers matches the number of remaining index groups
         if number_of_lasers != len(consecutive_indices):
@@ -320,15 +328,16 @@ class BasicPulseExtractor(PulseExtractorBase):
 
         # determine max length of laser pulse and initialize laser array
         max_laser_length = max([index_array.size for index_array in consecutive_indices])
-        return_dict['laser_counts_arr'] = np.zeros((number_of_lasers, max_laser_length),
-                                                   dtype='int64')
+        return_dict["laser_counts_arr"] = np.zeros(
+            (number_of_lasers, max_laser_length), dtype="int64"
+        )
 
         # fill laser array with slices of raw data array. Also populate the rising/falling index
         # arrays
         for i, index_group in enumerate(consecutive_indices):
-            return_dict['laser_indices_rising'][i] = index_group[0]
-            return_dict['laser_indices_falling'][i] = index_group[-1]
-            return_dict['laser_counts_arr'][i, :index_group.size] = count_data[index_group]
+            return_dict["laser_indices_rising"][i] = index_group[0]
+            return_dict["laser_indices_falling"][i] = index_group[-1]
+            return_dict["laser_counts_arr"][i, : index_group.size] = count_data[index_group]
 
         return return_dict
 
@@ -350,12 +359,12 @@ class BasicPulseExtractor(PulseExtractorBase):
                                   dimensions: 0: laser number, 1: time bin
         """
         # get the generation sampling rate
-        sample_rate = self.sampling_information['pulse_generator_settings']['sample_rate']
+        sample_rate = self.sampling_information["pulse_generator_settings"]["sample_rate"]
         # get the fastcounter binwidth
-        fc_binwidth = self.fast_counter_settings['bin_width']
+        fc_binwidth = self.fast_counter_settings["bin_width"]
         # get laser rising and falling bins
-        laser_rising_bins = self.sampling_information['laser_rising_bins']
-        laser_falling_bins = self.sampling_information['laser_falling_bins']
+        laser_rising_bins = self.sampling_information["laser_rising_bins"]
+        laser_falling_bins = self.sampling_information["laser_falling_bins"]
 
         # Sort out trailing or leading incomplete laser pulse
         while len(laser_rising_bins) != len(laser_falling_bins):
@@ -371,8 +380,8 @@ class BasicPulseExtractor(PulseExtractorBase):
                     laser_falling_bins = laser_falling_bins[:-1]
 
         # convert to bins of fastcounter
-        laser_rising_bins = np.rint(laser_rising_bins / sample_rate / fc_binwidth).astype('int64')
-        laser_falling_bins = np.rint(laser_falling_bins / sample_rate / fc_binwidth).astype('int64')
+        laser_rising_bins = np.rint(laser_rising_bins / sample_rate / fc_binwidth).astype("int64")
+        laser_falling_bins = np.rint(laser_falling_bins / sample_rate / fc_binwidth).astype("int64")
         # convert to fastcounter bins
         safety_bins = round(safety / fc_binwidth)
         delay_bins = round(delay / fc_binwidth)
@@ -385,8 +394,11 @@ class BasicPulseExtractor(PulseExtractorBase):
         laser_pulses = np.empty((num_rows, num_col))
         for ii in range(num_rows):
             laser_pulses[ii][:] = count_data[
-                np.arange(laser_rising_bins[ii] + delay_bins - safety_bins,
-                          laser_rising_bins[ii] + delay_bins + safety_bins + max_laser_length)]
+                np.arange(
+                    laser_rising_bins[ii] + delay_bins - safety_bins,
+                    laser_rising_bins[ii] + delay_bins + safety_bins + max_laser_length,
+                )
+            ]
         # use the gated extraction method
         return_dict = self.gated_conv_deriv(laser_pulses, conv_std_dev)
         return return_dict
@@ -404,9 +416,11 @@ class BasicPulseExtractor(PulseExtractorBase):
                       and falling flanks.
         """
         # Create return dictionary
-        return_dict = {'laser_counts_arr': np.reshape(count_data, (-1, 1)),
-                       'laser_indices_rising': np.arange(len(count_data)),
-                       'laser_indices_falling': np.arange(len(count_data))}
+        return_dict = {
+            "laser_counts_arr": np.reshape(count_data, (-1, 1)),
+            "laser_indices_rising": np.arange(len(count_data)),
+            "laser_indices_falling": np.arange(len(count_data)),
+        }
 
         return return_dict
 
@@ -422,8 +436,10 @@ class BasicPulseExtractor(PulseExtractorBase):
                       and falling flanks.
         """
         # Create return dictionary
-        return_dict = {'laser_counts_arr': np.array(count_data),
-                       'laser_indices_rising': np.arange(len(count_data)),
-                       'laser_indices_falling': np.arange(len(count_data))}
+        return_dict = {
+            "laser_counts_arr": np.array(count_data),
+            "laser_indices_rising": np.arange(len(count_data)),
+            "laser_indices_falling": np.arange(len(count_data)),
+        }
 
         return return_dict

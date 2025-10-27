@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi GUI module to operate the voltage (laser) scanner.
 
@@ -19,26 +18,23 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import os
-import pyqtgraph as pg
 
-from collections import OrderedDict
+import numpy as np
+import pyqtgraph as pg
+from qtpy import QtCore, QtGui, QtWidgets, uic
+
 from core.connector import Connector
 from gui.colordefs import ColorScaleInferno
 from gui.guibase import GUIBase
 from gui.guiutils import ColorBar
-from qtpy import QtCore
-from qtpy import QtGui
-from qtpy import QtWidgets
-from qtpy import uic
 
 
 class VoltScanMainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_laserscannergui.ui')
+        ui_file = os.path.join(this_dir, "ui_laserscannergui.ui")
 
         # Load it
         super(VoltScanMainWindow, self).__init__()
@@ -47,13 +43,11 @@ class VoltScanMainWindow(QtWidgets.QMainWindow):
 
 
 class VoltScanGui(GUIBase):
-    """
+    """ """
 
-    """
-    
     # declare connectors
-    voltagescannerlogic1 = Connector(interface='LaserScannerLogic')
-    savelogic = Connector(interface='SaveLogic')
+    voltagescannerlogic1 = Connector(interface="LaserScannerLogic")
+    savelogic = Connector(interface="SaveLogic")
 
     sigStartScan = QtCore.Signal()
     sigStopScan = QtCore.Signal()
@@ -65,7 +59,7 @@ class VoltScanGui(GUIBase):
     sigSaveMeasurement = QtCore.Signal(str, list, list)
 
     def on_deactivate(self):
-        """ Reverse steps of activation
+        """Reverse steps of activation
 
         @return int: error code (0:OK, -1:error)
         """
@@ -73,9 +67,7 @@ class VoltScanGui(GUIBase):
         return 0
 
     def on_activate(self):
-        """ 
-
-        """
+        """ """
         self._voltscan_logic = self.voltagescannerlogic1()
         self._savelogic = self.savelogic()
 
@@ -87,57 +79,59 @@ class VoltScanGui(GUIBase):
         self._mw.save_tag_LineEdit = QtWidgets.QLineEdit(self._mw)
         self._mw.save_tag_LineEdit.setMaximumWidth(500)
         self._mw.save_tag_LineEdit.setMinimumWidth(200)
-        self._mw.save_tag_LineEdit.setToolTip('Enter a nametag which will be\n'
-                                              'added to the filename.')
+        self._mw.save_tag_LineEdit.setToolTip(
+            "Enter a nametag which will be\nadded to the filename."
+        )
         self._mw.toolBar.addWidget(self._mw.save_tag_LineEdit)
 
         # Get the image from the logic
         self.scan_matrix_image = pg.ImageItem(
-            self._voltscan_logic.scan_matrix,
-            axisOrder='row-major')
+            self._voltscan_logic.scan_matrix, axisOrder="row-major"
+        )
 
         self.scan_matrix_image.setRect(
             QtCore.QRectF(
                 self._voltscan_logic.scan_range[0],
                 0,
                 self._voltscan_logic.scan_range[1] - self._voltscan_logic.scan_range[0],
-                self._voltscan_logic.number_of_repeats)
+                self._voltscan_logic.number_of_repeats,
+            )
         )
 
         self.scan_matrix_image2 = pg.ImageItem(
-            self._voltscan_logic.scan_matrix2,
-            axisOrder='row-major')
+            self._voltscan_logic.scan_matrix2, axisOrder="row-major"
+        )
 
         self.scan_matrix_image2.setRect(
             QtCore.QRectF(
                 self._voltscan_logic.scan_range[0],
                 0,
                 self._voltscan_logic.scan_range[1] - self._voltscan_logic.scan_range[0],
-                self._voltscan_logic.number_of_repeats)
+                self._voltscan_logic.number_of_repeats,
+            )
         )
 
-        self.scan_image = pg.PlotDataItem(
-            self._voltscan_logic.plot_x,
-            self._voltscan_logic.plot_y)
+        self.scan_image = pg.PlotDataItem(self._voltscan_logic.plot_x, self._voltscan_logic.plot_y)
 
         self.scan_image2 = pg.PlotDataItem(
-            self._voltscan_logic.plot_x,
-            self._voltscan_logic.plot_y2)
+            self._voltscan_logic.plot_x, self._voltscan_logic.plot_y2
+        )
 
         self.scan_fit_image = pg.PlotDataItem(
             self._voltscan_logic.fit_x,
             self._voltscan_logic.fit_y,
-            pen=QtGui.QPen(QtGui.QColor(255, 255, 255, 255)))
+            pen=QtGui.QPen(QtGui.QColor(255, 255, 255, 255)),
+        )
 
         # Add the display item to the xy and xz VieWidget, which was defined in
         # the UI file.
         self._mw.voltscan_ViewWidget.addItem(self.scan_image)
-        #self._mw.voltscan_ViewWidget.addItem(self.scan_fit_image)
+        # self._mw.voltscan_ViewWidget.addItem(self.scan_fit_image)
         self._mw.voltscan_ViewWidget.showGrid(x=True, y=True, alpha=0.8)
         self._mw.voltscan_matrix_ViewWidget.addItem(self.scan_matrix_image)
 
         self._mw.voltscan2_ViewWidget.addItem(self.scan_image2)
-        #self._mw.voltscan2_ViewWidget.addItem(self.scan_fit_image)
+        # self._mw.voltscan2_ViewWidget.addItem(self.scan_fit_image)
         self._mw.voltscan2_ViewWidget.showGrid(x=True, y=True, alpha=0.8)
         self._mw.voltscan_matrix2_ViewWidget.addItem(self.scan_matrix_image2)
 
@@ -150,11 +144,11 @@ class VoltScanGui(GUIBase):
         # Configuration of the Colorbar
         self.scan_cb = ColorBar(my_colors.cmap_normed, 100, 0, 100000)
 
-        #adding colorbar to ViewWidget
+        # adding colorbar to ViewWidget
         self._mw.voltscan_cb_ViewWidget.addItem(self.scan_cb)
-        self._mw.voltscan_cb_ViewWidget.hideAxis('bottom')
-        self._mw.voltscan_cb_ViewWidget.hideAxis('left')
-        self._mw.voltscan_cb_ViewWidget.setLabel('right', 'Fluorescence', units='c/s')
+        self._mw.voltscan_cb_ViewWidget.hideAxis("bottom")
+        self._mw.voltscan_cb_ViewWidget.hideAxis("left")
+        self._mw.voltscan_cb_ViewWidget.setLabel("right", "Fluorescence", units="c/s")
 
         # Connect the buttons and inputs for colorbar
         self._mw.voltscan_cb_manual_RadioButton.clicked.connect(self.refresh_matrix)
@@ -203,13 +197,13 @@ class VoltScanGui(GUIBase):
         self._mw.show()
 
     def show(self):
-        """Make window visible and put it above all other windows. """
+        """Make window visible and put it above all other windows."""
         self._mw.show()
         self._mw.activateWindow()
         self._mw.raise_()
 
     def run_stop(self, is_checked):
-        """ Manages what happens if scan is started/stopped """
+        """Manages what happens if scan is started/stopped"""
         self._mw.action_run_stop.setEnabled(False)
         if is_checked:
             self.sigStartScan.emit()
@@ -229,27 +223,29 @@ class VoltScanGui(GUIBase):
         self.refresh_lines()
 
     def refresh_plot(self):
-        """ Refresh the xy-plot image """
+        """Refresh the xy-plot image"""
         self.scan_image.setData(self._voltscan_logic.plot_x, self._voltscan_logic.plot_y)
         self.scan_image2.setData(self._voltscan_logic.plot_x, self._voltscan_logic.plot_y2)
 
     def refresh_matrix(self):
-        """ Refresh the xy-matrix image """
-        self.scan_matrix_image.setImage(self._voltscan_logic.scan_matrix, axisOrder='row-major')
+        """Refresh the xy-matrix image"""
+        self.scan_matrix_image.setImage(self._voltscan_logic.scan_matrix, axisOrder="row-major")
         self.scan_matrix_image.setRect(
             QtCore.QRectF(
                 self._voltscan_logic.scan_range[0],
                 0,
                 self._voltscan_logic.scan_range[1] - self._voltscan_logic.scan_range[0],
-                self._voltscan_logic.number_of_repeats)
+                self._voltscan_logic.number_of_repeats,
             )
-        self.scan_matrix_image2.setImage(self._voltscan_logic.scan_matrix2, axisOrder='row-major')
+        )
+        self.scan_matrix_image2.setImage(self._voltscan_logic.scan_matrix2, axisOrder="row-major")
         self.scan_matrix_image2.setRect(
             QtCore.QRectF(
                 self._voltscan_logic.scan_range[0],
                 0,
                 self._voltscan_logic.scan_range[1] - self._voltscan_logic.scan_range[0],
-                self._voltscan_logic.number_of_repeats)
+                self._voltscan_logic.number_of_repeats,
+            )
         )
         self.refresh_scan_colorbar()
 
@@ -269,21 +265,19 @@ class VoltScanGui(GUIBase):
 
         # Now update image with new color scale, and update colorbar
         self.scan_matrix_image.setImage(
-            image=scan_image_data,
-            levels=(cb_min, cb_max),
-            axisOrder='row-major')
+            image=scan_image_data, levels=(cb_min, cb_max), axisOrder="row-major"
+        )
 
         scan_image_data2 = self._voltscan_logic.scan_matrix2
         # Now update image with new color scale, and update colorbar
         self.scan_matrix_image2.setImage(
-            image=scan_image_data2,
-            levels=(cb_min, cb_max),
-            axisOrder='row-major')
+            image=scan_image_data2, levels=(cb_min, cb_max), axisOrder="row-major"
+        )
 
         self.refresh_scan_colorbar()
 
     def refresh_scan_colorbar(self):
-        """ Update the colorbar to a new scaling."""
+        """Update the colorbar to a new scaling."""
 
         # If "Centiles" is checked, adjust colour scaling automatically to centiles.
         # Otherwise, take user-defined values.
@@ -307,19 +301,17 @@ class VoltScanGui(GUIBase):
         self.sigChangeVoltage.emit(self._mw.constDoubleSpinBox.value())
 
     def change_start_volt(self):
-        self.sigChangeRange.emit([
-            self._mw.startDoubleSpinBox.value(),
-            self._mw.stopDoubleSpinBox.value()
-        ])
+        self.sigChangeRange.emit(
+            [self._mw.startDoubleSpinBox.value(), self._mw.stopDoubleSpinBox.value()]
+        )
 
     def change_speed(self):
         self.sigChangeSpeed.emit(self._mw.speedDoubleSpinBox.value())
 
     def change_stop_volt(self):
-        self.sigChangeRange.emit([
-            self._mw.startDoubleSpinBox.value(),
-            self._mw.stopDoubleSpinBox.value()
-        ])
+        self.sigChangeRange.emit(
+            [self._mw.startDoubleSpinBox.value(), self._mw.stopDoubleSpinBox.value()]
+        )
 
     def change_lines(self):
         self.sigChangeLines.emit(self._mw.linesSpinBox.value())
@@ -353,7 +345,7 @@ class VoltScanGui(GUIBase):
         return cb_range
 
     def save_data(self):
-        """ Save the sum plot, the scan marix plot and the scan data """
+        """Save the sum plot, the scan marix plot and the scan data"""
         filetag = self._mw.save_tag_LineEdit.text()
         cb_range = self.get_matrix_cb_range()
 

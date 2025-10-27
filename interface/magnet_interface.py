@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interface file to control magnet devices.
 
@@ -25,13 +23,13 @@ from core.meta import InterfaceMetaclass
 
 
 class MagnetInterface(metaclass=InterfaceMetaclass):
-    """ This is the Interface class to define the controls for the devices
-        controlling the magnetic field.
+    """This is the Interface class to define the controls for the devices
+    controlling the magnetic field.
     """
 
     @abstract_interface_method
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the magnet driving device.
+        """Retrieve the hardware constrains from the magnet driving device.
 
         @return dict: dict with constraints for the magnet hardware. These
                       constraints will be passed via the logic to the GUI so
@@ -97,10 +95,9 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
         """
         pass
 
-
     @abstract_interface_method
-    def move_rel(self,  param_dict):
-        """ Moves stage in given direction (relative movement)
+    def move_rel(self, param_dict):
+        """Moves stage in given direction (relative movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -116,7 +113,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def move_abs(self, param_dict):
-        """ Moves stage to absolute position (absolute movement)
+        """Moves stage to absolute position (absolute movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -130,7 +127,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def abort(self):
-        """ Stops movement of the stage
+        """Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
@@ -138,7 +135,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_pos(self, param_list=None):
-        """ Gets current position of the stage
+        """Gets current position of the stage
 
         @param list param_list: optional, if a specific position of an axis
                                 is desired, then the labels of the needed
@@ -153,7 +150,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_status(self, param_list=None):
-        """ Get the status of the position
+        """Get the status of the position
 
         @param list param_list: optional, if a specific status of an axis
                                 is desired, then the labels of the needed
@@ -167,7 +164,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def calibrate(self, param_list=None):
-        """ Calibrates the stage.
+        """Calibrates the stage.
 
         @param dict param_list: param_list: optional, if a specific calibration
                                 of an axis is desired, then the labels of the
@@ -185,7 +182,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_velocity(self, param_list=None):
-        """ Gets the current velocity for all connected axes.
+        """Gets the current velocity for all connected axes.
 
         @param dict param_list: optional, if a specific velocity of an axis
                                 is desired, then the labels of the needed
@@ -199,7 +196,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_velocity(self, param_dict=None):
-        """ Write new value for velocity.
+        """Write new value for velocity.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -213,7 +210,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def tell(self, param_dict=None):
-        """ Send a command to the magnet.
+        """Send a command to the magnet.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -227,7 +224,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def ask(self, param_dict=None):
-        """ Ask the magnet a question.
+        """Ask the magnet a question.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -243,7 +240,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_magnet_idle_state(self, magnet_idle=True):
-        """ Set the magnet to couple/decouple to/from the control.
+        """Set the magnet to couple/decouple to/from the control.
 
         @param bool magnet_idle: if True then magnet will be set to idle and
                                  each movement command will be ignored from the
@@ -258,7 +255,7 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_magnet_idle_state(self):
-        """ Retrieve the current state of the magnet, whether it is idle or not.
+        """Retrieve the current state of the magnet, whether it is idle or not.
 
         @return bool: the actual state which was set in the magnet hardware.
                         True = idle, decoupled from control
@@ -274,4 +271,3 @@ class MagnetInterface(metaclass=InterfaceMetaclass):
         @return int: (0: Ok, -1:error)
         """
         pass
-

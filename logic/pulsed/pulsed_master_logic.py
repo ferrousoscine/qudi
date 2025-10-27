@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Master logic to combine sequence_generator_logic and pulsed_measurement_logic to be
 used with a single GUI.
@@ -20,10 +19,11 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import numpy as np
+from qtpy import QtCore
+
 from core.connector import Connector
 from logic.generic_logic import GenericLogic
-from qtpy import QtCore
-import numpy as np
 
 
 class PulsedMasterLogic(GenericLogic):
@@ -48,8 +48,8 @@ class PulsedMasterLogic(GenericLogic):
     """
 
     # declare connectors
-    pulsedmeasurementlogic = Connector(interface='PulsedMeasurementLogic')
-    sequencegeneratorlogic = Connector(interface='SequenceGeneratorLogic')
+    pulsedmeasurementlogic = Connector(interface="PulsedMeasurementLogic")
+    sequencegeneratorlogic = Connector(interface="SequenceGeneratorLogic")
 
     # PulsedMeasurementLogic control signals
     sigDoFit = QtCore.Signal(str, bool)
@@ -109,9 +109,9 @@ class PulsedMasterLogic(GenericLogic):
     sigPredefinedSequenceGenerated = QtCore.Signal(object, bool)
 
     def __init__(self, config, **kwargs):
-        """ Create PulsedMasterLogic object with connectors.
+        """Create PulsedMasterLogic object with connectors.
 
-          @param dict kwargs: optional parameters
+        @param dict kwargs: optional parameters
         """
         super().__init__(config=config, **kwargs)
 
@@ -120,128 +120,177 @@ class PulsedMasterLogic(GenericLogic):
         return
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
 
         # Initialize status register
-        self.status_dict = {'sampling_ensemble_busy': False,
-                            'sampling_sequence_busy': False,
-                            'sampload_busy': False,
-                            'loading_busy': False,
-                            'pulser_running': False,
-                            'measurement_running': False,
-                            'microwave_running': False,
-                            'predefined_generation_busy': False,
-                            'fitting_busy': False,
-                            'benchmark_busy': False}
+        self.status_dict = {
+            "sampling_ensemble_busy": False,
+            "sampling_sequence_busy": False,
+            "sampload_busy": False,
+            "loading_busy": False,
+            "pulser_running": False,
+            "measurement_running": False,
+            "microwave_running": False,
+            "predefined_generation_busy": False,
+            "fitting_busy": False,
+            "benchmark_busy": False,
+        }
 
         # Connect signals controlling PulsedMeasurementLogic
-        self.sigDoFit.connect(
-            self.pulsedmeasurementlogic().do_fit, QtCore.Qt.QueuedConnection)
+        self.sigDoFit.connect(self.pulsedmeasurementlogic().do_fit, QtCore.Qt.QueuedConnection)
         self.sigToggleMeasurement.connect(
-            self.pulsedmeasurementlogic().toggle_pulsed_measurement, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().toggle_pulsed_measurement, QtCore.Qt.QueuedConnection
+        )
         self.sigToggleMeasurementPause.connect(
-            self.pulsedmeasurementlogic().toggle_measurement_pause, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().toggle_measurement_pause, QtCore.Qt.QueuedConnection
+        )
         self.sigTogglePulser.connect(
-            self.pulsedmeasurementlogic().toggle_pulse_generator, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().toggle_pulse_generator, QtCore.Qt.QueuedConnection
+        )
         self.sigToggleExtMicrowave.connect(
-            self.pulsedmeasurementlogic().toggle_microwave, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().toggle_microwave, QtCore.Qt.QueuedConnection
+        )
         self.sigFastCounterSettingsChanged.connect(
-            self.pulsedmeasurementlogic().set_fast_counter_settings, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_fast_counter_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigMeasurementSettingsChanged.connect(
-            self.pulsedmeasurementlogic().set_measurement_settings, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_measurement_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigExtMicrowaveSettingsChanged.connect(
-            self.pulsedmeasurementlogic().set_microwave_settings, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_microwave_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigAnalysisSettingsChanged.connect(
-            self.pulsedmeasurementlogic().set_analysis_settings, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_analysis_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigExtractionSettingsChanged.connect(
-            self.pulsedmeasurementlogic().set_extraction_settings, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_extraction_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigTimerIntervalChanged.connect(
-            self.pulsedmeasurementlogic().set_timer_interval, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_timer_interval, QtCore.Qt.QueuedConnection
+        )
         self.sigAlternativeDataTypeChanged.connect(
-            self.pulsedmeasurementlogic().set_alternative_data_type, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().set_alternative_data_type, QtCore.Qt.QueuedConnection
+        )
         self.sigManuallyPullData.connect(
-            self.pulsedmeasurementlogic().manually_pull_data, QtCore.Qt.QueuedConnection)
+            self.pulsedmeasurementlogic().manually_pull_data, QtCore.Qt.QueuedConnection
+        )
 
         # Connect signals coming from PulsedMeasurementLogic
         self.pulsedmeasurementlogic().sigMeasurementDataUpdated.connect(
-            self.sigMeasurementDataUpdated, QtCore.Qt.QueuedConnection)
+            self.sigMeasurementDataUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigTimerUpdated.connect(
-            self.sigTimerUpdated, QtCore.Qt.QueuedConnection)
+            self.sigTimerUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigFitUpdated.connect(
-            self.fit_updated, QtCore.Qt.QueuedConnection)
+            self.fit_updated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigMeasurementStatusUpdated.connect(
-            self.measurement_status_updated, QtCore.Qt.QueuedConnection)
+            self.measurement_status_updated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigPulserRunningUpdated.connect(
-            self.pulser_running_updated, QtCore.Qt.QueuedConnection)
+            self.pulser_running_updated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigExtMicrowaveRunningUpdated.connect(
-            self.ext_microwave_running_updated, QtCore.Qt.QueuedConnection)
+            self.ext_microwave_running_updated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigExtMicrowaveSettingsUpdated.connect(
-            self.sigExtMicrowaveSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigExtMicrowaveSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigFastCounterSettingsUpdated.connect(
-            self.sigFastCounterSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigFastCounterSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigMeasurementSettingsUpdated.connect(
-            self.sigMeasurementSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigMeasurementSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigAnalysisSettingsUpdated.connect(
-            self.sigAnalysisSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigAnalysisSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.pulsedmeasurementlogic().sigExtractionSettingsUpdated.connect(
-            self.sigExtractionSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigExtractionSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
 
         # Connect signals controlling SequenceGeneratorLogic
         self.sigSavePulseBlock.connect(
-            self.sequencegeneratorlogic().save_block, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().save_block, QtCore.Qt.QueuedConnection
+        )
         self.sigSaveBlockEnsemble.connect(
-            self.sequencegeneratorlogic().save_ensemble, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().save_ensemble, QtCore.Qt.QueuedConnection
+        )
         self.sigSaveSequence.connect(
-            self.sequencegeneratorlogic().save_sequence, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().save_sequence, QtCore.Qt.QueuedConnection
+        )
         self.sigDeletePulseBlock.connect(
-            self.sequencegeneratorlogic().delete_block, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().delete_block, QtCore.Qt.QueuedConnection
+        )
         self.sigDeleteBlockEnsemble.connect(
-            self.sequencegeneratorlogic().delete_ensemble, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().delete_ensemble, QtCore.Qt.QueuedConnection
+        )
         self.sigDeleteSequence.connect(
-            self.sequencegeneratorlogic().delete_sequence, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().delete_sequence, QtCore.Qt.QueuedConnection
+        )
         self.sigLoadBlockEnsemble.connect(
-            self.sequencegeneratorlogic().load_ensemble, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().load_ensemble, QtCore.Qt.QueuedConnection
+        )
         self.sigLoadSequence.connect(
-            self.sequencegeneratorlogic().load_sequence, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().load_sequence, QtCore.Qt.QueuedConnection
+        )
         self.sigSampleBlockEnsemble.connect(
-            self.sequencegeneratorlogic().sample_pulse_block_ensemble, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().sample_pulse_block_ensemble, QtCore.Qt.QueuedConnection
+        )
         self.sigSampleSequence.connect(
-            self.sequencegeneratorlogic().sample_pulse_sequence, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().sample_pulse_sequence, QtCore.Qt.QueuedConnection
+        )
         self.sigClearPulseGenerator.connect(
-            self.sequencegeneratorlogic().clear_pulser, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().clear_pulser, QtCore.Qt.QueuedConnection
+        )
         self.sigGeneratorSettingsChanged.connect(
-            self.sequencegeneratorlogic().set_pulse_generator_settings, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().set_pulse_generator_settings, QtCore.Qt.QueuedConnection
+        )
         self.sigSamplingSettingsChanged.connect(
-            self.sequencegeneratorlogic().set_generation_parameters, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().set_generation_parameters, QtCore.Qt.QueuedConnection
+        )
         self.sigGeneratePredefinedSequence.connect(
-            self.sequencegeneratorlogic().generate_predefined_sequence, QtCore.Qt.QueuedConnection)
+            self.sequencegeneratorlogic().generate_predefined_sequence, QtCore.Qt.QueuedConnection
+        )
 
         # Connect signals coming from SequenceGeneratorLogic
         self.sequencegeneratorlogic().sigBlockDictUpdated.connect(
-            self.sigBlockDictUpdated, QtCore.Qt.QueuedConnection)
+            self.sigBlockDictUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigEnsembleDictUpdated.connect(
-            self.sigEnsembleDictUpdated, QtCore.Qt.QueuedConnection)
+            self.sigEnsembleDictUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigSequenceDictUpdated.connect(
-            self.sigSequenceDictUpdated, QtCore.Qt.QueuedConnection)
+            self.sigSequenceDictUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigAvailableWaveformsUpdated.connect(
-            self.sigAvailableWaveformsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigAvailableWaveformsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigAvailableSequencesUpdated.connect(
-            self.sigAvailableSequencesUpdated, QtCore.Qt.QueuedConnection)
+            self.sigAvailableSequencesUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigGeneratorSettingsUpdated.connect(
-            self.sigGeneratorSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigGeneratorSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigSamplingSettingsUpdated.connect(
-            self.sigSamplingSettingsUpdated, QtCore.Qt.QueuedConnection)
+            self.sigSamplingSettingsUpdated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigPredefinedSequenceGenerated.connect(
-            self.predefined_sequence_generated, QtCore.Qt.QueuedConnection)
+            self.predefined_sequence_generated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigSampleEnsembleComplete.connect(
-            self.sample_ensemble_finished, QtCore.Qt.QueuedConnection)
+            self.sample_ensemble_finished, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigSampleSequenceComplete.connect(
-            self.sample_sequence_finished, QtCore.Qt.QueuedConnection)
+            self.sample_sequence_finished, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigLoadedAssetUpdated.connect(
-            self.loaded_asset_updated, QtCore.Qt.QueuedConnection)
+            self.loaded_asset_updated, QtCore.Qt.QueuedConnection
+        )
         self.sequencegeneratorlogic().sigBenchmarkComplete.connect(
-            self.benchmark_completed, QtCore.Qt.QueuedConnection)
+            self.benchmark_completed, QtCore.Qt.QueuedConnection
+        )
 
         return
 
@@ -479,8 +528,7 @@ class PulsedMasterLogic(GenericLogic):
 
     @QtCore.Slot()
     def manually_pull_data(self):
-        """
-        """
+        """ """
         self.sigManuallyPullData.emit()
         return
 
@@ -501,7 +549,7 @@ class PulsedMasterLogic(GenericLogic):
         @param is_running:
         """
         if isinstance(is_running, bool):
-            self.status_dict['microwave_running'] = is_running
+            self.status_dict["microwave_running"] = is_running
             self.sigExtMicrowaveRunningUpdated.emit(is_running)
         return
 
@@ -522,13 +570,13 @@ class PulsedMasterLogic(GenericLogic):
         @param is_running:
         """
         if isinstance(is_running, bool):
-            self.status_dict['pulser_running'] = is_running
+            self.status_dict["pulser_running"] = is_running
             self.sigPulserRunningUpdated.emit(is_running)
         return
 
     @QtCore.Slot(bool)
     @QtCore.Slot(bool, str)
-    def toggle_pulsed_measurement(self, start, stash_raw_data_tag=''):
+    def toggle_pulsed_measurement(self, start, stash_raw_data_tag=""):
         """
 
         @param bool start:
@@ -556,7 +604,7 @@ class PulsedMasterLogic(GenericLogic):
         @param is_paused:
         """
         if isinstance(is_running, bool) and isinstance(is_paused, bool):
-            self.status_dict['measurement_running'] = is_running
+            self.status_dict["measurement_running"] = is_running
             self.sigMeasurementStatusUpdated.emit(is_running, is_paused)
         return
 
@@ -569,7 +617,7 @@ class PulsedMasterLogic(GenericLogic):
         @param bool use_alternative_data:
         """
         if isinstance(fit_function, str) and isinstance(use_alternative_data, bool):
-            self.status_dict['fitting_busy'] = True
+            self.status_dict["fitting_busy"] = True
             self.sigDoFit.emit(fit_function, use_alternative_data)
         return
 
@@ -579,16 +627,22 @@ class PulsedMasterLogic(GenericLogic):
 
         @return:
         """
-        self.status_dict['fitting_busy'] = False
+        self.status_dict["fitting_busy"] = False
         self.sigFitUpdated.emit(fit_name, fit_data, fit_result, use_alternative_data)
         return
 
     @QtCore.Slot()
     def benchmark_completed(self):
-        self.status_dict['benchmark_busy'] = False
+        self.status_dict["benchmark_busy"] = False
 
-    def save_measurement_data(self, tag=None, with_error=True, save_laser_pulses=True, save_pulsed_measurement=True,
-                              save_figure=True):
+    def save_measurement_data(
+        self,
+        tag=None,
+        with_error=True,
+        save_laser_pulses=True,
+        save_pulsed_measurement=True,
+        save_figure=True,
+    ):
         """
         Prepare data to be saved and create a proper plot of the data.
         This is just handed over to the measurement logic.
@@ -601,8 +655,9 @@ class PulsedMasterLogic(GenericLogic):
 
         @return str: filepath where data were saved
         """
-        self.pulsedmeasurementlogic().save_measurement_data(tag, with_error, save_laser_pulses, save_pulsed_measurement,
-                                                            save_figure)
+        self.pulsedmeasurementlogic().save_measurement_data(
+            tag, with_error, save_laser_pulses, save_pulsed_measurement, save_figure
+        )
         return
 
     #######################################################################
@@ -654,28 +709,32 @@ class PulsedMasterLogic(GenericLogic):
 
     @property
     def generate_methods(self):
-        return getattr(self.sequencegeneratorlogic(), 'generate_methods', dict())
+        return getattr(self.sequencegeneratorlogic(), "generate_methods", dict())
 
     @property
     def generate_method_params(self):
-        return getattr(self.sequencegeneratorlogic(), 'generate_method_params', dict())
+        return getattr(self.sequencegeneratorlogic(), "generate_method_params", dict())
 
     #######################################################################
     ###             Sequence generator methods                          ###
     #######################################################################
     @QtCore.Slot()
     def clear_pulse_generator(self):
-        still_busy = self.status_dict['sampling_ensemble_busy'] or self.status_dict[
-            'sampling_sequence_busy'] or self.status_dict['loading_busy'] or self.status_dict[
-                                   'sampload_busy']
+        still_busy = (
+            self.status_dict["sampling_ensemble_busy"]
+            or self.status_dict["sampling_sequence_busy"]
+            or self.status_dict["loading_busy"]
+            or self.status_dict["sampload_busy"]
+        )
         if still_busy:
-            self.log.error('Can not clear pulse generator. Sampling/Loading still in progress.')
-        elif self.status_dict['measurement_running']:
-            self.log.error('Can not clear pulse generator. Measurement is still running.')
+            self.log.error("Can not clear pulse generator. Sampling/Loading still in progress.")
+        elif self.status_dict["measurement_running"]:
+            self.log.error("Can not clear pulse generator. Measurement is still running.")
         else:
-            if self.status_dict['pulser_running']:
-                self.log.warning('Can not clear pulse generator while it is still running. '
-                                 'Turned off.')
+            if self.status_dict["pulser_running"]:
+                self.log.warning(
+                    "Can not clear pulse generator while it is still running. Turned off."
+                )
                 self.pulsedmeasurementlogic().pulse_generator_off()
             self.sigClearPulseGenerator.emit()
         return
@@ -683,25 +742,30 @@ class PulsedMasterLogic(GenericLogic):
     @QtCore.Slot(str)
     @QtCore.Slot(str, bool)
     def sample_ensemble(self, ensemble_name, with_load=False):
-        already_busy = self.status_dict['sampling_ensemble_busy'] or self.status_dict[
-            'sampling_sequence_busy'] or self.sequencegeneratorlogic().module_state() == 'locked'
+        already_busy = (
+            self.status_dict["sampling_ensemble_busy"]
+            or self.status_dict["sampling_sequence_busy"]
+            or self.sequencegeneratorlogic().module_state() == "locked"
+        )
         if already_busy:
-            self.log.error('Sampling of a different asset already in progress.\n'
-                           'PulseBlockEnsemble "{0}" not sampled!'.format(ensemble_name))
+            self.log.error(
+                "Sampling of a different asset already in progress.\n"
+                f'PulseBlockEnsemble "{ensemble_name}" not sampled!'
+            )
         else:
             if with_load:
-                self.status_dict['sampload_busy'] = True
-            self.status_dict['sampling_ensemble_busy'] = True
+                self.status_dict["sampload_busy"] = True
+            self.status_dict["sampling_ensemble_busy"] = True
             self.sigSampleBlockEnsemble.emit(ensemble_name)
         return
 
     @QtCore.Slot(object)
     def sample_ensemble_finished(self, ensemble):
-        self.status_dict['sampling_ensemble_busy'] = False
+        self.status_dict["sampling_ensemble_busy"] = False
         self.sigSampleEnsembleComplete.emit(ensemble)
-        if self.status_dict['sampload_busy'] and not self.status_dict['sampling_sequence_busy']:
+        if self.status_dict["sampload_busy"] and not self.status_dict["sampling_sequence_busy"]:
             if ensemble is None:
-                self.status_dict['sampload_busy'] = False
+                self.status_dict["sampload_busy"] = False
                 self.sigLoadedAssetUpdated.emit(*self.loaded_asset)
             else:
                 self.load_ensemble(ensemble.name)
@@ -710,25 +774,30 @@ class PulsedMasterLogic(GenericLogic):
     @QtCore.Slot(str)
     @QtCore.Slot(str, bool)
     def sample_sequence(self, sequence_name, with_load=False):
-        already_busy = self.status_dict['sampling_ensemble_busy'] or self.status_dict[
-            'sampling_sequence_busy'] or self.sequencegeneratorlogic().module_state() == 'locked'
+        already_busy = (
+            self.status_dict["sampling_ensemble_busy"]
+            or self.status_dict["sampling_sequence_busy"]
+            or self.sequencegeneratorlogic().module_state() == "locked"
+        )
         if already_busy:
-            self.log.error('Sampling of a different asset already in progress.\n'
-                           'PulseSequence "{0}" not sampled!'.format(sequence_name))
+            self.log.error(
+                "Sampling of a different asset already in progress.\n"
+                f'PulseSequence "{sequence_name}" not sampled!'
+            )
         else:
             if with_load:
-                self.status_dict['sampload_busy'] = True
-            self.status_dict['sampling_sequence_busy'] = True
+                self.status_dict["sampload_busy"] = True
+            self.status_dict["sampling_sequence_busy"] = True
             self.sigSampleSequence.emit(sequence_name)
         return
 
     @QtCore.Slot(object)
     def sample_sequence_finished(self, sequence):
-        self.status_dict['sampling_sequence_busy'] = False
+        self.status_dict["sampling_sequence_busy"] = False
         self.sigSampleSequenceComplete.emit(sequence)
-        if self.status_dict['sampload_busy']:
+        if self.status_dict["sampload_busy"]:
             if sequence is None:
-                self.status_dict['sampload_busy'] = False
+                self.status_dict["sampload_busy"] = False
                 self.sigLoadedAssetUpdated.emit(*self.loaded_asset)
             else:
                 self.load_sequence(sequence.name)
@@ -736,38 +805,50 @@ class PulsedMasterLogic(GenericLogic):
 
     @QtCore.Slot(str)
     def load_ensemble(self, ensemble_name):
-        if self.status_dict['loading_busy']:
-            self.log.error('Loading of a different asset already in progress.\n'
-                           'PulseBlockEnsemble "{0}" not loaded!'.format(ensemble_name))
+        if self.status_dict["loading_busy"]:
+            self.log.error(
+                "Loading of a different asset already in progress.\n"
+                f'PulseBlockEnsemble "{ensemble_name}" not loaded!'
+            )
             self.loaded_asset_updated(*self.loaded_asset)
-        elif self.status_dict['measurement_running']:
-            self.log.error('Loading of ensemble not possible while measurement is running.\n'
-                           'PulseBlockEnsemble "{0}" not loaded!'.format(ensemble_name))
+        elif self.status_dict["measurement_running"]:
+            self.log.error(
+                "Loading of ensemble not possible while measurement is running.\n"
+                f'PulseBlockEnsemble "{ensemble_name}" not loaded!'
+            )
             self.loaded_asset_updated(*self.loaded_asset)
         else:
-            self.status_dict['loading_busy'] = True
-            if self.status_dict['pulser_running']:
-                self.log.warning('Can not load new asset into pulse generator while it is still '
-                                 'running. Turned off.')
+            self.status_dict["loading_busy"] = True
+            if self.status_dict["pulser_running"]:
+                self.log.warning(
+                    "Can not load new asset into pulse generator while it is still "
+                    "running. Turned off."
+                )
                 self.pulsedmeasurementlogic().pulse_generator_off()
             self.sigLoadBlockEnsemble.emit(ensemble_name)
         return
 
     @QtCore.Slot(str)
     def load_sequence(self, sequence_name):
-        if self.status_dict['loading_busy']:
-            self.log.error('Loading of a different asset already in progress.\n'
-                           'PulseSequence "{0}" not loaded!'.format(sequence_name))
+        if self.status_dict["loading_busy"]:
+            self.log.error(
+                "Loading of a different asset already in progress.\n"
+                f'PulseSequence "{sequence_name}" not loaded!'
+            )
             self.loaded_asset_updated(*self.loaded_asset)
-        elif self.status_dict['measurement_running']:
-            self.log.error('Loading of sequence not possible while measurement is running.\n'
-                           'PulseSequence "{0}" not loaded!'.format(sequence_name))
+        elif self.status_dict["measurement_running"]:
+            self.log.error(
+                "Loading of sequence not possible while measurement is running.\n"
+                f'PulseSequence "{sequence_name}" not loaded!'
+            )
             self.loaded_asset_updated(*self.loaded_asset)
         else:
-            self.status_dict['loading_busy'] = True
-            if self.status_dict['pulser_running']:
-                self.log.warning('Can not load new asset into pulse generator while it is still '
-                                 'running. Turned off.')
+            self.status_dict["loading_busy"] = True
+            if self.status_dict["pulser_running"]:
+                self.log.warning(
+                    "Can not load new asset into pulse generator while it is still "
+                    "running. Turned off."
+                )
                 self.pulsedmeasurementlogic().pulse_generator_off()
             self.sigLoadSequence.emit(sequence_name)
         return
@@ -780,8 +861,8 @@ class PulsedMasterLogic(GenericLogic):
         @param asset_type:
         @return:
         """
-        self.status_dict['sampload_busy'] = False
-        self.status_dict['loading_busy'] = False
+        self.status_dict["sampload_busy"] = False
+        self.status_dict["loading_busy"] = False
         self.sigLoadedAssetUpdated.emit(asset_name, asset_type)
         # Transfer sequence information from PulseBlockEnsemble or PulseSequence to
         # PulsedMeasurementLogic to be able to invoke measurement settings from them
@@ -789,9 +870,9 @@ class PulsedMasterLogic(GenericLogic):
             # If no asset loaded or asset type unknown, clear sequence_information dict
 
             object_instance = None
-        elif asset_type == 'PulseBlockEnsemble':
+        elif asset_type == "PulseBlockEnsemble":
             object_instance = self.saved_pulse_block_ensembles.get(asset_name)
-        elif asset_type == 'PulseSequence':
+        elif asset_type == "PulseSequence":
             object_instance = self.saved_pulse_sequences.get(asset_name)
         else:
             object_instance = None
@@ -800,8 +881,12 @@ class PulsedMasterLogic(GenericLogic):
             self.pulsedmeasurementlogic().sampling_information = dict()
             self.pulsedmeasurementlogic().measurement_information = dict()
         else:
-            self.pulsedmeasurementlogic().sampling_information = object_instance.sampling_information
-            self.pulsedmeasurementlogic().measurement_information = object_instance.measurement_information
+            self.pulsedmeasurementlogic().sampling_information = (
+                object_instance.sampling_information
+            )
+            self.pulsedmeasurementlogic().measurement_information = (
+                object_instance.measurement_information
+            )
         return
 
     @QtCore.Slot(object)
@@ -862,10 +947,15 @@ class PulsedMasterLogic(GenericLogic):
         @param ensemble_name:
         @return:
         """
-        if self.status_dict['pulser_running'] and self.loaded_asset[0] == ensemble_name and self.loaded_asset[1] == 'PulseBlockEnsemble':
-            self.log.error('Can not delete PulseBlockEnsemble "{0}" since the corresponding '
-                           'waveform(s) is(are) currently loaded and running.'
-                           ''.format(ensemble_name))
+        if (
+            self.status_dict["pulser_running"]
+            and self.loaded_asset[0] == ensemble_name
+            and self.loaded_asset[1] == "PulseBlockEnsemble"
+        ):
+            self.log.error(
+                f'Can not delete PulseBlockEnsemble "{ensemble_name}" since the corresponding '
+                "waveform(s) is(are) currently loaded and running."
+            )
         else:
             self.sigDeleteBlockEnsemble.emit(ensemble_name)
         return
@@ -875,9 +965,11 @@ class PulsedMasterLogic(GenericLogic):
         """
         Helper method to delete all pulse block ensembles at once.
         """
-        if self.status_dict['pulser_running'] or self.status_dict['measurement_running']:
-            self.log.error('Can not delete all PulseBlockEnsembles. Pulse generator is currently '
-                           'running or measurement is in progress.')
+        if self.status_dict["pulser_running"] or self.status_dict["measurement_running"]:
+            self.log.error(
+                "Can not delete all PulseBlockEnsembles. Pulse generator is currently "
+                "running or measurement is in progress."
+            )
         else:
             to_delete = tuple(self.saved_pulse_block_ensembles)
             for ensemble_name in to_delete:
@@ -891,9 +983,15 @@ class PulsedMasterLogic(GenericLogic):
         @param sequence_name:
         @return:
         """
-        if self.status_dict['pulser_running'] and self.loaded_asset[0] == sequence_name and self.loaded_asset[1] == 'PulseSequence':
-            self.log.error('Can not delete PulseSequence "{0}" since the corresponding sequence is '
-                           'currently loaded and running.'.format(sequence_name))
+        if (
+            self.status_dict["pulser_running"]
+            and self.loaded_asset[0] == sequence_name
+            and self.loaded_asset[1] == "PulseSequence"
+        ):
+            self.log.error(
+                f'Can not delete PulseSequence "{sequence_name}" since the corresponding sequence is '
+                "currently loaded and running."
+            )
         else:
             self.sigDeleteSequence.emit(sequence_name)
         return
@@ -903,9 +1001,11 @@ class PulsedMasterLogic(GenericLogic):
         """
         Helper method to delete all pulse sequences at once.
         """
-        if self.status_dict['pulser_running'] or self.status_dict['measurement_running']:
-            self.log.error('Can not delete all PulseSequences. Pulse generator is currently '
-                           'running or measurement is in progress.')
+        if self.status_dict["pulser_running"] or self.status_dict["measurement_running"]:
+            self.log.error(
+                "Can not delete all PulseSequences. Pulse generator is currently "
+                "running or measurement is in progress."
+            )
         else:
             to_delete = tuple(self.saved_pulse_sequences)
             for sequence_name in to_delete:
@@ -959,15 +1059,17 @@ class PulsedMasterLogic(GenericLogic):
             settings_dict.update(kwargs)
 
         # Force empty gate channel if fast counter is not gated
-        if 'gate_channel' in settings_dict and not self.fast_counter_settings.get('is_gated'):
-            settings_dict['gate_channel'] = ''
+        if "gate_channel" in settings_dict and not self.fast_counter_settings.get("is_gated"):
+            settings_dict["gate_channel"] = ""
         self.sigSamplingSettingsChanged.emit(settings_dict)
         return
 
     @QtCore.Slot(str)
     @QtCore.Slot(str, dict)
     @QtCore.Slot(str, dict, bool)
-    def generate_predefined_sequence(self, generator_method_name, kwarg_dict=None, sample_and_load=False):
+    def generate_predefined_sequence(
+        self, generator_method_name, kwarg_dict=None, sample_and_load=False
+    ):
         """
 
         @param generator_method_name:
@@ -977,19 +1079,19 @@ class PulsedMasterLogic(GenericLogic):
         """
         if not isinstance(kwarg_dict, dict):
             kwarg_dict = dict()
-        self.status_dict['predefined_generation_busy'] = True
+        self.status_dict["predefined_generation_busy"] = True
         if sample_and_load:
-            self.status_dict['sampload_busy'] = True
+            self.status_dict["sampload_busy"] = True
         self.sigGeneratePredefinedSequence.emit(generator_method_name, kwarg_dict)
         return
 
     @QtCore.Slot(object, bool)
     def predefined_sequence_generated(self, asset_name, is_sequence):
-        self.status_dict['predefined_generation_busy'] = False
+        self.status_dict["predefined_generation_busy"] = False
         if asset_name is None:
-            self.status_dict['sampload_busy'] = False
+            self.status_dict["sampload_busy"] = False
         self.sigPredefinedSequenceGenerated.emit(asset_name, is_sequence)
-        if self.status_dict['sampload_busy']:
+        if self.status_dict["sampload_busy"]:
             if is_sequence:
                 self.sample_sequence(asset_name, True)
             else:

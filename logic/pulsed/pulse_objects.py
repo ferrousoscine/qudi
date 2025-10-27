@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi data object classes needed for pulse sequence generation.
 
@@ -21,20 +19,19 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import copy
+import importlib
+import inspect
 import os
 import sys
-import inspect
-import importlib
-import numpy as np
 from collections import OrderedDict
 
-from logic.pulsed.sampling_functions import SamplingFunctions
-from core.util.modules import get_main_dir
+import numpy as np
+
 from core.util.helpers import natural_sort
-from enum import Enum
+from logic.pulsed.sampling_functions import SamplingFunctions
 
 
-class PulseBlockElement(object):
+class PulseBlockElement:
     """
     Object representing a single atomic element in a pulse block.
 
@@ -43,7 +40,14 @@ class PulseBlockElement(object):
     a GUI as single rows of a Pulse_Block.
     """
 
-    def __init__(self, init_length_s=10e-9, increment_s=0, pulse_function=None, digital_high=None, laser_on=False):
+    def __init__(
+        self,
+        init_length_s=10e-9,
+        increment_s=0,
+        pulse_function=None,
+        digital_high=None,
+        laser_on=False,
+    ):
         """
         The constructor for a Pulse_Block_Element needs to have:
 
@@ -83,25 +87,22 @@ class PulseBlockElement(object):
         self.channel_set = self.analog_channels.union(self.digital_channels)
 
     def __repr__(self):
-        repr_str = 'PulseBlockElement(init_length_s={0}, increment_s={1}, laser_on={2}, pulse_function='.format(
-            self.init_length_s, self.increment_s, self.laser_on)
-        repr_str += '{'
+        repr_str = f"PulseBlockElement(init_length_s={self.init_length_s}, increment_s={self.increment_s}, laser_on={self.laser_on}, pulse_function="
+        repr_str += "{"
         for ind, (channel, sampling_func) in enumerate(self.pulse_function.items()):
-            repr_str += '\'{0}\': {1}'.format(channel, 'SamplingFunctions.' + repr(sampling_func))
+            repr_str += "'{0}': {1}".format(channel, "SamplingFunctions." + repr(sampling_func))
             if ind < len(self.pulse_function) - 1:
-                repr_str += ', '
-        repr_str += '}, '
-        repr_str += 'digital_high={0})'.format(repr(dict(self.digital_high)))
+                repr_str += ", "
+        repr_str += "}, "
+        repr_str += f"digital_high={repr(dict(self.digital_high))})"
         return repr_str
 
     def __str__(self):
         pulse_func_dict = {chnl: type(func).__name__ for chnl, func in self.pulse_function.items()}
-        return_str = 'PulseBlockElement\n\tinitial length: {0}s\n\tlength increment: {1}s\n\tlaser_on : {2},' \
-                     'analog channels: {3}\n\tdigital channels: {4}'.format(self.init_length_s,
-                                                                            self.increment_s,
-                                                                            self.laser_on,
-                                                                            pulse_func_dict,
-                                                                            dict(self.digital_high))
+        return_str = (
+            f"PulseBlockElement\n\tinitial length: {self.init_length_s}s\n\tlength increment: {self.increment_s}s\n\tlaser_on : {self.laser_on},"
+            f"analog channels: {pulse_func_dict}\n\tdigital channels: {dict(self.digital_high)}"
+        )
         return return_str
 
     def __eq__(self, other):
@@ -112,7 +113,10 @@ class PulseBlockElement(object):
         if self.channel_set != other.channel_set:
             return False
         if (self.init_length_s, self.increment_s, self.laser_on) != (
-                other.init_length_s, other.increment_s, other.laser_on):
+            other.init_length_s,
+            other.increment_s,
+            other.laser_on,
+        ):
             return False
         if set(self.digital_high.items()) != set(other.digital_high.items()):
             return False
@@ -123,24 +127,24 @@ class PulseBlockElement(object):
 
     def get_dict_representation(self):
         dict_repr = dict()
-        dict_repr['init_length_s'] = self.init_length_s
-        dict_repr['increment_s'] = self.increment_s
-        dict_repr['laser_on'] = self.laser_on
-        dict_repr['digital_high'] = self.digital_high
-        dict_repr['pulse_function'] = dict()
+        dict_repr["init_length_s"] = self.init_length_s
+        dict_repr["increment_s"] = self.increment_s
+        dict_repr["laser_on"] = self.laser_on
+        dict_repr["digital_high"] = self.digital_high
+        dict_repr["pulse_function"] = dict()
         for chnl, func in self.pulse_function.items():
-            dict_repr['pulse_function'][chnl] = func.get_dict_representation()
+            dict_repr["pulse_function"][chnl] = func.get_dict_representation()
         return dict_repr
 
     @staticmethod
     def element_from_dict(element_dict):
-        for chnl, sample_dict in element_dict['pulse_function'].items():
-            sf_class = getattr(SamplingFunctions, sample_dict['name'])
-            element_dict['pulse_function'][chnl] = sf_class(**sample_dict['params'])
+        for chnl, sample_dict in element_dict["pulse_function"].items():
+            sf_class = getattr(SamplingFunctions, sample_dict["name"])
+            element_dict["pulse_function"][chnl] = sf_class(**sample_dict["params"])
         return PulseBlockElement(**element_dict)
 
 
-class PulseBlock(object):
+class PulseBlock:
     """
     Collection of Pulse_Block_Elements which is called a Pulse_Block.
     """
@@ -164,17 +168,16 @@ class PulseBlock(object):
         return
 
     def __repr__(self):
-        repr_str = 'PulseBlock(name=\'{0}\', element_list=['.format(self.name)
-        repr_str += ', '.join((repr(elem) for elem in self.element_list)) + '])'
+        repr_str = f"PulseBlock(name='{self.name}', element_list=["
+        repr_str += ", ".join(repr(elem) for elem in self.element_list) + "])"
         return repr_str
 
     def __str__(self):
-        return_str = 'PulseBlock "{0}"\n\tnumber of elements: {1}\n\t'.format(
-            self.name, len(self.element_list))
-        return_str += 'initial length: {0}s\n\tlength increment: {1}s\n\t'.format(
-            self.init_length_s, self.increment_s)
-        return_str += 'active analog channels: {0}\n\tactive digital channels: {1}'.format(
-            natural_sort(self.analog_channels), natural_sort(self.digital_channels))
+        return_str = f'PulseBlock "{self.name}"\n\tnumber of elements: {len(self.element_list)}\n\t'
+        return_str += (
+            f"initial length: {self.init_length_s}s\n\tlength increment: {self.increment_s}s\n\t"
+        )
+        return_str += f"active analog channels: {natural_sort(self.analog_channels)}\n\tactive digital channels: {natural_sort(self.digital_channels)}"
         return return_str
 
     def __len__(self):
@@ -182,22 +185,25 @@ class PulseBlock(object):
 
     def __getitem__(self, key):
         if not isinstance(key, (slice, int)):
-            raise TypeError('PulseBlock indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseBlock indices must be int or slice, not {type(key)}")
         return self.element_list[key]
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
             if not isinstance(value, PulseBlockElement):
-                raise TypeError('PulseBlock element list entries must be of type PulseBlockElement,'
-                                ' not {0}'.format(type(value)))
+                raise TypeError(
+                    "PulseBlock element list entries must be of type PulseBlockElement,"
+                    f" not {type(value)}"
+                )
             if not self.channel_set:
                 self.channel_set = value.channel_set.copy()
-                self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith('a')}
-                self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith('d')}
+                self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith("a")}
+                self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith("d")}
             elif value.channel_set != self.channel_set:
-                raise ValueError('Usage of different sets of analog and digital channels in the '
-                                 'same PulseBlock is prohibited. Used channel sets are:\n{0}\n{1}'
-                                 ''.format(self.channel_set, value.channel_set))
+                raise ValueError(
+                    "Usage of different sets of analog and digital channels in the "
+                    f"same PulseBlock is prohibited. Used channel sets are:\n{self.channel_set}\n{value.channel_set}"
+                )
 
             self.init_length_s -= self.element_list[key].init_length_s
             self.increment_s -= self.element_list[key].increment_s
@@ -208,19 +214,23 @@ class PulseBlock(object):
             add_increment = 0
             for element in value:
                 if not isinstance(element, PulseBlockElement):
-                    raise TypeError('PulseBlock element list entries must be of type '
-                                    'PulseBlockElement, not {0}'.format(type(value)))
+                    raise TypeError(
+                        "PulseBlock element list entries must be of type "
+                        f"PulseBlockElement, not {type(value)}"
+                    )
                 if not self.channel_set:
                     self.channel_set = element.channel_set.copy()
-                    self.analog_channels = {chnl for chnl in self.channel_set if
-                                            chnl.startswith('a')}
-                    self.digital_channels = {chnl for chnl in self.channel_set if
-                                             chnl.startswith('d')}
+                    self.analog_channels = {
+                        chnl for chnl in self.channel_set if chnl.startswith("a")
+                    }
+                    self.digital_channels = {
+                        chnl for chnl in self.channel_set if chnl.startswith("d")
+                    }
                 elif element.channel_set != self.channel_set:
                     raise ValueError(
-                        'Usage of different sets of analog and digital channels in the '
-                        'same PulseBlock is prohibited. Used channel sets are:\n{0}\n{1}'
-                        ''.format(self.channel_set, element.channel_set))
+                        "Usage of different sets of analog and digital channels in the "
+                        f"same PulseBlock is prohibited. Used channel sets are:\n{self.channel_set}\n{element.channel_set}"
+                    )
 
                 add_length += element.init_length_s
                 add_increment += element.increment_s
@@ -232,13 +242,13 @@ class PulseBlock(object):
             self.init_length_s += add_length
             self.increment_s += add_increment
         else:
-            raise TypeError('PulseBlock indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseBlock indices must be int or slice, not {type(key)}")
         self.element_list[key] = copy.deepcopy(value)
         return
 
     def __delitem__(self, key):
         if not isinstance(key, (slice, int)):
-            raise TypeError('PulseBlock indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseBlock indices must be int or slice, not {type(key)}")
 
         if isinstance(key, int):
             items_to_delete = [self.element_list[key]]
@@ -271,7 +281,7 @@ class PulseBlock(object):
         return True
 
     def refresh_parameters(self):
-        """ Initialize the parameters which describe this Pulse_Block object.
+        """Initialize the parameters which describe this Pulse_Block object.
 
         The information is gained from all the Pulse_Block_Element objects,
         which are attached in the element_list.
@@ -288,17 +298,18 @@ class PulseBlock(object):
             if not self.channel_set:
                 self.channel_set = elem.channel_set
             elif self.channel_set != elem.channel_set:
-                raise ValueError('Usage of different sets of analog and digital channels in the '
-                                 'same PulseBlock is prohibited.\nPulseBlock creation failed!\n'
-                                 'Used channel sets are:\n{0}\n{1}'.format(self.channel_set,
-                                                                           elem.channel_set))
-        self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith('a')}
-        self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith('d')}
+                raise ValueError(
+                    "Usage of different sets of analog and digital channels in the "
+                    "same PulseBlock is prohibited.\nPulseBlock creation failed!\n"
+                    f"Used channel sets are:\n{self.channel_set}\n{elem.channel_set}"
+                )
+        self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith("a")}
+        self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith("d")}
         return
 
     def pop(self, position=None):
         if len(self.element_list) == 0:
-            raise IndexError('pop from empty PulseBlock')
+            raise IndexError("pop from empty PulseBlock")
 
         if position is None:
             self.init_length_s -= self.element_list[-1].init_length_s
@@ -306,44 +317,47 @@ class PulseBlock(object):
             return self.element_list.pop()
 
         if not isinstance(position, int):
-            raise TypeError('PulseBlock.pop position argument expects integer, not {0}'
-                            ''.format(type(position)))
+            raise TypeError(
+                f"PulseBlock.pop position argument expects integer, not {type(position)}"
+            )
 
         if position < 0:
             position = len(self.element_list) + position
 
         if len(self.element_list) <= position or position < 0:
-            raise IndexError('PulseBlock element list index out of range')
+            raise IndexError("PulseBlock element list index out of range")
 
         self.init_length_s -= self.element_list[position].init_length_s
         self.increment_s -= self.element_list[position].increment_s
         return self.element_list.pop(position)
 
     def insert(self, position, element):
-        """ Insert a PulseBlockElement at the given position. The old element at this position and
+        """Insert a PulseBlockElement at the given position. The old element at this position and
         all consecutive elements after that will be shifted to higher indices.
 
         @param int position: position in the element list
         @param PulseBlockElement element: PulseBlockElement instance
         """
         if not isinstance(element, PulseBlockElement):
-            raise ValueError('PulseBlock elements must be of type PulseBlockElement, not {0}'
-                             ''.format(type(element)))
+            raise ValueError(
+                f"PulseBlock elements must be of type PulseBlockElement, not {type(element)}"
+            )
 
         if position < 0:
             position = len(self.element_list) + position
 
         if len(self.element_list) < position or position < 0:
-            raise IndexError('PulseBlock element list index out of range')
+            raise IndexError("PulseBlock element list index out of range")
 
         if not self.channel_set:
             self.channel_set = element.channel_set.copy()
-            self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith('a')}
-            self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith('d')}
+            self.analog_channels = {chnl for chnl in self.channel_set if chnl.startswith("a")}
+            self.digital_channels = {chnl for chnl in self.channel_set if chnl.startswith("d")}
         elif element.channel_set != self.channel_set:
-            raise ValueError('Usage of different sets of analog and digital channels in the '
-                             'same PulseBlock is prohibited. Used channel sets are:\n{0}\n{1}'
-                             ''.format(self.channel_set, element.channel_set))
+            raise ValueError(
+                "Usage of different sets of analog and digital channels in the "
+                f"same PulseBlock is prohibited. Used channel sets are:\n{self.channel_set}\n{element.channel_set}"
+            )
 
         self.init_length_s += element.init_length_s
         self.increment_s += element.increment_s
@@ -352,8 +366,7 @@ class PulseBlock(object):
         return
 
     def append(self, element):
-        """
-        """
+        """ """
         self.insert(position=len(self.element_list), element=element)
         return
 
@@ -377,20 +390,20 @@ class PulseBlock(object):
 
     def get_dict_representation(self):
         dict_repr = dict()
-        dict_repr['name'] = self.name
-        dict_repr['element_list'] = list()
+        dict_repr["name"] = self.name
+        dict_repr["element_list"] = list()
         for element in self.element_list:
-            dict_repr['element_list'].append(element.get_dict_representation())
+            dict_repr["element_list"].append(element.get_dict_representation())
         return dict_repr
 
     @staticmethod
     def block_from_dict(block_dict):
-        for ii, element_dict in enumerate(block_dict['element_list']):
-            block_dict['element_list'][ii] = PulseBlockElement.element_from_dict(element_dict)
+        for ii, element_dict in enumerate(block_dict["element_list"]):
+            block_dict["element_list"][ii] = PulseBlockElement.element_from_dict(element_dict)
         return PulseBlock(**block_dict)
 
 
-class PulseBlockEnsemble(object):
+class PulseBlockEnsemble:
     """
     Represents a collection of PulseBlock objects which is called a PulseBlockEnsemble.
 
@@ -430,15 +443,15 @@ class PulseBlockEnsemble(object):
         return
 
     def __repr__(self):
-        repr_str = 'PulseBlockEnsemble(name=\'{0}\', block_list={1}, rotating_frame={2})'.format(
-            self.name, repr(self.block_list), self.rotating_frame)
+        repr_str = f"PulseBlockEnsemble(name='{self.name}', block_list={repr(self.block_list)}, rotating_frame={self.rotating_frame})"
         return repr_str
 
     def __str__(self):
-        return_str = 'PulseBlockEnsemble "{0}"\n\trotating frame: {1}\n\t' \
-                     'has been sampled: {2}\n\t<block name>\t<repetitions>\n\t'.format(
-            self.name, self.rotating_frame, bool(self.sampling_information))
-        return_str += '\n\t'.join(('{0}\t{1}'.format(name, reps) for name, reps in self.block_list))
+        return_str = (
+            f'PulseBlockEnsemble "{self.name}"\n\trotating frame: {self.rotating_frame}\n\t'
+            f"has been sampled: {bool(self.sampling_information)}\n\t<block name>\t<repetitions>\n\t"
+        )
+        return_str += "\n\t".join((f"{name}\t{reps}" for name, reps in self.block_list))
         return return_str
 
     def __eq__(self, other):
@@ -459,34 +472,37 @@ class PulseBlockEnsemble(object):
 
     def __getitem__(self, key):
         if not isinstance(key, (slice, int)):
-            raise TypeError('PulseBlockEnsemble indices must be int or slice, not {0}'
-                            ''.format(type(key)))
+            raise TypeError(f"PulseBlockEnsemble indices must be int or slice, not {type(key)}")
         return self.block_list[key]
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
             if not isinstance(value, (tuple, list)) or len(value) != 2:
-                raise TypeError('PulseBlockEnsemble block list entries must be a tuple or list of '
-                                'length 2')
+                raise TypeError(
+                    "PulseBlockEnsemble block list entries must be a tuple or list of length 2"
+                )
             elif not isinstance(value[0], str):
-                raise ValueError('PulseBlockEnsemble element tuple index 0 must contain str, '
-                                 'not {0}'.format(type(value[0])))
+                raise ValueError(
+                    f"PulseBlockEnsemble element tuple index 0 must contain str, not {type(value[0])}"
+                )
             elif not isinstance(value[1], int) or value[1] < 0:
-                raise ValueError('PulseBlockEnsemble element tuple index 1 must contain int >= 0')
+                raise ValueError("PulseBlockEnsemble element tuple index 1 must contain int >= 0")
         elif isinstance(key, slice):
             for element in value:
                 if not isinstance(element, (tuple, list)) or len(value) != 2:
-                    raise TypeError('PulseBlockEnsemble block list entries must be a tuple or list '
-                                    'of length 2')
+                    raise TypeError(
+                        "PulseBlockEnsemble block list entries must be a tuple or list of length 2"
+                    )
                 elif not isinstance(element[0], str):
-                    raise ValueError('PulseBlockEnsemble element tuple index 0 must contain str, '
-                                     'not {0}'.format(type(element[0])))
+                    raise ValueError(
+                        f"PulseBlockEnsemble element tuple index 0 must contain str, not {type(element[0])}"
+                    )
                 elif not isinstance(element[1], int) or element[1] < 0:
-                    raise ValueError('PulseBlockEnsemble element tuple index 1 must contain int >= '
-                                     '0')
+                    raise ValueError(
+                        "PulseBlockEnsemble element tuple index 1 must contain int >= 0"
+                    )
         else:
-            raise TypeError('PulseBlockEnsemble indices must be int or slice, not {0}'
-                            ''.format(type(key)))
+            raise TypeError(f"PulseBlockEnsemble indices must be int or slice, not {type(key)}")
         self.block_list[key] = tuple(value)
         self.sampling_information = dict()
         self.measurement_information = dict()
@@ -494,8 +510,7 @@ class PulseBlockEnsemble(object):
 
     def __delitem__(self, key):
         if not isinstance(key, (slice, int)):
-            raise TypeError('PulseBlockEnsemble indices must be int or slice, not {0}'
-                            ''.format(type(key)))
+            raise TypeError(f"PulseBlockEnsemble indices must be int or slice, not {type(key)}")
 
         del self.block_list[key]
         self.sampling_information = dict()
@@ -504,7 +519,7 @@ class PulseBlockEnsemble(object):
 
     def pop(self, position=None):
         if len(self.block_list) == 0:
-            raise IndexError('pop from empty PulseBlockEnsemble')
+            raise IndexError("pop from empty PulseBlockEnsemble")
 
         if position is None:
             self.sampling_information = dict()
@@ -512,39 +527,42 @@ class PulseBlockEnsemble(object):
             return self.block_list.pop()
 
         if not isinstance(position, int):
-            raise TypeError('PulseBlockEnsemble.pop position argument expects integer, not {0}'
-                            ''.format(type(position)))
+            raise TypeError(
+                f"PulseBlockEnsemble.pop position argument expects integer, not {type(position)}"
+            )
 
         if position < 0:
             position = len(self.block_list) + position
 
         if len(self.block_list) <= position or position < 0:
-            raise IndexError('PulseBlockEnsemble block list index out of range')
+            raise IndexError("PulseBlockEnsemble block list index out of range")
 
         self.sampling_information = dict()
         self.measurement_information = dict()
         return self.block_list.pop(position)
 
     def insert(self, position, element):
-        """ Insert a (PulseBlock.name, repetitions) tuple at the given position. The old element
+        """Insert a (PulseBlock.name, repetitions) tuple at the given position. The old element
         at this position and all consecutive elements after that will be shifted to higher indices.
 
         @param int position: position in the element list
         @param tuple element: (PulseBlock name (str), repetitions (int))
         """
         if not isinstance(element, (tuple, list)) or len(element) != 2:
-            raise TypeError('PulseBlockEnsemble block list entries must be a tuple or list of '
-                            'length 2')
+            raise TypeError(
+                "PulseBlockEnsemble block list entries must be a tuple or list of length 2"
+            )
         elif not isinstance(element[0], str):
-            raise ValueError('PulseBlockEnsemble element tuple index 0 must contain str, '
-                             'not {0}'.format(type(element[0])))
+            raise ValueError(
+                f"PulseBlockEnsemble element tuple index 0 must contain str, not {type(element[0])}"
+            )
         elif not isinstance(element[1], int) or element[1] < 0:
-            raise ValueError('PulseBlockEnsemble element tuple index 1 must contain int >= 0')
+            raise ValueError("PulseBlockEnsemble element tuple index 1 must contain int >= 0")
 
         if position < 0:
             position = len(self.block_list) + position
         if len(self.block_list) < position or position < 0:
-            raise IndexError('PulseBlockEnsemble block list index out of range')
+            raise IndexError("PulseBlockEnsemble block list index out of range")
 
         self.block_list.insert(position, tuple(element))
         self.sampling_information = dict()
@@ -552,8 +570,7 @@ class PulseBlockEnsemble(object):
         return
 
     def append(self, element):
-        """
-        """
+        """ """
         self.insert(position=len(self), element=element)
         return
 
@@ -576,20 +593,22 @@ class PulseBlockEnsemble(object):
 
     def get_dict_representation(self):
         dict_repr = dict()
-        dict_repr['name'] = self.name
-        dict_repr['rotating_frame'] = self.rotating_frame
-        dict_repr['block_list'] = self.block_list
-        dict_repr['sampling_information'] = self.sampling_information
-        dict_repr['measurement_information'] = self.measurement_information
+        dict_repr["name"] = self.name
+        dict_repr["rotating_frame"] = self.rotating_frame
+        dict_repr["block_list"] = self.block_list
+        dict_repr["sampling_information"] = self.sampling_information
+        dict_repr["measurement_information"] = self.measurement_information
         return dict_repr
 
     @staticmethod
     def ensemble_from_dict(ensemble_dict):
-        new_ens = PulseBlockEnsemble(name=ensemble_dict['name'],
-                                     block_list=ensemble_dict['block_list'],
-                                     rotating_frame=ensemble_dict['rotating_frame'])
-        new_ens.sampling_information = ensemble_dict['sampling_information']
-        new_ens.measurement_information = ensemble_dict['measurement_information']
+        new_ens = PulseBlockEnsemble(
+            name=ensemble_dict["name"],
+            block_list=ensemble_dict["block_list"],
+            rotating_frame=ensemble_dict["rotating_frame"],
+        )
+        new_ens.sampling_information = ensemble_dict["sampling_information"]
+        new_ens.measurement_information = ensemble_dict["measurement_information"]
         return new_ens
 
 
@@ -612,21 +631,23 @@ class SequenceStep(dict):
         mystep.repetitions = 0
     """
 
-    __default_parameters = {'repetitions': 0,
-                            'go_to': -1,
-                            'event_jump_to': -1,
-                            'event_trigger': 'OFF',
-                            'wait_for': 'OFF',
-                            'flag_trigger': list(),
-                            'flag_high': list()}
+    __default_parameters = {
+        "repetitions": 0,
+        "go_to": -1,
+        "event_jump_to": -1,
+        "event_trigger": "OFF",
+        "wait_for": "OFF",
+        "flag_trigger": list(),
+        "flag_high": list(),
+    }
 
     def __init__(self, *args, **kwargs):
         if len(args) > 2:
-            raise TypeError('SequenceStep expected at most 2 arguments, got {0}'.format(len(args)))
+            raise TypeError(f"SequenceStep expected at most 2 arguments, got {len(args)}")
         # Allow the PulseBlockEnsemble name to be passed as positional argument
         for i, pos_arg in enumerate(args):
             if isinstance(pos_arg, str):
-                kwargs['ensemble'] = pos_arg
+                kwargs["ensemble"] = pos_arg
                 if len(args) == 2:
                     args = (args[0],) if i == 1 else (args[1],)
                 else:
@@ -638,14 +659,18 @@ class SequenceStep(dict):
         # Check for allowed keys in order to avoid overwriting built-in dict methods and the
         # ensemble name.
         # Also check presence of a valid mandatory "ensemble" entry
-        if not isinstance(self.get('ensemble'), str):
-            raise KeyError('"ensemble" entry of type str must be present in SequenceStep. Either '
-                           'include it as dict item or pass it as positional argument in the '
-                           'constructor.')
+        if not isinstance(self.get("ensemble"), str):
+            raise KeyError(
+                '"ensemble" entry of type str must be present in SequenceStep. Either '
+                "include it as dict item or pass it as positional argument in the "
+                "constructor."
+            )
         for attribute in dir(dict):
             if attribute in self:
-                raise KeyError('It is not allowed to overwrite built-in dict attributes. '
-                               'Please use another key than "{0}".'.format(attribute))
+                raise KeyError(
+                    "It is not allowed to overwrite built-in dict attributes. "
+                    f'Please use another key than "{attribute}".'
+                )
 
         # Merge namespaces (this is where the magic happens)
         self.__dict__ = self
@@ -667,8 +692,10 @@ class SequenceStep(dict):
         members/attributes.
         """
         if key in dir(dict):
-            raise KeyError('It is not allowed to overwrite built-in dict attributes. '
-                           'Please use another key than "{0}".'.format(key))
+            raise KeyError(
+                "It is not allowed to overwrite built-in dict attributes. "
+                f'Please use another key than "{key}".'
+            )
         super().__setitem__(key, value)
         return
 
@@ -676,7 +703,7 @@ class SequenceStep(dict):
         return SequenceStep(super().copy())
 
 
-class PulseSequence(object):
+class PulseSequence:
     """
     Higher order object for sequence capability.
 
@@ -763,18 +790,16 @@ class PulseSequence(object):
         return
 
     def __repr__(self):
-        repr_str = 'PulseSequence(name=\'{0}\', ensemble_list={1}, rotating_frame={2})'.format(
-            self.name, self.ensemble_list, self.rotating_frame)
+        repr_str = f"PulseSequence(name='{self.name}', ensemble_list={self.ensemble_list}, rotating_frame={self.rotating_frame})"
         return repr_str
 
     def __str__(self):
-        return_str = 'PulseSequence "{0}"\n\trotating frame: {1}\n\t' \
-                     'has finite length: {2}\n\thas been sampled: {3}\n\t<ensemble name>\t' \
-                     '<sequence parameters>\n\t'.format(self.name,
-                                                        self.rotating_frame,
-                                                        self.is_finite,
-                                                        bool(self.sampling_information))
-        return_str += '\n\t'.join(('{0}\t{1}'.format(name, param) for name, param in self))
+        return_str = (
+            f'PulseSequence "{self.name}"\n\trotating frame: {self.rotating_frame}\n\t'
+            f"has finite length: {self.is_finite}\n\thas been sampled: {bool(self.sampling_information)}\n\t<ensemble name>\t"
+            "<sequence parameters>\n\t"
+        )
+        return_str += "\n\t".join((f"{name}\t{param}" for name, param in self))
         return return_str
 
     def __eq__(self, other):
@@ -782,7 +807,11 @@ class PulseSequence(object):
             return False
         if self is other:
             return True
-        if (self.name, self.rotating_frame, self.is_finite) != (other.name, other.rotating_frame, other.is_finite):
+        if (self.name, self.rotating_frame, self.is_finite) != (
+            other.name,
+            other.rotating_frame,
+            other.is_finite,
+        ):
             return False
         if self.ensemble_list != other.ensemble_list:
             return False
@@ -795,7 +824,7 @@ class PulseSequence(object):
 
     def __getitem__(self, key):
         if not isinstance(key, (slice, int)):
-            raise TypeError('PulseSequence indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseSequence indices must be int or slice, not {type(key)}")
         return self.ensemble_list[key]
 
     def __setitem__(self, key, value):
@@ -807,13 +836,15 @@ class PulseSequence(object):
                 value = SequenceStep(*value)
 
             if not isinstance(value, SequenceStep):
-                raise TypeError('PulseSequence ensemble list entries must be either:\n'
-                                '\t- a tuple or list of length 2 with one entry being the '
-                                'PulseBlockEnsemble name and the other being a sequence parameter '
-                                'dictionary\n'
-                                '\t- a str containing the PulseBlockEnsemble name\n'
-                                '\t- a dict containing the sequence parameters including the '
-                                'PulseBlockEnsemble name')
+                raise TypeError(
+                    "PulseSequence ensemble list entries must be either:\n"
+                    "\t- a tuple or list of length 2 with one entry being the "
+                    "PulseBlockEnsemble name and the other being a sequence parameter "
+                    "dictionary\n"
+                    "\t- a str containing the PulseBlockEnsemble name\n"
+                    "\t- a dict containing the sequence parameters including the "
+                    "PulseBlockEnsemble name"
+                )
 
             if value.repetitions < 0:
                 self.is_finite = False
@@ -832,20 +863,22 @@ class PulseSequence(object):
                 value = tmp_value
             for element in value:
                 if not isinstance(element, SequenceStep):
-                    raise TypeError('PulseSequence ensemble list entries must be either:\n'
-                                    '\t- a tuple or list of length 2 with one entry being the '
-                                    'PulseBlockEnsemble name and the other being a sequence parameter '
-                                    'dictionary\n'
-                                    '\t- a str containing the PulseBlockEnsemble name\n'
-                                    '\t- a dict containing the sequence parameters including the '
-                                    'PulseBlockEnsemble name')
+                    raise TypeError(
+                        "PulseSequence ensemble list entries must be either:\n"
+                        "\t- a tuple or list of length 2 with one entry being the "
+                        "PulseBlockEnsemble name and the other being a sequence parameter "
+                        "dictionary\n"
+                        "\t- a str containing the PulseBlockEnsemble name\n"
+                        "\t- a dict containing the sequence parameters including the "
+                        "PulseBlockEnsemble name"
+                    )
 
                 if element.repetitions < 0:
                     self.is_finite = False
                 elif not self.is_finite:
                     stage_refresh = True
         else:
-            raise TypeError('PulseSequence indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseSequence indices must be int or slice, not {type(key)}")
         self.ensemble_list[key] = value
         self.sampling_information = dict()
         self.measurement_information = dict()
@@ -863,7 +896,7 @@ class PulseSequence(object):
         elif isinstance(key, int):
             stage_refresh = self.ensemble_list[key].repetitions < 0
         else:
-            raise TypeError('PulseSequence indices must be int or slice, not {0}'.format(type(key)))
+            raise TypeError(f"PulseSequence indices must be int or slice, not {type(key)}")
         del self.ensemble_list[key]
         self.sampling_information = dict()
         self.measurement_information = dict()
@@ -874,20 +907,21 @@ class PulseSequence(object):
     def pop(self, position=None):
         stage_refresh = False
         if len(self.ensemble_list) == 0:
-            raise IndexError('pop from empty PulseSequence')
+            raise IndexError("pop from empty PulseSequence")
 
         if position is None:
             position = len(self.ensemble_list) - 1
 
         if not isinstance(position, int):
-            raise TypeError('PulseSequence.pop position argument expects integer, not {0}'
-                            ''.format(type(position)))
+            raise TypeError(
+                f"PulseSequence.pop position argument expects integer, not {type(position)}"
+            )
 
         if position < 0:
             position = len(self.ensemble_list) + position
 
         if len(self.ensemble_list) <= position or position < 0:
-            raise IndexError('PulseSequence ensemble list index out of range')
+            raise IndexError("PulseSequence ensemble list index out of range")
 
         self.sampling_information = dict()
         self.measurement_information = dict()
@@ -916,18 +950,20 @@ class PulseSequence(object):
             element = SequenceStep(*element)
 
         if not isinstance(element, SequenceStep):
-            raise TypeError('PulseSequence ensemble list entries must be either:\n'
-                            '\t- a tuple or list of length 2 with one entry being the '
-                            'PulseBlockEnsemble name and the other being a sequence parameter '
-                            'dictionary\n'
-                            '\t- a str containing the PulseBlockEnsemble name\n'
-                            '\t- a dict containing the sequence parameters including the '
-                            'PulseBlockEnsemble name')
+            raise TypeError(
+                "PulseSequence ensemble list entries must be either:\n"
+                "\t- a tuple or list of length 2 with one entry being the "
+                "PulseBlockEnsemble name and the other being a sequence parameter "
+                "dictionary\n"
+                "\t- a str containing the PulseBlockEnsemble name\n"
+                "\t- a dict containing the sequence parameters including the "
+                "PulseBlockEnsemble name"
+            )
 
         if position < 0:
             position = len(self.ensemble_list) + position
         if len(self.ensemble_list) < position or position < 0:
-            raise IndexError('PulseSequence ensemble list index out of range')
+            raise IndexError("PulseSequence ensemble list index out of range")
 
         self.ensemble_list.insert(position, element)
         if element.repetitions < 0:
@@ -937,8 +973,7 @@ class PulseSequence(object):
         return
 
     def append(self, element):
-        """
-        """
+        """ """
         self.insert(position=len(self.ensemble_list), element=element)
         return
 
@@ -962,20 +997,22 @@ class PulseSequence(object):
 
     def get_dict_representation(self):
         dict_repr = dict()
-        dict_repr['name'] = self.name
-        dict_repr['rotating_frame'] = self.rotating_frame
-        dict_repr['ensemble_list'] = self.ensemble_list
-        dict_repr['sampling_information'] = self.sampling_information
-        dict_repr['measurement_information'] = self.measurement_information
+        dict_repr["name"] = self.name
+        dict_repr["rotating_frame"] = self.rotating_frame
+        dict_repr["ensemble_list"] = self.ensemble_list
+        dict_repr["sampling_information"] = self.sampling_information
+        dict_repr["measurement_information"] = self.measurement_information
         return dict_repr
 
     @staticmethod
     def sequence_from_dict(sequence_dict):
-        new_seq = PulseSequence(name=sequence_dict['name'],
-                                ensemble_list=sequence_dict['ensemble_list'],
-                                rotating_frame=sequence_dict['rotating_frame'])
-        new_seq.sampling_information = sequence_dict['sampling_information']
-        new_seq.measurement_information = sequence_dict['measurement_information']
+        new_seq = PulseSequence(
+            name=sequence_dict["name"],
+            ensemble_list=sequence_dict["ensemble_list"],
+            rotating_frame=sequence_dict["rotating_frame"],
+        )
+        new_seq.sampling_information = sequence_dict["sampling_information"]
+        new_seq.measurement_information = sequence_dict["measurement_information"]
         return new_seq
 
 
@@ -1033,76 +1070,75 @@ class PredefinedGeneratorBase:
 
     @property
     def channel_set(self):
-        channels = self.pulse_generator_settings.get('activation_config')
+        channels = self.pulse_generator_settings.get("activation_config")
         if channels is None:
-            channels = ('', set())
+            channels = ("", set())
         return channels[1]
 
     @property
     def analog_channels(self):
-        return {chnl for chnl in self.channel_set if chnl.startswith('a')}
+        return {chnl for chnl in self.channel_set if chnl.startswith("a")}
 
     @property
     def digital_channels(self):
-        return {chnl for chnl in self.channel_set if chnl.startswith('d')}
+        return {chnl for chnl in self.channel_set if chnl.startswith("d")}
 
     @property
     def laser_channel(self):
-        return self.generation_parameters.get('laser_channel')
+        return self.generation_parameters.get("laser_channel")
 
     @property
     def sync_channel(self):
-        channel = self.generation_parameters.get('sync_channel')
-        return None if channel == '' else channel
+        channel = self.generation_parameters.get("sync_channel")
+        return None if channel == "" else channel
 
     @property
     def gate_channel(self):
-        channel = self.generation_parameters.get('gate_channel')
-        return None if channel == '' else channel
+        channel = self.generation_parameters.get("gate_channel")
+        return None if channel == "" else channel
 
     @property
     def analog_trigger_voltage(self):
-        return self.generation_parameters.get('analog_trigger_voltage')
+        return self.generation_parameters.get("analog_trigger_voltage")
 
     @property
     def laser_delay(self):
-        return self.generation_parameters.get('laser_delay')
+        return self.generation_parameters.get("laser_delay")
 
     @property
     def microwave_channel(self):
-        channel = self.generation_parameters.get('microwave_channel')
-        return None if channel == '' else channel
+        channel = self.generation_parameters.get("microwave_channel")
+        return None if channel == "" else channel
 
     @property
     def microwave_frequency(self):
-        return self.generation_parameters.get('microwave_frequency')
+        return self.generation_parameters.get("microwave_frequency")
 
     @property
     def microwave_amplitude(self):
-        return self.generation_parameters.get('microwave_amplitude')
+        return self.generation_parameters.get("microwave_amplitude")
 
     @property
     def laser_length(self):
-        return self.generation_parameters.get('laser_length')
+        return self.generation_parameters.get("laser_length")
 
     @property
     def wait_time(self):
-        return self.generation_parameters.get('wait_time')
+        return self.generation_parameters.get("wait_time")
 
     @property
     def rabi_period(self):
-        return self.generation_parameters.get('rabi_period')
+        return self.generation_parameters.get("rabi_period")
 
     @property
     def sample_rate(self):
-        return self.pulse_generator_settings.get('sample_rate')
+        return self.pulse_generator_settings.get("sample_rate")
 
     ################################################################################################
     #                                   Helper methods                                          ####
     ################################################################################################
 
-    def tau_2_pulse_spacing(self, t, inverse=False,
-                           custom_func=[None, None], **custom_kwwargs):
+    def tau_2_pulse_spacing(self, t, inverse=False, custom_func=[None, None], **custom_kwwargs):
         """
         Converts tau to the physical pulse spacing between (microwave) pulses.
         By definition, tau = 1/f where f is the filter frequency of a dynamical decoupling
@@ -1127,8 +1163,9 @@ class PredefinedGeneratorBase:
             t_phys = np.asarray(t_phys)
             tau = np.asarray(tau)
             if np.any(t_phys < 0):
-                self.log.warning("Adjusting negative physical pulse spacing to 0. Affected tau: {} "
-                                 .format(tau[t_phys < 0]))
+                self.log.warning(
+                    f"Adjusting negative physical pulse spacing to 0. Affected tau: {tau[t_phys < 0]} "
+                )
                 t_phys[t_phys < 0] = 0
 
             return t_phys
@@ -1159,7 +1196,8 @@ class PredefinedGeneratorBase:
             init_length_s=length,
             increment_s=increment,
             pulse_function={chnl: SamplingFunctions.Idle() for chnl in self.analog_channels},
-            digital_high={chnl: False for chnl in self.digital_channels})
+            digital_high={chnl: False for chnl in self.digital_channels},
+        )
 
     def _get_trigger_element(self, length, increment, channels):
         """
@@ -1180,16 +1218,18 @@ class PredefinedGeneratorBase:
 
         # Determine analogue or digital trigger channel and set channels accordingly.
         for channel in channels:
-            if channel.startswith('d'):
+            if channel.startswith("d"):
                 digital_high[channel] = True
-            elif channel.startswith('a'):
+            elif channel.startswith("a"):
                 pulse_function[channel] = SamplingFunctions.DC(voltage=self.analog_trigger_voltage)
 
         # return trigger element
-        return PulseBlockElement(init_length_s=length,
-                                 increment_s=increment,
-                                 pulse_function=pulse_function,
-                                 digital_high=digital_high)
+        return PulseBlockElement(
+            init_length_s=length,
+            increment_s=increment,
+            pulse_function=pulse_function,
+            digital_high=digital_high,
+        )
 
     def _get_laser_element(self, length, increment):
         """
@@ -1200,23 +1240,22 @@ class PredefinedGeneratorBase:
 
         @return: PulseBlockElement, two elements for laser and gate trigger (delay element)
         """
-        laser_element = self._get_trigger_element(length=length,
-                                                  increment=increment,
-                                                  channels=self.laser_channel)
+        laser_element = self._get_trigger_element(
+            length=length, increment=increment, channels=self.laser_channel
+        )
         laser_element.laser_on = True
         return laser_element
 
     def _get_laser_gate_element(self, length, increment):
-        """
-        """
-        laser_gate_element = self._get_laser_element(length=length,
-                                                     increment=increment)
+        """ """
+        laser_gate_element = self._get_laser_element(length=length, increment=increment)
         if self.gate_channel:
-            if self.gate_channel.startswith('d'):
+            if self.gate_channel.startswith("d"):
                 laser_gate_element.digital_high[self.gate_channel] = True
-            elif self.gate_channel.startswith('a'):
+            elif self.gate_channel.startswith("a"):
                 laser_gate_element.pulse_function[self.gate_channel] = SamplingFunctions.DC(
-                    voltage=self.analog_trigger_voltage)
+                    voltage=self.analog_trigger_voltage
+                )
         return laser_gate_element
 
     def _get_delay_element(self):
@@ -1225,8 +1264,7 @@ class PredefinedGeneratorBase:
 
         @return PulseBlockElement: The delay element
         """
-        return self._get_idle_element(length=self.laser_delay,
-                                      increment=0)
+        return self._get_idle_element(length=self.laser_delay, increment=0)
 
     def _get_delay_gate_element(self):
         """
@@ -1236,16 +1274,14 @@ class PredefinedGeneratorBase:
         @return PulseBlockElement: The delay element
         """
         if self.gate_channel:
-            return self._get_trigger_element(length=self.laser_delay,
-                                             increment=0,
-                                             channels=self.gate_channel)
+            return self._get_trigger_element(
+                length=self.laser_delay, increment=0, channels=self.gate_channel
+            )
         else:
             return self._get_delay_element()
 
     def _get_sync_element(self):
-        """
-
-        """
+        """ """
         return self._get_trigger_element(length=50e-9, increment=0, channels=self.sync_channel)
 
     def _get_mw_element(self, length, increment, amp=None, freq=None, phase=None):
@@ -1260,19 +1296,15 @@ class PredefinedGeneratorBase:
 
         @return: PulseBlockElement, the generated MW element
         """
-        if self.microwave_channel.startswith('d'):
+        if self.microwave_channel.startswith("d"):
             mw_element = self._get_trigger_element(
-                length=length,
-                increment=increment,
-                channels=self.microwave_channel)
+                length=length, increment=increment, channels=self.microwave_channel
+            )
         else:
-            mw_element = self._get_idle_element(
-                length=length,
-                increment=increment)
+            mw_element = self._get_idle_element(length=length, increment=increment)
             mw_element.pulse_function[self.microwave_channel] = SamplingFunctions.Sin(
-                amplitude=amp,
-                frequency=freq,
-                phase=phase)
+                amplitude=amp, frequency=freq, phase=phase
+            )
         return mw_element
 
     def _get_multiple_mw_element(self, length, increment, amps=None, freqs=None, phases=None):
@@ -1293,23 +1325,19 @@ class PredefinedGeneratorBase:
         if isinstance(phases, (int, float)):
             phases = [phases]
 
-        if self.microwave_channel.startswith('d'):
+        if self.microwave_channel.startswith("d"):
             mw_element = self._get_trigger_element(
-                length=length,
-                increment=increment,
-                channels=self.microwave_channel)
+                length=length, increment=increment, channels=self.microwave_channel
+            )
         else:
-            mw_element = self._get_idle_element(
-                length=length,
-                increment=increment)
+            mw_element = self._get_idle_element(length=length, increment=increment)
 
             sine_number = min(len(amps), len(freqs), len(phases))
 
             if sine_number < 2:
                 mw_element.pulse_function[self.microwave_channel] = SamplingFunctions.Sin(
-                    amplitude=amps[0],
-                    frequency=freqs[0],
-                    phase=phases[0])
+                    amplitude=amps[0], frequency=freqs[0], phase=phases[0]
+                )
             elif sine_number == 2:
                 mw_element.pulse_function[self.microwave_channel] = SamplingFunctions.DoubleSinSum(
                     amplitude_1=amps[0],
@@ -1317,7 +1345,8 @@ class PredefinedGeneratorBase:
                     frequency_1=freqs[0],
                     frequency_2=freqs[1],
                     phase_1=phases[0],
-                    phase_2=phases[1])
+                    phase_2=phases[1],
+                )
             else:
                 mw_element.pulse_function[self.microwave_channel] = SamplingFunctions.TripleSinSum(
                     amplitude_1=amps[0],
@@ -1328,7 +1357,8 @@ class PredefinedGeneratorBase:
                     frequency_3=freqs[2],
                     phase_1=phases[0],
                     phase_2=phases[1],
-                    phase_3=phases[2])
+                    phase_3=phases[2],
+                )
         return mw_element
 
     def _get_mw_laser_element(self, length, increment, amp=None, freq=None, phase=None):
@@ -1341,21 +1371,22 @@ class PredefinedGeneratorBase:
         @param phase:
         @return:
         """
-        mw_laser_element = self._get_mw_element(length=length,
-                                                increment=increment,
-                                                amp=amp,
-                                                freq=freq,
-                                                phase=phase)
-        if self.laser_channel.startswith('d'):
+        mw_laser_element = self._get_mw_element(
+            length=length, increment=increment, amp=amp, freq=freq, phase=phase
+        )
+        if self.laser_channel.startswith("d"):
             mw_laser_element.digital_high[self.laser_channel] = True
-        elif self.laser_channel.startswith('a'):
+        elif self.laser_channel.startswith("a"):
             mw_laser_element.pulse_function[self.laser_channel] = SamplingFunctions.DC(
-                voltage=self.analog_trigger_voltage)
+                voltage=self.analog_trigger_voltage
+            )
 
         mw_laser_element.laser_on = True
         return mw_laser_element
 
-    def _get_mw_element_linearchirp(self, length, increment, amplitude=None, start_freq=None, stop_freq=None, phase=None):
+    def _get_mw_element_linearchirp(
+        self, length, increment, amplitude=None, start_freq=None, stop_freq=None, phase=None
+    ):
         """
         Creates a MW pulse PulseBlockElement
 
@@ -1368,26 +1399,37 @@ class PredefinedGeneratorBase:
 
         @return: PulseBlockElement, the generated MW element
         """
-        if self.microwave_channel.startswith('d'):
+        if self.microwave_channel.startswith("d"):
             mw_element = self._get_trigger_element(
-                length=length,
-                increment=increment,
-                channels=self.microwave_channel)
-            self.log.warning('You are trying to create chirped pulses on a digital channel.')
+                length=length, increment=increment, channels=self.microwave_channel
+            )
+            self.log.warning("You are trying to create chirped pulses on a digital channel.")
         else:
-            mw_element = self._get_idle_element(
-                length=length,
-                increment=increment)
+            mw_element = self._get_idle_element(length=length, increment=increment)
 
-            sampling_function_name = 'Chirp'
-            kwargs = {'amplitude': amplitude, 'start_freq': start_freq, 'stop_freq': stop_freq, 'phase': phase}
+            sampling_function_name = "Chirp"
+            kwargs = {
+                "amplitude": amplitude,
+                "start_freq": start_freq,
+                "stop_freq": stop_freq,
+                "phase": phase,
+            }
 
-            mw_element.pulse_function[self.microwave_channel] = \
-                getattr(SamplingFunctions, sampling_function_name)(**kwargs)
+            mw_element.pulse_function[self.microwave_channel] = getattr(
+                SamplingFunctions, sampling_function_name
+            )(**kwargs)
         return mw_element
 
-    def _get_mw_element_AEchirp(self, length, increment, amp=None, start_freq=None, stop_freq=None, phase=None,
-                                truncation_ratio=0.1):
+    def _get_mw_element_AEchirp(
+        self,
+        length,
+        increment,
+        amp=None,
+        start_freq=None,
+        stop_freq=None,
+        phase=None,
+        truncation_ratio=0.1,
+    ):
         """
         Creates a MW pulse PulseBlockElement
 
@@ -1400,27 +1442,29 @@ class PredefinedGeneratorBase:
 
         @return: PulseBlockElement, the generated MW element
         """
-        if self.microwave_channel.startswith('d'):
+        if self.microwave_channel.startswith("d"):
             mw_element = self._get_trigger_element(
-                length=length,
-                increment=increment,
-                channels=self.microwave_channel)
-            self.log.warning('You are trying to create chirped pulses on a digital channel.')
+                length=length, increment=increment, channels=self.microwave_channel
+            )
+            self.log.warning("You are trying to create chirped pulses on a digital channel.")
         else:
-            mw_element = self._get_idle_element(
-                length=length,
-                increment=increment)
+            mw_element = self._get_idle_element(length=length, increment=increment)
 
-            sampling_function_name = 'AllenEberlyChirp'
-            kwargs = {'amplitude': amp, 'start_freq': start_freq, 'stop_freq': stop_freq, 'phase': phase,
-                      'tau_pulse': truncation_ratio * length}
+            sampling_function_name = "AllenEberlyChirp"
+            kwargs = {
+                "amplitude": amp,
+                "start_freq": start_freq,
+                "stop_freq": stop_freq,
+                "phase": phase,
+                "tau_pulse": truncation_ratio * length,
+            }
 
-            mw_element.pulse_function[self.microwave_channel] = \
-                getattr(SamplingFunctions, sampling_function_name)(**kwargs)
+            mw_element.pulse_function[self.microwave_channel] = getattr(
+                SamplingFunctions, sampling_function_name
+            )(**kwargs)
         return mw_element
 
     def _get_readout_element(self):
-
         waiting_element = self._get_idle_element(length=self.wait_time, increment=0)
         laser_element = self._get_laser_gate_element(length=self.laser_length, increment=0)
         delay_element = self._get_delay_gate_element()
@@ -1428,35 +1472,52 @@ class PredefinedGeneratorBase:
 
     def _add_trigger(self, created_blocks, block_ensemble):
         if self.sync_channel:
-            sync_block = PulseBlock(name='sync_trigger')
+            sync_block = PulseBlock(name="sync_trigger")
             sync_block.append(self._get_sync_element())
             created_blocks.append(sync_block)
             block_ensemble.append((sync_block.name, 0))
         return created_blocks, block_ensemble
 
-    def _add_metadata_to_settings(self, block_ensemble, created_blocks, alternating=False,
-                                  laser_ignore_list=None, controlled_variable=None, units=('s', ''),
-                                  labels=('Tau', 'Signal'), number_of_lasers=None, counting_length=None):
-
-        block_ensemble.measurement_information['alternating'] = alternating
-        block_ensemble.measurement_information[
-            'laser_ignore_list'] = laser_ignore_list if laser_ignore_list is not None else list()
-        block_ensemble.measurement_information[
-            'controlled_variable'] = controlled_variable if controlled_variable is not None else [0, 1]
-        block_ensemble.measurement_information['units'] = units
-        block_ensemble.measurement_information['labels'] = labels
+    def _add_metadata_to_settings(
+        self,
+        block_ensemble,
+        created_blocks,
+        alternating=False,
+        laser_ignore_list=None,
+        controlled_variable=None,
+        units=("s", ""),
+        labels=("Tau", "Signal"),
+        number_of_lasers=None,
+        counting_length=None,
+    ):
+        block_ensemble.measurement_information["alternating"] = alternating
+        block_ensemble.measurement_information["laser_ignore_list"] = (
+            laser_ignore_list if laser_ignore_list is not None else list()
+        )
+        block_ensemble.measurement_information["controlled_variable"] = (
+            controlled_variable if controlled_variable is not None else [0, 1]
+        )
+        block_ensemble.measurement_information["units"] = units
+        block_ensemble.measurement_information["labels"] = labels
         if number_of_lasers is None:
             if alternating:
-                block_ensemble.measurement_information['number_of_lasers'] = len(controlled_variable) * 2
+                block_ensemble.measurement_information["number_of_lasers"] = (
+                    len(controlled_variable) * 2
+                )
             else:
-                block_ensemble.measurement_information['number_of_lasers'] = len(controlled_variable)
+                block_ensemble.measurement_information["number_of_lasers"] = len(
+                    controlled_variable
+                )
         else:
-            block_ensemble.measurement_information['number_of_lasers'] = number_of_lasers
+            block_ensemble.measurement_information["number_of_lasers"] = number_of_lasers
         if counting_length is None:
-            block_ensemble.measurement_information['counting_length'] = self._get_ensemble_count_length(
-                ensemble=block_ensemble, created_blocks=created_blocks)
+            block_ensemble.measurement_information["counting_length"] = (
+                self._get_ensemble_count_length(
+                    ensemble=block_ensemble, created_blocks=created_blocks
+                )
+            )
         else:
-            block_ensemble.measurement_information['counting_length'] = counting_length
+            block_ensemble.measurement_information["counting_length"] = counting_length
 
         return block_ensemble
 
@@ -1475,7 +1536,7 @@ class PredefinedGeneratorBase:
         resolution = 1 / self.sample_rate * divisibility
         mod = value % resolution
         if mod < resolution / 2:
-            self.log.debug('Adjusted to sampling rate:' + str(value) + ' to ' + str(value - mod))
+            self.log.debug("Adjusted to sampling rate:" + str(value) + " to " + str(value - mod))
             value = value - mod
         else:
             value = value + resolution - mod
@@ -1497,14 +1558,12 @@ class PredefinedGeneratorBase:
             length = 0.0
             for block_name, reps in ensemble.block_list:
                 length += blocks[block_name].init_length_s * (reps + 1)
-                length += blocks[block_name].increment_s * ((reps ** 2 + reps) / 2)
+                length += blocks[block_name].increment_s * ((reps**2 + reps) / 2)
         return length
 
 
 class PulseObjectGenerator(PredefinedGeneratorBase):
-    """
-
-    """
+    """ """
 
     def __init__(self, sequencegeneratorlogic):
         # Initialize base class
@@ -1519,7 +1578,8 @@ class PulseObjectGenerator(PredefinedGeneratorBase):
 
         # Import predefined generator modules and get a list of generator classes
         generator_classes = self.__import_external_generators(
-            paths=sequencegeneratorlogic.predefined_methods_import_path)
+            paths=sequencegeneratorlogic.predefined_methods_import_path
+        )
 
         # create an instance of each class and put them in a temporary list
         generator_instances = [cls(sequencegeneratorlogic) for cls in generator_classes]
@@ -1550,14 +1610,18 @@ class PulseObjectGenerator(PredefinedGeneratorBase):
         class_list = list()
         for path in paths:
             if not os.path.exists(path):
-                self.log.error('Unable to import generate methods from "{0}".\n'
-                               'Path does not exist.'.format(path))
+                self.log.error(
+                    f'Unable to import generate methods from "{path}".\nPath does not exist.'
+                )
                 continue
             # Get all python modules to import from.
             # The assumption is that in the path, there are *.py files,
             # which contain only generator classes!
-            module_list = [name[:-3] for name in os.listdir(path) if
-                           os.path.isfile(os.path.join(path, name)) and name.endswith('.py')]
+            module_list = [
+                name[:-3]
+                for name in os.listdir(path)
+                if os.path.isfile(os.path.join(path, name)) and name.endswith(".py")
+            ]
 
             # append import path to sys.path
             if path not in sys.path:
@@ -1566,7 +1630,7 @@ class PulseObjectGenerator(PredefinedGeneratorBase):
             # Go through all modules and create instances of each class found.
             for module_name in module_list:
                 # import module
-                mod = importlib.import_module('{0}'.format(module_name))
+                mod = importlib.import_module(f"{module_name}")
                 importlib.reload(mod)
                 # get all generator class references defined in the module
                 tmp_list = [m[1] for m in inspect.getmembers(mod, self.is_generator_class)]
@@ -1584,7 +1648,7 @@ class PulseObjectGenerator(PredefinedGeneratorBase):
         self._generate_methods = dict()
         for instance in instance_list:
             for method_name, method_ref in inspect.getmembers(instance, inspect.ismethod):
-                if method_name.startswith('generate_'):
+                if method_name.startswith("generate_"):
                     self._generate_methods[method_name[9:]] = method_ref
         return
 
@@ -1614,4 +1678,3 @@ class PulseObjectGenerator(PredefinedGeneratorBase):
         if inspect.isclass(obj):
             return PredefinedGeneratorBase in obj.__bases__ and len(obj.__bases__) == 1
         return False
-

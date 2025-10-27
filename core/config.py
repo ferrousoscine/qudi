@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi configuration file module.
 
@@ -31,12 +30,12 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-import numpy
-import re
 import os
-import ruamel.yaml as yaml
+from collections import OrderedDict
 from io import BytesIO
+
+import numpy
+import yaml  # Use PyYAML for custom loaders
 
 
 def ordered_load(stream, Loader=yaml.Loader):
@@ -49,10 +48,12 @@ def ordered_load(stream, Loader=yaml.Loader):
     Returns OrderedDict with data. If stream is empty then an empty
     OrderedDict is returned.
     """
+
     class OrderedLoader(Loader):
         """
         Loader using an OrderedDict
         """
+
         pass
 
     def construct_mapping(loader, node):
@@ -70,7 +71,7 @@ def ordered_load(stream, Loader=yaml.Loader):
         value = loader.construct_yaml_binary(node)
         with BytesIO(bytes(value)) as f:
             arrays = numpy.load(f)
-            return arrays['array']
+            return arrays["array"]
 
     def construct_external_ndarray(loader, node):
         """
@@ -78,7 +79,7 @@ def ordered_load(stream, Loader=yaml.Loader):
         """
         filename = loader.construct_yaml_str(node)
         arrays = numpy.load(filename)
-        return arrays['array']
+        return arrays["array"]
 
     def construct_frozenset(loader, node):
         """
@@ -97,12 +98,22 @@ def ordered_load(stream, Loader=yaml.Loader):
         value = loader.construct_yaml_str(node)
         # if a string could be an array, we try to evaluate the string
         # to reconstruct a numpy array. If it fails we return the string.
-        if value.startswith('array('):
+        if value.startswith("array("):
             try:
                 local = {"array": numpy.array}
-                for dtype in ['int8', 'uint8', 'int16', 'uint16', 'float16',
-                        'int32', 'uint32', 'float32', 'int64', 'uint64',
-                        'float64']:
+                for dtype in [
+                    "int8",
+                    "uint8",
+                    "int16",
+                    "uint16",
+                    "float16",
+                    "int32",
+                    "uint32",
+                    "float32",
+                    "int64",
+                    "uint64",
+                    "float64",
+                ]:
                     local[dtype] = getattr(numpy, dtype)
                 return eval(value, local)
             except SyntaxError:
@@ -111,24 +122,14 @@ def ordered_load(stream, Loader=yaml.Loader):
             return value
 
     # add constructor
-    OrderedLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            construct_mapping)
-    OrderedLoader.add_constructor(
-            '!ndarray',
-            construct_ndarray)
-    OrderedLoader.add_constructor(
-            '!extndarray',
-            construct_external_ndarray)
-    OrderedLoader.add_constructor(
-        '!frozenset',
-        construct_frozenset)
-    OrderedLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG,
-            construct_str)
+    OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
+    OrderedLoader.add_constructor("!ndarray", construct_ndarray)
+    OrderedLoader.add_constructor("!extndarray", construct_external_ndarray)
+    OrderedLoader.add_constructor("!frozenset", construct_frozenset)
+    OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG, construct_str)
 
-    # load config file
-    config = yaml.load(stream, OrderedLoader)
+    # load config file using PyYAML (supports custom loaders)
+    config = yaml.load(stream, Loader=OrderedLoader)
     # yaml returns None if the config file was empty
     if config is not None:
         return config
@@ -144,10 +145,12 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
     @param Stream stream: where the data in YAML is dumped
     @param Dumper Dumper: The dumper that is used as a base class
     """
+
     class OrderedDumper(Dumper):
         """
         A Dumper using an OrderedDict
         """
+
         external_ndarray_counter = 0
 
         def ignore_aliases(self, ignore_data):
@@ -161,8 +164,8 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
         Representer for OrderedDict
         """
         return dumper.represent_mapping(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            dict_data.items())
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_data.items()
+        )
 
     def represent_int(dumper, int_data):
         """
@@ -181,7 +184,7 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
         Representer for frozenset
         """
         node = dumper.represent_set(set(set_data))
-        node.tag = '!frozenset'
+        node.tag = "!frozenset"
         return node
 
     def represent_ndarray(dumper, array_data):
@@ -191,19 +194,19 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
         try:
             filename = os.path.splitext(os.path.basename(stream.name))[0]
             configdir = os.path.dirname(stream.name)
-            newpath = '{0}-{1:06}.npz'.format(
-                os.path.join(configdir, filename),
-                dumper.external_ndarray_counter)
+            newpath = (
+                f"{os.path.join(configdir, filename)}-{dumper.external_ndarray_counter:06}.npz"
+            )
             numpy.savez_compressed(newpath, array=array_data)
             node = dumper.represent_str(newpath)
-            node.tag = '!extndarray'
+            node.tag = "!extndarray"
             dumper.external_ndarray_counter += 1
         except:
             with BytesIO() as f:
                 numpy.savez_compressed(f, array=array_data)
                 compressed_string = f.getvalue()
             node = dumper.represent_binary(compressed_string)
-            node.tag = '!ndarray'
+            node.tag = "!ndarray"
         return node
 
     # add representers
@@ -235,7 +238,7 @@ def load(filename):
 
     Returns OrderedDict
     """
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         return ordered_load(f, yaml.SafeLoader)
 
 
@@ -246,5 +249,5 @@ def save(filename, data):
     @param str filename: filename of config file
     @param OrderedDict data: config values
     """
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         ordered_dump(data, stream=f, Dumper=yaml.SafeDumper, default_flow_style=False)

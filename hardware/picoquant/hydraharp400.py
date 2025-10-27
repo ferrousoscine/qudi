@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi hardware module for the HydraHarp400.
 
@@ -19,13 +18,14 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from core.module import Base
-from core.configoption import ConfigOption
-from core.util.modules import get_main_dir
-from interface.fast_counter_interface import FastCounterInterface
-import time
-import numpy as np
 import ctypes
+import time
+
+import numpy as np
+
+from core.configoption import ConfigOption
+from core.module import Base
+from interface.fast_counter_interface import FastCounterInterface
 
 # =============================================================================
 # Wrapper around the HHLib64.DLL. The current file is based on the header files
@@ -54,8 +54,9 @@ correspond to standard C/C++ data types as follows:
     double                  64 bit floating point number
 """
 
+
 class HydraHarp400(Base, FastCounterInterface):
-    """ Hardware class to control the HydraHarp 400 from PicoQuant.
+    """Hardware class to control the HydraHarp 400 from PicoQuant.
 
     This class is written according to the Programming Library Version 3.0.0.2
 
@@ -65,77 +66,88 @@ class HydraHarp400(Base, FastCounterInterface):
         module.Class: 'picoquant.hydraharp400.hydraharp400.HydraHarp400'
         deviceID: 0 # a device index from 0 to 7.
         mode: 0 # 0: histogram mode, 2: T2 mode, 3: T3 mode, 8: continuous mode
-        
+
     """
-    _modclass = 'HydraHarp400'
-    _modtype = 'hardware'
 
-    _deviceID = ConfigOption('deviceID', 0, missing='warn') # a device index from 0 to 7.
-    _mode = ConfigOption('mode', 0, missing='warn')
-    _refsource = ConfigOption('refsource', 0, missing='warn')
+    _modclass = "HydraHarp400"
+    _modtype = "hardware"
 
-    gated = ConfigOption('gated', False, missing='warn')
-    trigger_safety = ConfigOption('trigger_safety', 400e-9, missing='warn')
-    aom_delay = ConfigOption('aom_delay', 390e-9, missing='warn')
-    minimal_binwidth = ConfigOption('minimal_binwidth', 1e-12, missing='warn')
+    _deviceID = ConfigOption("deviceID", 0, missing="warn")  # a device index from 0 to 7.
+    _mode = ConfigOption("mode", 0, missing="warn")
+    _refsource = ConfigOption("refsource", 0, missing="warn")
+
+    gated = ConfigOption("gated", False, missing="warn")
+    trigger_safety = ConfigOption("trigger_safety", 400e-9, missing="warn")
+    aom_delay = ConfigOption("aom_delay", 390e-9, missing="warn")
+    minimal_binwidth = ConfigOption("minimal_binwidth", 1e-12, missing="warn")
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
         self._set_constants()
         self.connected_to_device = False
 
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
         for key in config.keys():
-            self.log.info('{0}: {1}'.format(key, config[key]))
+            self.log.info(f"{key}: {config[key]}")
 
         self.stopped_or_halt = "stopped"
         self.bins_num = 0
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
 
-        self.dll = ctypes.windll.LoadLibrary('C:\Windows\System32\hhlib64.dll')
+        self.dll = ctypes.windll.LoadLibrary(r"C:\Windows\System32\hhlib64.dll")
         serial = ctypes.create_string_buffer(8)
-        dev=[]
+        dev = []
         # Check the availability of the configured Pico Quant device
         op = self.dll.HH_OpenDevice(ctypes.c_int(self._deviceID), serial)
         if op == 0:
-            ini = self.dll.HH_Initialize(ctypes.c_int(self._deviceID), ctypes.c_int(self._mode), ctypes.c_int(self._refsource))
+            ini = self.dll.HH_Initialize(
+                ctypes.c_int(self._deviceID),
+                ctypes.c_int(self._mode),
+                ctypes.c_int(self._refsource),
+            )
         else:
             # search available Pico Quant device
             # unplug or replug of PQ device, could change the device ID
-            self.log.warn('Fastcounter: Cannot find configured HydraHarp400. \nSearching available HydraHarp400...')
+            self.log.warn(
+                "Fastcounter: Cannot find configured HydraHarp400. \nSearching available HydraHarp400..."
+            )
             for i in range(0, 8):
                 op = self.dll.HH_OpenDevice(ctypes.c_int(i), serial)
                 if op == 0:
                     dev.append(i)
             # Use the first Pico Quant device as fastcounter
-            self.log.info('Using the first Pico Quant device of the searching list as the fastcounter. \ndeviceID: {0}'.format(dev[0]))
+            self.log.info(
+                f"Using the first Pico Quant device of the searching list as the fastcounter. \ndeviceID: {dev[0]}"
+            )
             self._deviceID = dev[0]
-            ini = self.dll.HH_Initialize(ctypes.c_int(self._deviceID), ctypes.c_int(self._mode), ctypes.c_int(self._refsource))
+            ini = self.dll.HH_Initialize(
+                ctypes.c_int(self._deviceID),
+                ctypes.c_int(self._mode),
+                ctypes.c_int(self._refsource),
+            )
         if ini == 0:
             cal = self.dll.HH_Calibrate(self._deviceID)
             if cal == 0:
                 self.connected_to_device = True
-                self.log.info('Calibration of HydraHarp400 is finished.')
+                self.log.info("Calibration of HydraHarp400 is finished.")
                 return
             else:
-                self.log.warn('Fastcounter: Calibration of HydraHarp400 failed.')
+                self.log.warn("Fastcounter: Calibration of HydraHarp400 failed.")
         else:
-            self.log.error('Fastcounter: Could not find any Pico Quant device.')
+            self.log.error("Fastcounter: Could not find any Pico Quant device.")
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         self.dll.HH_CloseDevice(ctypes.c_int(self._deviceID))
-        self.log.info('HydraHarp400 closed.')
+        self.log.info("HydraHarp400 closed.")
         return
 
     def check(self, func_val):
-        """ Check routine for the received error codes.
+        """Check routine for the received error codes.
 
         @param int func_val: return error code of the called function.
 
@@ -150,13 +162,13 @@ class HydraHarp400(Base, FastCounterInterface):
         """
 
         if not func_val == 0:
-            self.log.error('Fastcounter: Error in HydraHarp400 with errorcode {0}:\n'
-                           '{1}'.format(func_val, self.errorcode[func_val]))
+            self.log.error(
+                f"Fastcounter: Error in HydraHarp400 with errorcode {func_val}:\n{self.errorcode[func_val]}"
+            )
         return func_val
 
-
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the Fast counting device.
+        """Retrieve the hardware constrains from the Fast counting device.
 
         @return dict: dict with keys being the constraint names as string and
                       items are the definition for the constaints.
@@ -194,69 +206,73 @@ class HydraHarp400(Base, FastCounterInterface):
         # the unit of those entries are seconds per bin. In order to get the
         # current binwidth in seonds use the get_binwidth method.
 
-        constraints['hardware_binwidth_list'] = list(self.minimal_binwidth * (2 ** np.array(
-                                                     np.linspace(0, 25, 26))))
-        constraints['max_sweep_len'] = 2.199 # Page 51 in user manual
-        constraints['max_bins'] = 65536
+        constraints["hardware_binwidth_list"] = list(
+            self.minimal_binwidth * (2 ** np.array(np.linspace(0, 25, 26)))
+        )
+        constraints["max_sweep_len"] = 2.199  # Page 51 in user manual
+        constraints["max_bins"] = 65536
         return constraints
 
-
     def configure(self, bin_width_s, record_length_s, number_of_gates=None):
-            """ Configuration of the fast counter.
-            @param float bin_width_s: Length of a single time bin in the time trace
-                                      histogram in seconds.
-            @param float record_length_s: Total length of the timetrace/each single
-                                          gate in seconds.
-            @param int number_of_gates: optional, number of gates in the pulse
-                                        sequence. Ignore for not gated counter.
-            @return tuple(binwidth_s, record_length_s, number_of_gates):
-                        binwidth_s: float the actual set binwidth in seconds
-                        gate_length_s: the actual record length in seconds
-                        number_of_gates: the number of gated, which are accepted,
-                        None if not-gated
-            """
+        """Configuration of the fast counter.
+        @param float bin_width_s: Length of a single time bin in the time trace
+                                  histogram in seconds.
+        @param float record_length_s: Total length of the timetrace/each single
+                                      gate in seconds.
+        @param int number_of_gates: optional, number of gates in the pulse
+                                    sequence. Ignore for not gated counter.
+        @return tuple(binwidth_s, record_length_s, number_of_gates):
+                    binwidth_s: float the actual set binwidth in seconds
+                    gate_length_s: the actual record length in seconds
+                    number_of_gates: the number of gated, which are accepted,
+                    None if not-gated
+        """
 
-            # when not gated, record length = total sequence length, when gated, record length = laser length.
-            # subtract 200 ns to make sure no sequence trigger is missed
-            self.set_binwidth(bin_width_s)
-            record_length_HydraHarp_s = record_length_s
+        # when not gated, record length = total sequence length, when gated, record length = laser length.
+        # subtract 200 ns to make sure no sequence trigger is missed
+        self.set_binwidth(bin_width_s)
+        record_length_HydraHarp_s = record_length_s
 
-            if self.gated:
-                # add time to account for AOM delay
-                new_record_length_s = int((record_length_HydraHarp_s + self.aom_delay) / bin_width_s)
-            else:
-                # subtract time to make sure no sequence trigger is missed
-                new_record_length_s = int((record_length_HydraHarp_s - self.trigger_safety) / bin_width_s)
-            self.set_length(new_record_length_s)
-            # self.set_cycles(number_of_gates)
+        if self.gated:
+            # add time to account for AOM delay
+            new_record_length_s = int((record_length_HydraHarp_s + self.aom_delay) / bin_width_s)
+        else:
+            # subtract time to make sure no sequence trigger is missed
+            new_record_length_s = int(
+                (record_length_HydraHarp_s - self.trigger_safety) / bin_width_s
+            )
+        self.set_length(new_record_length_s)
+        # self.set_cycles(number_of_gates)
 
-            return self.get_binwidth(), self.get_length() * self.get_binwidth(), number_of_gates
+        return self.get_binwidth(), self.get_length() * self.get_binwidth(), number_of_gates
 
     def start_measure(self):
-        """Start the measurement. """
+        """Start the measurement."""
         self.dll.HH_ClearHistMem(self._deviceID)
-        status = self.dll.HH_StartMeas(self._deviceID, 360000) # t is aquisition time, can set ACQTMAX as default
+        status = self.dll.HH_StartMeas(
+            self._deviceID, 360000
+        )  # t is aquisition time, can set ACQTMAX as default
         return status
 
     def stop_measure(self):
-        """Stop the measurement. """
+        """Stop the measurement."""
         self.stopped_or_halt = "stopped"
         status = self.dll.HH_StopMeas(self._deviceID)
         return status
 
     def pause_measure(self):
-        """Make a pause in the measurement, which can be continued. """
+        """Make a pause in the measurement, which can be continued."""
         self.stopped_or_halt = "halt"
         status = self.dll.HH_StopMeas(self._deviceID)
         return status
 
     def continue_measure(self):
-        """Continue a paused measurement. """
+        """Continue a paused measurement."""
         status = self.dll.HH_StartMeas(self._deviceID, 360000)
         return status
 
     def is_gated(self):
-        """ Check the gated counting possibility.
+        """Check the gated counting possibility.
 
         @return bool: Boolean value indicates if the fast counter is a gated
                       counter (TRUE) or not (FALSE).
@@ -264,12 +280,12 @@ class HydraHarp400(Base, FastCounterInterface):
         return self.gated
 
     def get_length(self):
-        """ Get the length of the current measurement.
+        """Get the length of the current measurement.
 
-          @return int: length of the current measurement in bins
+        @return int: length of the current measurement in bins
         """
         if self.bins_num == 0:
-            self.log.warn('Fastcounter: bin number has not been set. Returning 0.')
+            self.log.warn("Fastcounter: bin number has not been set. Returning 0.")
         return self.bins_num
 
     def get_data_trace(self):
@@ -297,18 +313,17 @@ class HydraHarp400(Base, FastCounterInterface):
         time_trace = np.int64(py_counts)
 
         meas_t = int(self.get_measurement_time())
-        info_dict = {'elapsed_sweeps': None,
-                     'elapsed_time': meas_t}
+        info_dict = {"elapsed_sweeps": None, "elapsed_time": meas_t}
         return time_trace, info_dict
 
     def get_measurement_time(self):
         t = ctypes.c_double()  # in ms unit
         self.dll.HH_GetElapsedMeasTime(self._deviceID, ctypes.byref(t))
-        return t.value/1000 # return in second
+        return t.value / 1000  # return in second
 
     def _set_constants(self):
-        """ Set the constants (max and min values) for the Hydraharp400 device.
-        These setting are taken from hhdefin.h """
+        """Set the constants (max and min values) for the Hydraharp400 device.
+        These setting are taken from hhdefin.h"""
 
         self.MODE_HIST = 0
         self.MODE_T2 = 2
@@ -320,8 +335,8 @@ class HydraHarp400(Base, FastCounterInterface):
         self.ZCMAX = 40
         self.DISCRMIN = 0
         self.DISCRMAX = 1000
-     #   self.PHR800LVMIN = -1600
-      #  self.PHR800LVMAX = 2400
+        #   self.PHR800LVMIN = -1600
+        #  self.PHR800LVMAX = 2400
 
         # in ps:
         self.OFFSETMIN = 0
@@ -342,18 +357,17 @@ class HydraHarp400(Base, FastCounterInterface):
         self.HISTCHAN = 65536  # number of histogram channels 2^16
         self.TTREADMAX = 131072  # 128K event records (2^17)
 
-
     def get_version(self):
-        """ Get the software/library version of the device.
+        """Get the software/library version of the device.
 
         @return string: string representation of the
                         Version number of the current library."""
-        buf = ctypes.create_string_buffer(8)   # at least 8 byte
+        buf = ctypes.create_string_buffer(8)  # at least 8 byte
         self.check(self.dll.HH_GetLibraryVersion(ctypes.byref(buf)))
-        return buf.value # .decode() converts byte to string
+        return buf.value  # .decode() converts byte to string
 
     def get_error_string(self, errcode):
-        """ Get the string error code from the Hydraharp Device.
+        """Get the string error code from the Hydraharp Device.
 
         @param int errcode: errorcode from 0 and below.
 
@@ -364,41 +378,44 @@ class HydraHarp400(Base, FastCounterInterface):
         or lower, since interger bigger 0 are not defined as error.
         """
 
-        buf = ctypes.create_string_buffer(80)   # at least 40 byte
+        buf = ctypes.create_string_buffer(80)  # at least 40 byte
         self.check(self.dll.HH_GetErrorString(ctypes.byref(buf), errcode))
-        return buf.value.decode() # .decode() converts byte to string
+        return buf.value.decode()  # .decode() converts byte to string
 
     # =========================================================================
     # All functions below can be used if the device was successfully called.
     # =========================================================================
 
     def get_hardware_info(self):
-        """ Retrieve the device hardware information.
+        """Retrieve the device hardware information.
 
         @return string tuple(3): (Model, Partnum, Version)
         """
 
-        model = ctypes.create_string_buffer(32)     # at least 16 byte
-        version = ctypes.create_string_buffer(16)   # at least 8 byte
-        partnum = ctypes.create_string_buffer(16)   # at least 8 byte
-        self.check(self.dll.HH_GetHardwareInfo(self._deviceID, ctypes.byref(model),
-                                                ctypes.byref(partnum), ctypes.byref(version)))
+        model = ctypes.create_string_buffer(32)  # at least 16 byte
+        version = ctypes.create_string_buffer(16)  # at least 8 byte
+        partnum = ctypes.create_string_buffer(16)  # at least 8 byte
+        self.check(
+            self.dll.HH_GetHardwareInfo(
+                self._deviceID, ctypes.byref(model), ctypes.byref(partnum), ctypes.byref(version)
+            )
+        )
 
         # the .decode() function converts byte objects to string objects
         return model.value.decode(), partnum.value.decode(), version.value.decode()
 
     def get_serial_number(self):
-        """ Retrieve the serial number of the device.
+        """Retrieve the serial number of the device.
 
         @return string: serial number of the device
         """
 
-        serialnum = ctypes.create_string_buffer(16)   # at least 8 byte
+        serialnum = ctypes.create_string_buffer(16)  # at least 8 byte
         self.check(self.dll.HH_GetSerialNumber(self._deviceID, ctypes.byref(serialnum)))
-        return serialnum.value.decode() # .decode() converts byte to string
+        return serialnum.value.decode()  # .decode() converts byte to string
 
     def get_base_resolution(self):
-        """ Retrieve the base resolution of the device.
+        """Retrieve the base resolution of the device.
 
         @return double: the base resolution of the device
         """
@@ -408,7 +425,7 @@ class HydraHarp400(Base, FastCounterInterface):
         return res.value
 
     def set_input_CFD(self, channel, level, zerocross):
-        """ Set the Constant Fraction Discriminators for the HydraHarp400.
+        """Set the Constant Fraction Discriminators for the HydraHarp400.
 
         @param int channel: number (0 or 1) of the input channel
         @param int level: CFD discriminator level in millivolts
@@ -418,26 +435,32 @@ class HydraHarp400(Base, FastCounterInterface):
         level = int(level)
         zerocross = int(zerocross)
         if channel not in (0, 1):
-            self.log.error('HydraHarp: Channal does not exist.\nChannel has '
-                           'to be 0 or 1 but {0} was passed.'.format(channel))
+            self.log.error(
+                "HydraHarp: Channal does not exist.\nChannel has "
+                f"to be 0 or 1 but {channel} was passed."
+            )
             return
-        if not(self.DISCRMIN <= level <= self.DISCRMAX):
-            self.log.error('HydraHarp: Invalid CFD level.\nValue must be '
-                           'within the range [{0},{1}] millivolts but a value of '
-                           '{2} has been '
-                           'passed.'.format(self.DISCRMIN, self.DISCRMAX, level))
+        if not (self.DISCRMIN <= level <= self.DISCRMAX):
+            self.log.error(
+                "HydraHarp: Invalid CFD level.\nValue must be "
+                f"within the range [{self.DISCRMIN},{self.DISCRMAX}] millivolts but a value of "
+                f"{level} has been "
+                "passed."
+            )
             return
-        if not(self.ZCMIN <= zerocross <= self.ZCMAX):
-            self.log.error('HydraHarp: Invalid CFD zero cross.\nValue must be '
-                           'within the range [{0},{1}] millivolts but a value of '
-                           '{2} has been '
-                           'passed.'.format(self.ZCMIN, self.ZCMAX, zerocross))
+        if not (self.ZCMIN <= zerocross <= self.ZCMAX):
+            self.log.error(
+                "HydraHarp: Invalid CFD zero cross.\nValue must be "
+                f"within the range [{self.ZCMIN},{self.ZCMAX}] millivolts but a value of "
+                f"{zerocross} has been "
+                "passed."
+            )
             return
 
         self.check(self.dll.HH_SetInputCFD(self._deviceID, channel, level, zerocross))
 
     def set_offset(self, offset):
-        """ Set an offset time.
+        """Set an offset time.
 
         @param int offset: offset in ps (only possible for histogramming and T3
                            mode!). Value must be within [OFFSETMIN,OFFSETMAX].
@@ -447,15 +470,17 @@ class HydraHarp400(Base, FastCounterInterface):
         difference between ch1 and ch0 in hitogramming and T3 mode. Do not
         confuse it with the input offsets!
         """
-        if not(self.OFFSETMIN <= offset <= self.OFFSETMAX):
-            self.log.error('HydraHarp: Invalid offset.\nValue must be within '
-                           'the range [{0},{1}] ps, but a value of {2} has been '
-                           'passed.'.format(self.OFFSETMIN, self.OFFSETMAX, offset))
+        if not (self.OFFSETMIN <= offset <= self.OFFSETMAX):
+            self.log.error(
+                "HydraHarp: Invalid offset.\nValue must be within "
+                f"the range [{self.OFFSETMIN},{self.OFFSETMAX}] ps, but a value of {offset} has been "
+                "passed."
+            )
         else:
             self.check(self.dll.HH_SetOffset(self._deviceID, offset))
 
     def _get_status(self):
-        """ Check the status of the device.
+        """Check the status of the device.
 
         @return int:  = 0: acquisition time still running
                       > 0: acquisition time has ended, measurement finished.
@@ -465,7 +490,7 @@ class HydraHarp400(Base, FastCounterInterface):
         return ctcstatus.value
 
     def get_resolution(self):
-        """ Retrieve the current resolution of the picohard.
+        """Retrieve the current resolution of the picohard.
 
         @return double: resolution at current binning.
         """
@@ -494,16 +519,18 @@ class HydraHarp400(Base, FastCounterInterface):
                 return 1
 
     def get_binwidth(self):
-        """ Returns the width of a single timebin in the timetrace in seconds.
+        """Returns the width of a single timebin in the timetrace in seconds.
         @return float: current length of a single bin in seconds (seconds/bin)
         """
         resolution = ctypes.c_double()
-        self.tryfunc(self.dll.HH_GetResolution(self._deviceID, ctypes.byref(resolution)), "GetResolution")
+        self.tryfunc(
+            self.dll.HH_GetResolution(self._deviceID, ctypes.byref(resolution)), "GetResolution"
+        )
 
         return resolution.value * 1e-12
 
     def set_length(self, length_bins):
-        """ Sets the length of the length of the actual measurement.
+        """Sets the length of the length of the actual measurement.
 
         @param int length_bins: Length of the measurement in bins
 
@@ -515,27 +542,33 @@ class HydraHarp400(Base, FastCounterInterface):
             pass
         else:
             cycles = 1
-        if length_bins *  cycles < constraints['max_bins']:
+        if length_bins * cycles < constraints["max_bins"]:
             # bin numbers for Hydraharp, bin_num=1024*2^lencode, where lencode is integral, ranging 0~16.
             # Therefore, it has a very large bin increments. Bin numbers can be [1024,2048, 4096, ...].
-            lencode = int(np.log2(length_bins/1024)+1)
+            lencode = int(np.log2(length_bins / 1024) + 1)
             actualength = ctypes.c_int()
             length_set = self.dll.HH_SetHistoLen(self._deviceID, lencode, ctypes.byref(actualength))
             if length_set == 0:
-                self.log.info('Bin lencode is {0}, Actual histogram bins are {1}.'.format(lencode, actualength.value))
+                self.log.info(
+                    f"Bin lencode is {lencode}, Actual histogram bins are {actualength.value}."
+                )
                 self.bins_num = actualength.value
-                extra_length = (self.bins_num - length_bins) * self.get_binwidth()*1e3
-                self.log.warn('Fastcounter: Extra length of the sweep is {0} ms.'.format(extra_length))
+                extra_length = (self.bins_num - length_bins) * self.get_binwidth() * 1e3
+                self.log.warn(f"Fastcounter: Extra length of the sweep is {extra_length} ms.")
             else:
-                self.log.error('Fastcounter: Counting length set failed, errocode: {0}. check errorcodes.h for solution.'.format(length_set))
+                self.log.error(
+                    f"Fastcounter: Counting length set failed, errocode: {length_set}. check errorcodes.h for solution."
+                )
             time.sleep(0.5)
             return actualength.value
         else:
-            self.log.error('Fastcounter: Dimensions {0} are too large for fast counter!'.format(length_bins * cycles))
+            self.log.error(
+                f"Fastcounter: Dimensions {length_bins * cycles} are too large for fast counter!"
+            )
             return -1
 
     def set_binning(self, binning):
-        """ Set the base resolution of the measurement.
+        """Set the base resolution of the measurement.
         @param int binning: binning code
                                 minimum = 0 (smallest, i.e. base resolution)
                                 maximum = (BINSTEPSMAX-1) (largest)
@@ -552,39 +585,45 @@ class HydraHarp400(Base, FastCounterInterface):
         In histogram mode the internal
         buffer can store 65535 points (each a 32bit word).
         """
-        if not(0 <= binning < self.BINSTEPSMAX):
-            self.log.error('HydraHarp: Invalid binning.\nValue must be within '
-                           'the range [{0},{1}] bins, but a value of {2} has been '
-                           'passed.'.format(0, self.BINSTEPSMAX, binning))
+        if not (0 <= binning < self.BINSTEPSMAX):
+            self.log.error(
+                "HydraHarp: Invalid binning.\nValue must be within "
+                f"the range [{0},{self.BINSTEPSMAX}] bins, but a value of {binning} has been "
+                "passed."
+            )
         else:
             self.check(self.dll.HH_SetBinning(self._deviceID, binning))
 
     def set_binwidth(self, binwidth):
-        """ Set defined binwidth in Card.
+        """Set defined binwidth in Card.
         @param float binwidth: the current binwidth in seconds
         @return float: Red out bitshift converted to binwidth
         The binwidth is converted into to an appropiate bitshift defined as
         2**bitshift*minimal_binwidth.
         """
-        bitshift = int(np.log2(binwidth/self.minimal_binwidth))
-        resolution=self.set_bitshift(bitshift)
+        bitshift = int(np.log2(binwidth / self.minimal_binwidth))
+        resolution = self.set_bitshift(bitshift)
         return resolution
 
     def set_bitshift(self, bitshift):
-        """ Sets the bitshift properly for this card.
+        """Sets the bitshift properly for this card.
         @param int bitshift:
         @return int: asks the actual bitshift and returns the red out value
         """
 
         self.set_binning(bitshift)
         resolution = ctypes.c_double()
-        self.tryfunc(self.dll.HH_GetResolution(self._deviceID, ctypes.byref(resolution)), "GetResolution")
+        self.tryfunc(
+            self.dll.HH_GetResolution(self._deviceID, ctypes.byref(resolution)), "GetResolution"
+        )
         return resolution.value * 1e-12
 
     def tryfunc(self, retcode, funcName, measRunning=False):
         errorString = ctypes.create_string_buffer(b"", 40)
         if retcode < 0:
             self.dll.HH_GetErrorString(errorString, ctypes.c_int(retcode))
-            self.log.error("Fastcounter: HH_%s error %d (%s). Aborted." % (funcName, retcode,\
-                  errorString.value.decode("utf-8")))
+            self.log.error(
+                "Fastcounter: HH_%s error %d (%s). Aborted."
+                % (funcName, retcode, errorString.value.decode("utf-8"))
+            )
         return retcode

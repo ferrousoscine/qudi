@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dummy implementation for simple data acquisition.
 
@@ -19,15 +18,16 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import time
+
+import numpy as np
 
 from core.module import Base
 from interface.simple_data_interface import SimpleDataInterface
 
 
 class SimpleDummy(Base, SimpleDataInterface):
-    """ A simple Data generator dummy.
+    """A simple Data generator dummy.
 
     Example config for copy-paste:
 

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the dummy for a magnet interface.
 
@@ -27,15 +25,16 @@ from interface.magnet_interface import MagnetInterface
 
 
 class MagnetAxisDummy:
-    """ Generic dummy magnet representing one axis. """
+    """Generic dummy magnet representing one axis."""
+
     def __init__(self, label):
         self.label = label
         self.pos = 0.0
-        self.status = 0, {0: 'MagnetDummy Idle'}
+        self.status = 0, {0: "MagnetDummy Idle"}
 
 
 class MagnetDummy(Base, MagnetInterface):
-    """ This is the Interface class to define the controls for the simple
+    """This is the Interface class to define the controls for the simple
         magnet hardware.
 
     Example config for copy-paste:
@@ -44,29 +43,28 @@ class MagnetDummy(Base, MagnetInterface):
         module.Class: 'magnet.magnet_dummy.MagnetDummy'
 
     """
+
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
 
-        #these label should be actually set by the config.
-        self._x_axis = MagnetAxisDummy('x')
-        self._y_axis = MagnetAxisDummy('y')
-        self._z_axis = MagnetAxisDummy('z')
-        self._phi_axis = MagnetAxisDummy('phi')
+        # these label should be actually set by the config.
+        self._x_axis = MagnetAxisDummy("x")
+        self._y_axis = MagnetAxisDummy("y")
+        self._z_axis = MagnetAxisDummy("z")
+        self._phi_axis = MagnetAxisDummy("phi")
 
-    #TODO: Checks if configuration is set and is reasonable
+    # TODO: Checks if configuration is set and is reasonable
 
     def on_activate(self):
-        """ Definition and initialisation of the GUI.
-        """
+        """Definition and initialisation of the GUI."""
         pass
 
     def on_deactivate(self):
-        """ Deactivate the module properly.
-        """
+        """Deactivate the module properly."""
         pass
 
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the motor device.
+        """Retrieve the hardware constrains from the motor device.
 
         @return dict: dict with constraints for the magnet hardware. These
                       constraints will be passed via the logic to the GUI so
@@ -89,69 +87,76 @@ class MagnetDummy(Base, MagnetInterface):
         """
         constraints = OrderedDict()
 
-        axis0 = {'label': self._x_axis.label,
-                 'unit': 'm',
-                 'ramp': ['Sinus', 'Linear'],
-                 'pos_min': 0,
-                 'pos_max': 100e-3,
-                 'pos_step': 0.001e-3,
-                 'vel_min': 0,
-                 'vel_max': 100e-3,
-                 'vel_step': 0.01e-3,
-                 'acc_min': 0.1e-3,
-                 'acc_max': 0.0,
-                 'acc_step': 0.0}
+        axis0 = {
+            "label": self._x_axis.label,
+            "unit": "m",
+            "ramp": ["Sinus", "Linear"],
+            "pos_min": 0,
+            "pos_max": 100e-3,
+            "pos_step": 0.001e-3,
+            "vel_min": 0,
+            "vel_max": 100e-3,
+            "vel_step": 0.01e-3,
+            "acc_min": 0.1e-3,
+            "acc_max": 0.0,
+            "acc_step": 0.0,
+        }
 
-        axis1 = {'label': self._y_axis.label,
-                 'unit': 'm',
-                 'ramp': ['Sinus', 'Linear'],
-                 'pos_min': 0,
-                 'pos_max': 100e-3,
-                 'pos_step': 0.001e-3,
-                 'vel_min': 0,
-                 'vel_max': 100e-3,
-                 'vel_step': 0.01e-3,
-                 'acc_min': 0.1e-3,
-                 'acc_max': 0.0,
-                 'acc_step': 0.0}
+        axis1 = {
+            "label": self._y_axis.label,
+            "unit": "m",
+            "ramp": ["Sinus", "Linear"],
+            "pos_min": 0,
+            "pos_max": 100e-3,
+            "pos_step": 0.001e-3,
+            "vel_min": 0,
+            "vel_max": 100e-3,
+            "vel_step": 0.01e-3,
+            "acc_min": 0.1e-3,
+            "acc_max": 0.0,
+            "acc_step": 0.0,
+        }
 
-        axis2 = {'label': self._z_axis.label,
-                 'unit': 'm',
-                 'ramp': ['Sinus', 'Linear'],
-                 'pos_min': 0,
-                 'pos_max': 100e-3,
-                 'pos_step': 0.001e-3,
-                 'vel_min': 0,
-                 'vel_max': 100e-3,
-                 'vel_step': 0.01e-3,
-                 'acc_min': 0.1e-3,
-                 'acc_max': 0.0,
-                 'acc_step': 0.0}
+        axis2 = {
+            "label": self._z_axis.label,
+            "unit": "m",
+            "ramp": ["Sinus", "Linear"],
+            "pos_min": 0,
+            "pos_max": 100e-3,
+            "pos_step": 0.001e-3,
+            "vel_min": 0,
+            "vel_max": 100e-3,
+            "vel_step": 0.01e-3,
+            "acc_min": 0.1e-3,
+            "acc_max": 0.0,
+            "acc_step": 0.0,
+        }
 
-        axis3 = {'label': self._phi_axis.label,
-                 'unit': '°',
-                 'ramp': ['Sinus', 'Trapez'],
-                 'pos_min': 0,
-                 'pos_max': 360,
-                 'pos_step': 0.1,
-                 'vel_min': 1,
-                 'vel_max': 20,
-                 'vel_step': 0.1,
-                 'acc_min': None,
-                 'acc_max': None,
-                 'acc_step': None}
+        axis3 = {
+            "label": self._phi_axis.label,
+            "unit": "°",
+            "ramp": ["Sinus", "Trapez"],
+            "pos_min": 0,
+            "pos_max": 360,
+            "pos_step": 0.1,
+            "vel_min": 1,
+            "vel_max": 20,
+            "vel_step": 0.1,
+            "acc_min": None,
+            "acc_max": None,
+            "acc_step": None,
+        }
 
         # assign the parameter container for x to a name which will identify it
-        constraints[axis0['label']] = axis0
-        constraints[axis1['label']] = axis1
-        constraints[axis2['label']] = axis2
-        constraints[axis3['label']] = axis3
+        constraints[axis0["label"]] = axis0
+        constraints[axis1["label"]] = axis1
+        constraints[axis2["label"]] = axis2
+        constraints[axis3["label"]] = axis3
 
         return constraints
 
-
-    def move_rel(self,  param_dict):
-        """ Moves magnet in given direction (relative movement)
+    def move_rel(self, param_dict):
+        """Moves magnet in given direction (relative movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed.
@@ -175,17 +180,20 @@ class MagnetDummy(Base, MagnetInterface):
             move_x = param_dict[self._x_axis.label]
             curr_pos_x = curr_pos_dict[self._x_axis.label]
 
-            if  (curr_pos_x + move_x > constraints[self._x_axis.label]['pos_max'] ) or\
-                (curr_pos_x + move_x < constraints[self._x_axis.label]['pos_min']):
-
-                self.log.warning('Cannot make further movement of the axis '
-                        '"{0}" with the step {1}, since the border [{2},{3}] '
-                        ' of the magnet was reached! Ignore '
-                        'command!'.format(
-                            self._x_axis.label,
-                            move_x,
-                            constraints[self._x_axis.label]['pos_min'],
-                            constraints[self._x_axis.label]['pos_max']))
+            if (curr_pos_x + move_x > constraints[self._x_axis.label]["pos_max"]) or (
+                curr_pos_x + move_x < constraints[self._x_axis.label]["pos_min"]
+            ):
+                self.log.warning(
+                    "Cannot make further movement of the axis "
+                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    " of the magnet was reached! Ignore "
+                    "command!".format(
+                        self._x_axis.label,
+                        move_x,
+                        constraints[self._x_axis.label]["pos_min"],
+                        constraints[self._x_axis.label]["pos_max"],
+                    )
+                )
             else:
                 self._x_axis.pos = self._x_axis.pos + move_x
 
@@ -193,17 +201,20 @@ class MagnetDummy(Base, MagnetInterface):
             move_y = param_dict[self._y_axis.label]
             curr_pos_y = curr_pos_dict[self._y_axis.label]
 
-            if  (curr_pos_y + move_y > constraints[self._y_axis.label]['pos_max'] ) or\
-                (curr_pos_y + move_y < constraints[self._y_axis.label]['pos_min']):
-
-                self.log.warning('Cannot make further movement of the axis '
-                        '"{0}" with the step {1}, since the border [{2},{3}] '
-                        ' of the magnet was reached! Ignore '
-                        'command!'.format(
-                            self._y_axis.label,
-                            move_y,
-                            constraints[self._y_axis.label]['pos_min'],
-                            constraints[self._y_axis.label]['pos_max']))
+            if (curr_pos_y + move_y > constraints[self._y_axis.label]["pos_max"]) or (
+                curr_pos_y + move_y < constraints[self._y_axis.label]["pos_min"]
+            ):
+                self.log.warning(
+                    "Cannot make further movement of the axis "
+                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    " of the magnet was reached! Ignore "
+                    "command!".format(
+                        self._y_axis.label,
+                        move_y,
+                        constraints[self._y_axis.label]["pos_min"],
+                        constraints[self._y_axis.label]["pos_max"],
+                    )
+                )
             else:
                 self._y_axis.pos = self._y_axis.pos + move_y
 
@@ -211,17 +222,20 @@ class MagnetDummy(Base, MagnetInterface):
             move_z = param_dict[self._z_axis.label]
             curr_pos_z = curr_pos_dict[self._z_axis.label]
 
-            if  (curr_pos_z + move_z > constraints[self._z_axis.label]['pos_max'] ) or\
-                (curr_pos_z + move_z < constraints[self._z_axis.label]['pos_min']):
-
-                self.log.warning('Cannot make further movement of the axis '
-                        '"{0}" with the step {1}, since the border [{2},{3}] '
-                        ' of the magnet was reached! Ignore '
-                        'command!'.format(
-                            self._z_axis.label,
-                            move_z,
-                            constraints[self._z_axis.label]['pos_min'],
-                            constraints[self._z_axis.label]['pos_max']))
+            if (curr_pos_z + move_z > constraints[self._z_axis.label]["pos_max"]) or (
+                curr_pos_z + move_z < constraints[self._z_axis.label]["pos_min"]
+            ):
+                self.log.warning(
+                    "Cannot make further movement of the axis "
+                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    " of the magnet was reached! Ignore "
+                    "command!".format(
+                        self._z_axis.label,
+                        move_z,
+                        constraints[self._z_axis.label]["pos_min"],
+                        constraints[self._z_axis.label]["pos_max"],
+                    )
+                )
             else:
                 self._z_axis.pos = self._z_axis.pos + move_z
 
@@ -229,22 +243,25 @@ class MagnetDummy(Base, MagnetInterface):
             move_phi = param_dict[self._phi_axis.label]
             curr_pos_phi = curr_pos_dict[self._phi_axis.label]
 
-            if  (curr_pos_phi + move_phi > constraints[self._phi_axis.label]['pos_max'] ) or\
-                (curr_pos_phi + move_phi < constraints[self._phi_axis.label]['pos_min']):
-
-                self.log.warning('Cannot make further movement of the axis '
-                        '"{0}" with the step {1}, since the border [{2},{3}] '
-                        ' of the magnet was reached! Ignore '
-                        'command!'.format(
-                            self._phi_axis.label,
-                            move_phi,
-                            constraints[self._phi_axis.label]['pos_min'],
-                            constraints[self._phi_axis.label]['pos_max']))
+            if (curr_pos_phi + move_phi > constraints[self._phi_axis.label]["pos_max"]) or (
+                curr_pos_phi + move_phi < constraints[self._phi_axis.label]["pos_min"]
+            ):
+                self.log.warning(
+                    "Cannot make further movement of the axis "
+                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    " of the magnet was reached! Ignore "
+                    "command!".format(
+                        self._phi_axis.label,
+                        move_phi,
+                        constraints[self._phi_axis.label]["pos_min"],
+                        constraints[self._phi_axis.label]["pos_max"],
+                    )
+                )
             else:
                 self._phi_axis.pos = self._phi_axis.pos + move_phi
 
     def move_abs(self, param_dict):
-        """ Moves magnet to absolute position (absolute movement)
+        """Moves magnet to absolute position (absolute movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -259,15 +276,15 @@ class MagnetDummy(Base, MagnetInterface):
             desired_pos = param_dict[self._x_axis.label]
             constr = constraints[self._x_axis.label]
 
-            if not(constr['pos_min'] <= desired_pos <= constr['pos_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] of the magnet! Command is '
-                        'ignored!'.format(
-                            self._x_axis.label,
-                            desired_pos,
-                            constr['pos_min'],
-                            constr['pos_max']))
+            if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] of the magnet! Command is "
+                    "ignored!".format(
+                        self._x_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
+                    )
+                )
             else:
                 self._x_axis.pos = desired_pos
 
@@ -275,15 +292,15 @@ class MagnetDummy(Base, MagnetInterface):
             desired_pos = param_dict[self._y_axis.label]
             constr = constraints[self._y_axis.label]
 
-            if not(constr['pos_min'] <= desired_pos <= constr['pos_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] of the magnet! Command is '
-                        'ignored!'.format(
-                            self._y_axis.label,
-                            desired_pos,
-                            constr['pos_min'],
-                            constr['pos_max']))
+            if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] of the magnet! Command is "
+                    "ignored!".format(
+                        self._y_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
+                    )
+                )
             else:
                 self._y_axis.pos = desired_pos
 
@@ -291,15 +308,15 @@ class MagnetDummy(Base, MagnetInterface):
             desired_pos = param_dict[self._z_axis.label]
             constr = constraints[self._z_axis.label]
 
-            if not(constr['pos_min'] <= desired_pos <= constr['pos_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] of the magnet! Command is '
-                        'ignored!'.format(
-                            self._z_axis.label,
-                            desired_pos,
-                            constr['pos_min'],
-                            constr['pos_max']))
+            if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] of the magnet! Command is "
+                    "ignored!".format(
+                        self._z_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
+                    )
+                )
             else:
                 self._z_axis.pos = desired_pos
 
@@ -307,27 +324,27 @@ class MagnetDummy(Base, MagnetInterface):
             desired_pos = param_dict[self._phi_axis.label]
             constr = constraints[self._phi_axis.label]
 
-            if not(constr['pos_min'] <= desired_pos <= constr['pos_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] of the magnet! Command is ignored!'.format(
-                            self._phi_axis.label,
-                            desired_pos,
-                            constr['pos_min'],
-                            constr['pos_max']))
+            if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] of the magnet! Command is ignored!".format(
+                        self._phi_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
+                    )
+                )
             else:
                 self._phi_axis.pos = desired_pos
 
     def abort(self):
-        """ Stops movement of the stage
+        """Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
-        self.log.info('MagnetDummy: Movement stopped!')
+        self.log.info("MagnetDummy: Movement stopped!")
         return 0
 
     def get_pos(self, param_list=None):
-        """ Gets current position of the magnet stage arms
+        """Gets current position of the magnet stage arms
 
         @param list param_list: optional, if a specific position of an axis
                                 is desired, then the labels of the needed
@@ -361,7 +378,7 @@ class MagnetDummy(Base, MagnetInterface):
         return pos
 
     def get_status(self, param_list=None):
-        """ Get the status of the position
+        """Get the status of the position
 
         @param list param_list: optional, if a specific status of an axis
                                 is desired, then the labels of the needed
@@ -395,7 +412,7 @@ class MagnetDummy(Base, MagnetInterface):
         return status
 
     def calibrate(self, param_list=None):
-        """ Calibrates the magnet stage.
+        """Calibrates the magnet stage.
 
         @param dict param_list: param_list: optional, if a specific calibration
                                 of an axis is desired, then the labels of the
@@ -431,7 +448,7 @@ class MagnetDummy(Base, MagnetInterface):
         return 0
 
     def get_velocity(self, param_list=None):
-        """ Gets the current velocity for all connected axes.
+        """Gets the current velocity for all connected axes.
 
         @param dict param_list: optional, if a specific velocity of an axis
                                 is desired, then the labels of the needed
@@ -461,7 +478,7 @@ class MagnetDummy(Base, MagnetInterface):
         return vel
 
     def set_velocity(self, param_dict=None):
-        """ Write new value for velocity.
+        """Write new value for velocity.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -475,14 +492,14 @@ class MagnetDummy(Base, MagnetInterface):
             desired_vel = param_dict[self._x_axis.label]
             constr = constraints[self._x_axis.label]
 
-            if not(constr['vel_min'] <= desired_vel <= constr['vel_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] ! Command is ignored!'.format(
-                            self._x_axis.label,
-                            desired_vel,
-                            constr['vel_min'],
-                            constr['vel_max']))
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] ! Command is ignored!".format(
+                        self._x_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
+                    )
+                )
             else:
                 self._x_axis.vel = desired_vel
 
@@ -490,14 +507,14 @@ class MagnetDummy(Base, MagnetInterface):
             desired_vel = param_dict[self._y_axis.label]
             constr = constraints[self._y_axis.label]
 
-            if not(constr['vel_min'] <= desired_vel <= constr['vel_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] ! Command is ignored!'.format(
-                            self._y_axis.label,
-                            desired_vel,
-                            constr['vel_min'],
-                            constr['vel_max']))
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] ! Command is ignored!".format(
+                        self._y_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
+                    )
+                )
             else:
                 self._y_axis.vel = desired_vel
 
@@ -505,14 +522,14 @@ class MagnetDummy(Base, MagnetInterface):
             desired_vel = param_dict[self._z_axis.label]
             constr = constraints[self._z_axis.label]
 
-            if not(constr['vel_min'] <= desired_vel <= constr['vel_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] ! Command is ignored!'.format(
-                            self._z_axis.label,
-                            desired_vel,
-                            constr['vel_min'],
-                            constr['vel_max']))
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] ! Command is ignored!".format(
+                        self._z_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
+                    )
+                )
             else:
                 self._z_axis.vel = desired_vel
 
@@ -520,19 +537,19 @@ class MagnetDummy(Base, MagnetInterface):
             desired_vel = param_dict[self._phi_axis.label]
             constr = constraints[self._phi_axis.label]
 
-            if not(constr['vel_min'] <= desired_vel <= constr['vel_max']):
-                self.log.warning('Cannot make absolute movement of the axis '
-                        '"{0}" to possition {1}, since it exceeds the limits '
-                        '[{2},{3}] ! Command is ignored!'.format(
-                            self._phi_axis.label,
-                            desired_vel,
-                            constr['vel_min'],
-                            constr['vel_max']))
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
+                self.log.warning(
+                    "Cannot make absolute movement of the axis "
+                    '"{0}" to possition {1}, since it exceeds the limits '
+                    "[{2},{3}] ! Command is ignored!".format(
+                        self._phi_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
+                    )
+                )
             else:
                 self._phi_axis.vel = desired_vel
 
     def tell(self, param_dict=None):
-        """ Send a command to the magnet.
+        """Send a command to the magnet.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -542,14 +559,16 @@ class MagnetDummy(Base, MagnetInterface):
 
         @return int: error code (0:OK, -1:error)
         """
-        self.log.info('You can tell the magnet dummy as much as you want, it '
-                'has always an open ear for you. But do not expect an '
-                'answer, it is very shy!')
+        self.log.info(
+            "You can tell the magnet dummy as much as you want, it "
+            "has always an open ear for you. But do not expect an "
+            "answer, it is very shy!"
+        )
 
         return 0
 
     def ask(self, param_dict=None):
-        """ Ask the magnet a question.
+        """Ask the magnet a question.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -559,20 +578,21 @@ class MagnetDummy(Base, MagnetInterface):
 
         @return string: contains the answer coming from the magnet
         """
-        self.log.info('Dude, I am a dummy! Your question(s) "{0}" to the '
-                'axis "{1}" is/are way to complicated for me :D ! If you '
-                'want to talk to someone, ask Siri, maybe she will listen to '
-                'you and answer your questions :P.'.format(
-                    list(param_dict.values()), list(param_dict)))
+        self.log.info(
+            f'Dude, I am a dummy! Your question(s) "{list(param_dict.values())}" to the '
+            f'axis "{list(param_dict)}" is/are way to complicated for me :D ! If you '
+            "want to talk to someone, ask Siri, maybe she will listen to "
+            "you and answer your questions :P."
+        )
 
         return_val = {}
         for entry in param_dict:
-            return_val[entry] = 'Nothing to say, Motor is quite.'
+            return_val[entry] = "Nothing to say, Motor is quite."
 
         return return_val
 
     def set_magnet_idle_state(self, magnet_idle=True):
-        """ Set the magnet to couple/decouple to/from the control.
+        """Set the magnet to couple/decouple to/from the control.
 
         @param bool magnet_idle: if True then magnet will be set to idle and
                                  each movement command will be ignored from the
@@ -588,7 +608,7 @@ class MagnetDummy(Base, MagnetInterface):
         return self._idle_state
 
     def get_magnet_idle_state(self):
-        """ Retrieve the current state of the magnet, whether it is idle or not.
+        """Retrieve the current state of the magnet, whether it is idle or not.
 
         @return bool: the actual state which was set in the magnet hardware.
                         True = idle, decoupled from control
@@ -603,5 +623,5 @@ class MagnetDummy(Base, MagnetInterface):
         heated it cools them, else the coils get heated.
         @return int: (0: Ok, -1:error)
         """
-        raise InterfaceImplementationError('magnet_interface>initialize')
+        raise InterfaceImplementationError("magnet_interface>initialize")
         return -1

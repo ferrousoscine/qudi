@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface file to use processes.
 
@@ -25,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class ProcessInterface(metaclass=InterfaceMetaclass):
-    """ A simple interface to measure one or multiple value(s).
+    """A simple interface to measure one or multiple value(s).
 
     This interface is in fact a very general/universal interface that can be used for a lot of things.
     It can be used to interface any hardware where one to simply read one or multiple process value, like a temperature
@@ -35,7 +33,7 @@ class ProcessInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_process_value(self, channel=None):
-        """ Return a measured value
+        """Return a measured value
 
         @param (int) channel: (Optional) The number of the channel
         @return (float): The measured process value
@@ -44,17 +42,17 @@ class ProcessInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_process_unit(self, channel=None):
-        """ Return the unit that the value is measured in as a tuple of ('abbreviation', 'full unit name')
+        """Return the unit that the value is measured in as a tuple of ('abbreviation', 'full unit name')
 
         @param (int) channel: (Optional) The number of the channel
 
         @return: The unit as a tuple of ('abbreviation', 'full unit name')
 
-         """
+        """
         pass
 
     def process_supports_multiple_channels(self):
-        """ Function to test if hardware support multiple channels
+        """Function to test if hardware support multiple channels
 
         @return (bool): Whether the hardware supports multiple channels
 
@@ -63,7 +61,7 @@ class ProcessInterface(metaclass=InterfaceMetaclass):
         return False
 
     def process_get_number_channels(self):
-        """ Function to get the number of channels available for measure
+        """Function to get the number of channels available for measure
 
         @return (int): The number of channel(s)
 

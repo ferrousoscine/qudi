@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Check if something is a rpyc remote object and transfer it
 
@@ -24,8 +23,7 @@ import rpyc.utils.classic
 
 
 def netobtain(obj):
-    """
-    """
+    """ """
     if isinstance(obj, rpyc.core.netref.BaseNetref):
         return rpyc.utils.classic.obtain(obj)
     else:

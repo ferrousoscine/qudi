@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the qudi hardware module to use a National Instruments X-series card as mixed
 signal input data streamer.
@@ -21,15 +19,20 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import copy
-import numpy as np
 import time
 
-from core.module import Base
+import numpy as np
+
 from core.configoption import ConfigOption
+from core.module import Base
 from core.util.helpers import natural_sort
-from interface.data_instream_interface import DataInStreamInterface, DataInStreamConstraints
-from interface.data_instream_interface import StreamingMode, StreamChannelType, StreamChannel
+from interface.data_instream_interface import (
+    DataInStreamConstraints,
+    DataInStreamInterface,
+    StreamChannel,
+    StreamChannelType,
+    StreamingMode,
+)
 
 
 class InStreamDummy(Base, DataInStreamInterface):
@@ -57,13 +60,14 @@ class InStreamDummy(Base, DataInStreamInterface):
             - 10
         # analog_amplitudes: 10  # optional (10V by default)
     """
+
     # config options
-    _digital_channels = ConfigOption(name='digital_channels', default=tuple(), missing='nothing')
-    _analog_channels = ConfigOption(name='analog_channels', default=tuple(), missing='nothing')
-    _digital_event_rates = ConfigOption(name='digital_event_rates',
-                                        default=100000,
-                                        missing='nothing')
-    _analog_amplitudes = ConfigOption(name='analog_voltage_ranges', default=10, missing='nothing')
+    _digital_channels = ConfigOption(name="digital_channels", default=tuple(), missing="nothing")
+    _analog_channels = ConfigOption(name="analog_channels", default=tuple(), missing="nothing")
+    _digital_event_rates = ConfigOption(
+        name="digital_event_rates", default=100000, missing="nothing"
+    )
+    _analog_amplitudes = ConfigOption(name="analog_voltage_ranges", default=10, missing="nothing")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,7 +98,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         """
         # Sanity check ConfigOptions
         if not self._digital_channels and not self._analog_channels:
-            raise Exception('Not a single analog or digital channel provided in ConfigOptions.')
+            raise Exception("Not a single analog or digital channel provided in ConfigOptions.")
         self._digital_channels = natural_sort(str(chnl) for chnl in self._digital_channels)
         self._analog_channels = natural_sort(str(chnl) for chnl in self._analog_channels)
 
@@ -103,44 +107,54 @@ class InStreamDummy(Base, DataInStreamInterface):
                 if len(self._digital_channels) != len(self._digital_event_rates):
                     if len(self._digital_event_rates) == 1:
                         tmp = self._digital_event_rates[0]
-                        self._digital_event_rates = [i * tmp for i, _ in
-                                                     enumerate(self._digital_channels, 1)]
+                        self._digital_event_rates = [
+                            i * tmp for i, _ in enumerate(self._digital_channels, 1)
+                        ]
                     else:
-                        raise Exception('ConfigOption "digital_event_rates" must have same length '
-                                        'as "digital_channels" or just be a single value.')
+                        raise Exception(
+                            'ConfigOption "digital_event_rates" must have same length '
+                            'as "digital_channels" or just be a single value.'
+                        )
             except TypeError:
-                self._digital_event_rates = [i * self._digital_event_rates for i, _ in
-                                             enumerate(self._digital_channels, 1)]
+                self._digital_event_rates = [
+                    i * self._digital_event_rates for i, _ in enumerate(self._digital_channels, 1)
+                ]
         if self._analog_channels:
             try:
                 if len(self._analog_channels) != len(self._analog_amplitudes):
                     if len(self._analog_amplitudes) == 1:
                         tmp = self._analog_amplitudes[0]
-                        self._analog_amplitudes = [i * tmp for i, _ in
-                                                   enumerate(self._analog_channels, 1)]
+                        self._analog_amplitudes = [
+                            i * tmp for i, _ in enumerate(self._analog_channels, 1)
+                        ]
                     else:
-                        raise Exception('ConfigOption "analog_amplitudes" must have same length '
-                                        'as "analog_channels" or just be a single value.')
+                        raise Exception(
+                            'ConfigOption "analog_amplitudes" must have same length '
+                            'as "analog_channels" or just be a single value.'
+                        )
             except TypeError:
-                self._analog_amplitudes = [i * self._analog_amplitudes for i, _ in
-                                           enumerate(self._analog_channels, 1)]
+                self._analog_amplitudes = [
+                    i * self._analog_amplitudes for i, _ in enumerate(self._analog_channels, 1)
+                ]
 
         # Create constraints
         self._constraints = DataInStreamConstraints()
         self._constraints.digital_channels = tuple(
-            StreamChannel(name=ch, type=StreamChannelType.DIGITAL, unit='counts') for ch in
-            self._digital_channels)
+            StreamChannel(name=ch, type=StreamChannelType.DIGITAL, unit="counts")
+            for ch in self._digital_channels
+        )
         self._constraints.analog_channels = tuple(
-            StreamChannel(name=ch, type=StreamChannelType.ANALOG, unit='V') for ch in
-            self._analog_channels)
+            StreamChannel(name=ch, type=StreamChannelType.ANALOG, unit="V")
+            for ch in self._analog_channels
+        )
         self._constraints.analog_sample_rate.min = 1
-        self._constraints.analog_sample_rate.max = 2**31-1
+        self._constraints.analog_sample_rate.max = 2**31 - 1
         self._constraints.analog_sample_rate.step = 1
-        self._constraints.analog_sample_rate.unit = 'Hz'
+        self._constraints.analog_sample_rate.unit = "Hz"
         self._constraints.digital_sample_rate.min = 1
-        self._constraints.digital_sample_rate.max = 2**31-1
+        self._constraints.digital_sample_rate.max = 2**31 - 1
         self._constraints.digital_sample_rate.step = 1
-        self._constraints.digital_sample_rate.unit = 'Hz'
+        self._constraints.digital_sample_rate.unit = "Hz"
         self._constraints.combined_sample_rate = self._constraints.analog_sample_rate
 
         self._constraints.read_block_size.min = 1
@@ -169,8 +183,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         return
 
     def on_deactivate(self):
-        """ Shut down the NI card.
-        """
+        """Shut down the NI card."""
         self._has_overflown = False
         self._is_running = False
         self._last_read = None
@@ -198,9 +211,10 @@ class InStreamDummy(Base, DataInStreamInterface):
                     min_val = self._constraints.digital_sample_rate.min
                     max_val = self._constraints.digital_sample_rate.max
                 self.log.warning(
-                    'Sample rate requested ({0:.3e}Hz) is out of bounds. Please choose '
-                    'a value between {1:.3e}Hz and {2:.3e}Hz. Value will be clipped to '
-                    'the closest boundary.'.format(rate, min_val, max_val))
+                    f"Sample rate requested ({rate:.3e}Hz) is out of bounds. Please choose "
+                    f"a value between {min_val:.3e}Hz and {max_val:.3e}Hz. Value will be clipped to "
+                    "the closest boundary."
+                )
                 rate = max(min(max_val, rate), min_val)
             self.__sample_rate = float(rate)
         return
@@ -231,8 +245,10 @@ class InStreamDummy(Base, DataInStreamInterface):
         if self._check_settings_change():
             size = int(size)
             if size < 1:
-                self.log.error('Buffer size smaller than 1 makes no sense. Tried to set {0} as '
-                               'buffer size and failed.'.format(size))
+                self.log.error(
+                    f"Buffer size smaller than 1 makes no sense. Tried to set {size} as "
+                    "buffer size and failed."
+                )
                 return
             self.__buffer_size = int(size)
             self._init_buffer()
@@ -252,7 +268,7 @@ class InStreamDummy(Base, DataInStreamInterface):
     def use_circular_buffer(self, flag):
         if self._check_settings_change():
             if flag and not self._constraints.allow_circular_buffer:
-                self.log.error('Circular buffer not allowed for this hardware module.')
+                self.log.error("Circular buffer not allowed for this hardware module.")
                 return
             self.__use_circular_buffer = bool(flag)
         return
@@ -272,8 +288,9 @@ class InStreamDummy(Base, DataInStreamInterface):
         if self._check_settings_change():
             mode = StreamingMode(mode)
             if mode not in self._constraints.streaming_modes:
-                self.log.error('Unknown streaming mode "{0}" encountered.\nValid modes are: {1}.'
-                               ''.format(mode, self._constraints.streaming_modes))
+                self.log.error(
+                    f'Unknown streaming mode "{mode}" encountered.\nValid modes are: {self._constraints.streaming_modes}.'
+                )
                 return
             self.__streaming_mode = mode
         return
@@ -298,8 +315,10 @@ class InStreamDummy(Base, DataInStreamInterface):
                       and values being the corresponding StreamChannel instances.
         """
         constr = self._constraints
-        return (*(ch.copy() for ch in constr.digital_channels if ch.name in self.__active_channels),
-                *(ch.copy() for ch in constr.analog_channels if ch.name in self.__active_channels))
+        return (
+            *(ch.copy() for ch in constr.digital_channels if ch.name in self.__active_channels),
+            *(ch.copy() for ch in constr.analog_channels if ch.name in self.__active_channels),
+        )
 
     @active_channels.setter
     def active_channels(self, channels):
@@ -307,9 +326,10 @@ class InStreamDummy(Base, DataInStreamInterface):
             channels = tuple(channels)
             avail_chnl_names = tuple(ch.name for ch in self.available_channels)
             if any(ch not in avail_chnl_names for ch in channels):
-                self.log.error('Invalid channel to stream from encountered: {0}.\nValid channels '
-                               'are: {1}'
-                               ''.format(channels, avail_chnl_names))
+                self.log.error(
+                    f"Invalid channel to stream from encountered: {channels}.\nValid channels "
+                    f"are: {avail_chnl_names}"
+                )
                 return
             self.__active_channels = channels
         return
@@ -324,8 +344,10 @@ class InStreamDummy(Base, DataInStreamInterface):
         @return tuple: data channel properties for all available channels with keys being the
                        channel names and values being the corresponding StreamChannel instances.
         """
-        return (*(ch.copy() for ch in self._constraints.digital_channels),
-                *(ch.copy() for ch in self._constraints.analog_channels))
+        return (
+            *(ch.copy() for ch in self._constraints.digital_channels),
+            *(ch.copy() for ch in self._constraints.analog_channels),
+        )
 
     @property
     def available_samples(self):
@@ -354,7 +376,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         if self._check_settings_change():
             length = int(length)
             if length < 1:
-                self.log.error('Stream_length must be a positive integer >= 1.')
+                self.log.error("Stream_length must be a positive integer >= 1.")
                 return
             self.__stream_length = length
         return
@@ -389,15 +411,24 @@ class InStreamDummy(Base, DataInStreamInterface):
 
         @return dict: Dictionary containing all configurable settings
         """
-        return {'sample_rate': self.__sample_rate,
-                'streaming_mode': self.__streaming_mode,
-                'active_channels': self.active_channels,
-                'stream_length': self.__stream_length,
-                'buffer_size': self.__buffer_size,
-                'use_circular_buffer': self.__use_circular_buffer}
+        return {
+            "sample_rate": self.__sample_rate,
+            "streaming_mode": self.__streaming_mode,
+            "active_channels": self.active_channels,
+            "stream_length": self.__stream_length,
+            "buffer_size": self.__buffer_size,
+            "use_circular_buffer": self.__use_circular_buffer,
+        }
 
-    def configure(self, sample_rate=None, streaming_mode=None, active_channels=None,
-                  stream_length=None, buffer_size=None, use_circular_buffer=None):
+    def configure(
+        self,
+        sample_rate=None,
+        streaming_mode=None,
+        active_channels=None,
+        stream_length=None,
+        buffer_size=None,
+        use_circular_buffer=None,
+    ):
         """
         Method to configure all possible settings of the data input stream.
 
@@ -453,7 +484,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         @return int: error code (0: OK, -1: Error)
         """
         if self.is_running:
-            self.log.warning('Unable to start input stream. It is already running.')
+            self.log.warning("Unable to start input stream. It is already running.")
             return 0
 
         self._init_buffer()
@@ -492,26 +523,32 @@ class InStreamDummy(Base, DataInStreamInterface):
                      (e.g. read timeout)
         """
         if not self.is_running:
-            self.log.error('Unable to read data. Device is not running.')
+            self.log.error("Unable to read data. Device is not running.")
             return -1
 
         if not isinstance(buffer, np.ndarray) or buffer.dtype != self.__data_type:
-            self.log.error('buffer must be numpy.ndarray with dtype {0}. Read failed.'
-                           ''.format(self.__data_type))
+            self.log.error(
+                f"buffer must be numpy.ndarray with dtype {self.__data_type}. Read failed."
+            )
             return -1
 
         if buffer.ndim == 2:
             if buffer.shape[0] != self.number_of_channels:
-                self.log.error('Configured number of channels ({0:d}) does not match first '
-                               'dimension of 2D buffer array ({1:d}).'
-                               ''.format(self.number_of_channels, buffer.shape[0]))
+                self.log.error(
+                    f"Configured number of channels ({self.number_of_channels:d}) does not match first "
+                    f"dimension of 2D buffer array ({buffer.shape[0]:d})."
+                )
                 return -1
             number_of_samples = buffer.shape[1] if number_of_samples is None else number_of_samples
             buffer = buffer.flatten()
         elif buffer.ndim == 1:
-            number_of_samples = (buffer.size // self.number_of_channels) if number_of_samples is None else number_of_samples
+            number_of_samples = (
+                (buffer.size // self.number_of_channels)
+                if number_of_samples is None
+                else number_of_samples
+            )
         else:
-            self.log.error('Buffer must be a 1D or 2D numpy.ndarray.')
+            self.log.error("Buffer must be a 1D or 2D numpy.ndarray.")
             return -1
 
         if number_of_samples < 1:
@@ -533,16 +570,17 @@ class InStreamDummy(Base, DataInStreamInterface):
             if chnl in self._digital_channels:
                 ch_index = self._digital_channels.index(chnl)
                 events_per_bin = self._digital_event_rates[ch_index] / self.__sample_rate
-                buffer[offset:(offset+number_of_samples)] = np.random.poisson(events_per_bin,
-                                                                              number_of_samples)
+                buffer[offset : (offset + number_of_samples)] = np.random.poisson(
+                    events_per_bin, number_of_samples
+                )
             else:
                 ch_index = self._analog_channels.index(chnl)
                 amplitude = self._analog_amplitudes[ch_index]
-                np.sin(analog_x, out=buffer[offset:(offset+number_of_samples)])
-                buffer[offset:(offset + number_of_samples)] *= amplitude
+                np.sin(analog_x, out=buffer[offset : (offset + number_of_samples)])
+                buffer[offset : (offset + number_of_samples)] *= amplitude
                 noise_level = 0.1 * amplitude
                 noise = noise_level - 2 * noise_level * np.random.rand(number_of_samples)
-                buffer[offset:(offset + number_of_samples)] += noise
+                buffer[offset : (offset + number_of_samples)] += noise
             offset += number_of_samples
         return number_of_samples
 
@@ -564,7 +602,7 @@ class InStreamDummy(Base, DataInStreamInterface):
                      (e.g. read timeout)
         """
         if not self.is_running:
-            self.log.error('Unable to read data. Device is not running.')
+            self.log.error("Unable to read data. Device is not running.")
             return -1
 
         avail_samples = min(buffer.size // self.number_of_channels, self.available_samples)
@@ -587,7 +625,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         @return numpy.ndarray: The read samples
         """
         if not self.is_running:
-            self.log.error('Unable to read data. Device is not running.')
+            self.log.error("Unable to read data. Device is not running.")
             return np.empty((0, 0), dtype=self.data_type)
 
         if number_of_samples is None:
@@ -595,14 +633,16 @@ class InStreamDummy(Base, DataInStreamInterface):
             if read_samples < 0:
                 return np.empty((0, 0), dtype=self.data_type)
         else:
-            read_samples = self.read_data_into_buffer(self._data_buffer,
-                                                      number_of_samples=number_of_samples)
+            read_samples = self.read_data_into_buffer(
+                self._data_buffer, number_of_samples=number_of_samples
+            )
             if read_samples != number_of_samples:
                 return np.empty((0, 0), dtype=self.data_type)
 
         total_samples = self.number_of_channels * read_samples
-        return self._data_buffer[:total_samples].reshape((self.number_of_channels,
-                                                          number_of_samples))
+        return self._data_buffer[:total_samples].reshape(
+            (self.number_of_channels, number_of_samples)
+        )
 
     def read_single_point(self):
         """
@@ -617,7 +657,7 @@ class InStreamDummy(Base, DataInStreamInterface):
                                indicates error.
         """
         if not self.is_running:
-            self.log.error('Unable to read data. Device is not running.')
+            self.log.error("Unable to read data. Device is not running.")
             return np.empty(0, dtype=self.__data_type)
 
         data = np.empty(self.number_of_channels, dtype=self.__data_type)
@@ -649,8 +689,8 @@ class InStreamDummy(Base, DataInStreamInterface):
     def _init_buffer(self):
         if not self.is_running:
             self._data_buffer = np.zeros(
-                self.number_of_channels * self.buffer_size,
-                dtype=self.data_type)
+                self.number_of_channels * self.buffer_size, dtype=self.data_type
+            )
             self._has_overflown = False
         return
 
@@ -662,7 +702,9 @@ class InStreamDummy(Base, DataInStreamInterface):
         @return bool: Flag indicating if settings can be changed (True) or not (False)
         """
         if self.is_running:
-            self.log.warning('Unable to change streamer settings while streamer is running. '
-                             'New settings ignored.')
+            self.log.warning(
+                "Unable to change streamer settings while streamer is running. "
+                "New settings ignored."
+            )
             return False
         return True

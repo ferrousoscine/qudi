@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi Interface file for ODMRCounter.
 
@@ -24,11 +23,11 @@ from core.meta import InterfaceMetaclass
 
 
 class ODMRCounterInterface(metaclass=InterfaceMetaclass):
-    """ This is the Interface class supplies the controls for a simple ODMR."""
+    """This is the Interface class supplies the controls for a simple ODMR."""
 
     @abstract_interface_method
     def set_up_odmr_clock(self, clock_frequency=None, clock_channel=None):
-        """ Configures the hardware clock of the NiDAQ card to give the timing.
+        """Configures the hardware clock of the NiDAQ card to give the timing.
 
         @param float clock_frequency: if defined, this sets the frequency of the
                                       clock
@@ -40,9 +39,14 @@ class ODMRCounterInterface(metaclass=InterfaceMetaclass):
         pass
 
     @abstract_interface_method
-    def set_up_odmr(self, counter_channel=None, photon_source=None,
-                    clock_channel=None, odmr_trigger_channel=None):
-        """ Configures the actual counter with a given clock.
+    def set_up_odmr(
+        self,
+        counter_channel=None,
+        photon_source=None,
+        clock_channel=None,
+        odmr_trigger_channel=None,
+    ):
+        """Configures the actual counter with a given clock.
 
         @param str counter_channel: if defined, this is the physical channel of
                                     the counter
@@ -68,8 +72,8 @@ class ODMRCounterInterface(metaclass=InterfaceMetaclass):
         pass
 
     @abstract_interface_method
-    def count_odmr(self, length = 100):
-        """ Sweeps the microwave and returns the counts on that sweep.
+    def count_odmr(self, length=100):
+        """Sweeps the microwave and returns the counts on that sweep.
 
         @param int length: length of microwave sweep in pixel
 
@@ -79,7 +83,7 @@ class ODMRCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def close_odmr(self):
-        """ Close the odmr and clean up afterwards.
+        """Close the odmr and clean up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -87,7 +91,7 @@ class ODMRCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def close_odmr_clock(self):
-        """ Close the odmr and clean up afterwards.
+        """Close the odmr and clean up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -95,7 +99,7 @@ class ODMRCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_odmr_channels(self):
-        """ Return a list of channel names.
+        """Return a list of channel names.
 
         @return list(str): channels recorded during ODMR measurement
         """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple data acquisition from serial port.
 
@@ -21,13 +20,13 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import visa
 
-from core.module import Base
 from core.configoption import ConfigOption
+from core.module import Base
 from interface.simple_data_interface import SimpleDataInterface
 
 
 class SimpleAcq(Base, SimpleDataInterface):
-    """ Read human readable numbers from serial port.
+    """Read human readable numbers from serial port.
 
     Example config for copy-paste:
 
@@ -37,35 +36,34 @@ class SimpleAcq(Base, SimpleDataInterface):
         baudrate: 115200
 
     """
-    resource = ConfigOption('interface', 'ASRL1::INSTR', missing='warn')
-    baudrate = ConfigOption('baudrate', 115200, missing='warn')
+
+    resource = ConfigOption("interface", "ASRL1::INSTR", missing="warn")
+    baudrate = ConfigOption("baudrate", 115200, missing="warn")
 
     def on_activate(self):
-        """ Activate module.
-        """
+        """Activate module."""
         self.rm = visa.ResourceManager()
-        self.log.debug('Resources: {0}'.format(self.rm.list_resources()))
+        self.log.debug(f"Resources: {self.rm.list_resources()}")
         self.my_instrument = self.rm.open_resource(self.resource, baud_rate=self.baudrate)
 
     def on_deactivate(self):
-        """ Deactivate module.
-        """
+        """Deactivate module."""
         self.my_instrument.close()
         self.rm.close()
 
     def getData(self):
-        """ Read one value from serial port.
+        """Read one value from serial port.
 
-            @return int: vaue form serial port
+        @return int: vaue form serial port
         """
         try:
-            return int(self.my_instrument.read_raw().decode('utf-8').rstrip().split()[1])
+            return int(self.my_instrument.read_raw().decode("utf-8").rstrip().split()[1])
         except:
             return 0
 
     def getChannels(self):
-        """ Number of channels.
+        """Number of channels.
 
-            @return int: number of channels
+        @return int: number of channels
         """
         return 1

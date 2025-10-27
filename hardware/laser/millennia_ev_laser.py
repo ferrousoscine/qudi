@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module controls LaserQuantum lasers.
 
@@ -19,24 +18,28 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from core.module import Base
-from core.configoption import ConfigOption
-from interface.simple_laser_interface import SimpleLaserInterface
-from interface.simple_laser_interface import ControlMode
-from interface.simple_laser_interface import ShutterState
-from interface.simple_laser_interface import LaserState
 from enum import Enum
+
 import visa
+
+from core.configoption import ConfigOption
+from core.module import Base
+from interface.simple_laser_interface import (
+    ControlMode,
+    LaserState,
+    ShutterState,
+    SimpleLaserInterface,
+)
 
 
 class Models(Enum):
-    """ Model numbers for Millennia lasers
-    """
+    """Model numbers for Millennia lasers"""
+
     MilEV = 0
 
 
 class MillenniaeVLaser(Base, SimpleLaserInterface):
-    """ Spectra Physics Millennia diode pumped solid state laser.
+    """Spectra Physics Millennia diode pumped solid state laser.
 
     Example config for copy-paste:
 
@@ -47,25 +50,23 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
 
     """
 
-    serial_interface = ConfigOption('interface', 'ASRL1::INSTR', missing='warn')
-    maxpower = ConfigOption('maxpower', 25.0, missing='warn')
+    serial_interface = ConfigOption("interface", "ASRL1::INSTR", missing="warn")
+    maxpower = ConfigOption("maxpower", 25.0, missing="warn")
 
     def on_activate(self):
-        """ Activate Module.
-        """
+        """Activate Module."""
         self.connect_laser(self.serial_interface)
 
     def on_deactivate(self):
-        """ Deactivate module
-        """
+        """Deactivate module"""
         self.disconnect_laser()
 
     def connect_laser(self, interface):
-        """ Connect to Instrument.
+        """Connect to Instrument.
 
-            @param str interface: visa interface identifier
+        @param str interface: visa interface identifier
 
-            @return bool: connection success
+        @return bool: connection success
         """
         try:
             self.rm = visa.ResourceManager()
@@ -73,40 +74,40 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
             self.inst = self.rm.open_resource(
                 interface,
                 baud_rate=rate,
-                write_termination='\n',
-                read_termination='\n',
-                send_end=True)
+                write_termination="\n",
+                read_termination="\n",
+                send_end=True,
+            )
             self.inst.timeout = 1000
-            idn = self.inst.query('*IDN?')
-            (self.mfg, self.model, self.serial, self.version) = idn.split(',')
-        except visa.VisaIOError as e:
-            self.log.exception('Communication Failure:')
+            idn = self.inst.query("*IDN?")
+            (self.mfg, self.model, self.serial, self.version) = idn.split(",")
+        except visa.VisaIOError:
+            self.log.exception("Communication Failure:")
             return False
         else:
             return True
 
     def disconnect_laser(self):
-        """ Close the connection to the instrument.
-        """
+        """Close the connection to the instrument."""
         self.inst.close()
         self.rm.close()
 
     def allowed_control_modes(self):
-        """ Control modes for this laser
+        """Control modes for this laser
 
-            @return ControlMode: available control modes
+        @return ControlMode: available control modes
         """
         return [ControlMode.MIXED]
 
     def get_control_mode(self):
-        """ Get active control mode
+        """Get active control mode
 
         @return ControlMode: active control mode
         """
         return ControlMode.MIXED
 
     def set_control_mode(self, mode):
-        """ Set actve control mode
+        """Set actve control mode
 
         @param ControlMode mode: desired control mode
         @return ControlMode: actual control mode
@@ -114,91 +115,91 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
         return ControlMode.MIXED
 
     def get_power(self):
-        """ Current laser power
+        """Current laser power
 
         @return float: laser power in watts
         """
-        answer = self.inst.query('?P')
+        answer = self.inst.query("?P")
         return float(answer)
 
     def get_power_setpoint(self):
-        """ Current laser power setpoint
+        """Current laser power setpoint
 
         @return float: power setpoint in watts
         """
-        answer = self.inst.query('?PSET')
+        answer = self.inst.query("?PSET")
         return float(answer)
 
     def get_power_range(self):
-        """ Laser power range
+        """Laser power range
 
         @return (float, float): laser power range
         """
         return 0, self.maxpower
 
     def set_power(self, power):
-        """ Set laser power setpoint
+        """Set laser power setpoint
 
         @param float power: desired laser power
 
         @return float: actual laser power setpoint
         """
-        self.inst.query('P:{0:f}'.format(power))
+        self.inst.query(f"P:{power:f}")
         return self.get_power_setpoint()
 
     def get_current_unit(self):
-        """ Get unit for current
+        """Get unit for current
 
-            return str: unit for laser current
+        return str: unit for laser current
         """
-        return 'A'
+        return "A"
 
     def get_current_range(self):
-        """ Get range for laser current
+        """Get range for laser current
 
-            @return (float, float): range for laser current
+        @return (float, float): range for laser current
         """
-        maxcurrent = float(self.inst.query('?DCL'))
+        maxcurrent = float(self.inst.query("?DCL"))
         return 0, maxcurrent
 
     def get_current(self):
-        """ Get current laser current
+        """Get current laser current
 
         @return float: current laser current
         """
-        return float(self.inst.query('?C1'))
+        return float(self.inst.query("?C1"))
 
     def get_current_setpoint(self):
-        """ Get laser current setpoint
+        """Get laser current setpoint
 
         @return float: laser current setpoint
         """
-        return float(self.inst.query('?CS1'))
+        return float(self.inst.query("?CS1"))
 
     def set_current(self, current_percent):
-        """ Set laser current setpoint
+        """Set laser current setpoint
 
         @param float current_percent: desired laser current setpoint
         @return float: actual laer current setpoint
         """
-        self.inst.query('C:{0}'.format(current_percent))
+        self.inst.query(f"C:{current_percent}")
         return self.get_current_setpoint()
 
     def get_shutter_state(self):
-        """ Get laser shutter state
+        """Get laser shutter state
 
         @return ShutterState: current laser shutter state
         """
-        state = self.inst.query('?SHT')
-        if 'OPEN' in state:
+        state = self.inst.query("?SHT")
+        if "OPEN" in state:
             return ShutterState.OPEN
-        elif 'CLOSED' in state:
+        elif "CLOSED" in state:
             return ShutterState.CLOSED
         else:
             return ShutterState.UNKNOWN
 
     def set_shutter_state(self, state):
-        """ Set laser shutter state.
+        """Set laser shutter state.
 
         @param ShuterState state: desired laser shutter state
         @return ShutterState: actual laser shutter state
@@ -206,76 +207,74 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
         actstate = self.get_shutter_state()
         if state != actstate:
             if state == ShutterState.OPEN:
-                self.inst.query('SHT:1')
+                self.inst.query("SHT:1")
             elif state == ShutterState.CLOSED:
-                self.inst.query('SHT:0')
+                self.inst.query("SHT:0")
         return self.get_shutter_state()
 
     def get_crystal_temperature(self):
-        """ Get SHG crystal temerpature.
+        """Get SHG crystal temerpature.
 
-            @return float: SHG crystal temperature in degrees Celsius
+        @return float: SHG crystal temperature in degrees Celsius
         """
-        return float(self.inst.query('?SHG'))
+        return float(self.inst.query("?SHG"))
 
     def get_diode_temperature(self):
-        """ Get laser diode temperature.
+        """Get laser diode temperature.
 
-            @return float: laser diode temperature in degrees Celsius
+        @return float: laser diode temperature in degrees Celsius
         """
-        return float(self.inst.query('?T'))
+        return float(self.inst.query("?T"))
 
     def get_tower_temperature(self):
-        """ Get SHG tower temperature
+        """Get SHG tower temperature
 
-            @return float: SHG tower temperature in degrees Celsius
+        @return float: SHG tower temperature in degrees Celsius
         """
-        return float(self.inst.query('?TT'))
+        return float(self.inst.query("?TT"))
 
     def get_cab_temperature(self):
-        """ Get cabinet temperature
+        """Get cabinet temperature
 
-            @return float: get laser cabinet temperature in degrees Celsius
+        @return float: get laser cabinet temperature in degrees Celsius
         """
-        return float(self.inst.query('?CABTEMP'))
+        return float(self.inst.query("?CABTEMP"))
 
     def get_temperatures(self):
-        """ Get all available temperatures
+        """Get all available temperatures
 
-            @return dict: tict of temperature names and values
+        @return dict: tict of temperature names and values
         """
         return {
-            'crystal': self.get_crystal_temperature(),
-            'diode': self.get_diode_temperature(),
-            'tower': self.get_tower_temperature(),
-            'cab': self.get_cab_temperature(),
-            }
+            "crystal": self.get_crystal_temperature(),
+            "diode": self.get_diode_temperature(),
+            "tower": self.get_tower_temperature(),
+            "cab": self.get_cab_temperature(),
+        }
 
     def set_temperatures(self, temps):
-        """ Set temperatures for lasers wth tunable temperatures
-
-        """
+        """Set temperatures for lasers wth tunable temperatures"""
         return {}
 
     def get_temperature_setpoints(self):
-        """ Get tepmerature setpoints.
+        """Get tepmerature setpoints.
 
-            @return dict: setpoint name and value
+        @return dict: setpoint name and value
         """
-        shgset = int(self.inst.query('?SHGS'))
-        return {'shg': shgset}
+        shgset = int(self.inst.query("?SHGS"))
+        return {"shg": shgset}
 
     def get_laser_state(self):
-        """ Get laser state.
+        """Get laser state.
 
         @return LaserState: current laser state
         """
-        diode = int(self.inst.query('?D'))
-        state = self.inst.query('?F')
+        diode = int(self.inst.query("?D"))
+        state = self.inst.query("?F")
 
-        if state in ('SYS ILK', 'KEY ILK'):
+        if state in ("SYS ILK", "KEY ILK"):
             return LaserState.LOCKED
-        elif state == 'SYSTEM OK':
+        elif state == "SYSTEM OK":
             if diode == 1:
                 return LaserState.ON
             elif diode == 0:
@@ -286,7 +285,7 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
             return LaserState.UNKNOWN
 
     def set_laser_state(self, status):
-        """ Set laser state
+        """Set laser state
 
         @param LaserState status: desited laser state
         @return LaserState: actual laser state
@@ -294,54 +293,53 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
         actstat = self.get_laser_state()
         if actstat != status:
             if status == LaserState.ON:
-                self.inst.query('ON')
+                self.inst.query("ON")
             elif status == LaserState.OFF:
-                self.inst.query('OFF')
+                self.inst.query("OFF")
         return self.get_laser_state()
 
     def on(self):
-        """ Turn laser on.
+        """Turn laser on.
 
-            @return LaserState: actual laser state
+        @return LaserState: actual laser state
         """
         return self.set_laser_state(LaserState.ON)
 
     def off(self):
-        """ Turn laser off.
+        """Turn laser off.
 
-            @return LaserState: actual laser state
+        @return LaserState: actual laser state
         """
         return self.set_laser_state(LaserState.OFF)
 
     def dump(self):
-        """ Dump laser information.
+        """Dump laser information.
 
         @return str: laser information
         """
-        lines = ''
-        lines += 'Didoe Serial: {0}\n'.format(self.inst.query('?DSN'))
+        lines = ""
+        lines += "Didoe Serial: {0}\n".format(self.inst.query("?DSN"))
         return lines
 
     def timers(self):
-        """ Laser component runtimes
+        """Laser component runtimes
 
         @return str: laser component run times
         """
-        lines = ''
-        lines += 'Diode ON: {0}\n'.format(self.inst.query('?DH'))
-        lines += 'Head ON: {0}\n'.format(self.inst.query('?HEADHRS'))
-        lines += 'PSU ON: {0}\n'.format(self.inst.query('?PSHRS'))
+        lines = ""
+        lines += "Diode ON: {0}\n".format(self.inst.query("?DH"))
+        lines += "Head ON: {0}\n".format(self.inst.query("?HEADHRS"))
+        lines += "PSU ON: {0}\n".format(self.inst.query("?PSHRS"))
         return lines
 
     def get_extra_info(self):
-        """ Formatted information about the laser.
+        """Formatted information about the laser.
 
-            @return str: Laser information
+        @return str: Laser information
         """
-        extra = ''
-        extra += '{0}\n{1}\n{2}\n{3}\n'.format(self.mfg, self.model, self.serial, self.version)
-        extra += '\n'
-        extra += '\n {0}'.format(self.timers())
-        extra += '\n'
+        extra = ""
+        extra += f"{self.mfg}\n{self.model}\n{self.serial}\n{self.version}\n"
+        extra += "\n"
+        extra += f"\n {self.timers()}"
+        extra += "\n"
         return extra
-

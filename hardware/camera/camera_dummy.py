@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Dummy implementation for camera_interface.
 
@@ -20,15 +18,17 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import time
-from core.module import Base
+
+import numpy as np
+
 from core.configoption import ConfigOption
+from core.module import Base
 from interface.camera_interface import CameraInterface
 
 
 class CameraDummy(Base, CameraInterface):
-    """ Dummy hardware for camera interface
+    """Dummy hardware for camera interface
 
     Example config for copy-paste:
 
@@ -41,48 +41,46 @@ class CameraDummy(Base, CameraInterface):
         gain: 1.0
     """
 
-    _support_live = ConfigOption('support_live', True)
-    _camera_name = ConfigOption('camera_name', 'Dummy camera')
-    _resolution = ConfigOption('resolution', (1280, 720))  # High-definition !
+    _support_live = ConfigOption("support_live", True)
+    _camera_name = ConfigOption("camera_name", "Dummy camera")
+    _resolution = ConfigOption("resolution", (1280, 720))  # High-definition !
 
     _live = False
     _acquiring = False
-    _exposure = ConfigOption('exposure', .1)
-    _gain = ConfigOption('gain', 1.)
+    _exposure = ConfigOption("exposure", 0.1)
+    _gain = ConfigOption("gain", 1.0)
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         pass
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         self.stop_acquisition()
 
     def get_name(self):
-        """ Retrieve an identifier of the camera that the GUI can print
+        """Retrieve an identifier of the camera that the GUI can print
 
         @return string: name for the camera
         """
         return self._camera_name
 
     def get_size(self):
-        """ Retrieve size of the image in pixel
+        """Retrieve size of the image in pixel
 
         @return tuple: Size (width, height)
         """
         return self._resolution
 
     def support_live_acquisition(self):
-        """ Return whether or not the camera can take care of live acquisition
+        """Return whether or not the camera can take care of live acquisition
 
         @return bool: True if supported, False if not
         """
         return self._support_live
 
     def start_live_acquisition(self):
-        """ Start a continuous acquisition
+        """Start a continuous acquisition
 
         @return bool: Success ?
         """
@@ -91,7 +89,7 @@ class CameraDummy(Base, CameraInterface):
             self._acquiring = False
 
     def start_single_acquisition(self):
-        """ Start a single acquisition
+        """Start a single acquisition
 
         @return bool: Success ?
         """
@@ -99,31 +97,30 @@ class CameraDummy(Base, CameraInterface):
             return False
         else:
             self._acquiring = True
-            time.sleep(float(self._exposure+10/1000))
+            time.sleep(float(self._exposure + 10 / 1000))
             self._acquiring = False
             return True
 
     def stop_acquisition(self):
-        """ Stop/abort live or single acquisition
+        """Stop/abort live or single acquisition
 
         @return bool: Success ?
         """
         self._live = False
         self._acquiring = False
 
-
     def get_acquired_data(self):
-        """ Return an array of last acquired image.
+        """Return an array of last acquired image.
 
         @return numpy array: image data in format [[row],[row]...]
 
         Each pixel might be a float, integer or sub pixels
         """
-        data = np.random.random(self._resolution)*self._exposure*self._gain
+        data = np.random.random(self._resolution) * self._exposure * self._gain
         return data.transpose()
 
     def set_exposure(self, exposure):
-        """ Set the exposure time in seconds
+        """Set the exposure time in seconds
 
         @param float time: desired new exposure time
 
@@ -133,15 +130,14 @@ class CameraDummy(Base, CameraInterface):
         return self._exposure
 
     def get_exposure(self):
-        """ Get the exposure time in seconds
+        """Get the exposure time in seconds
 
         @return float exposure time
         """
         return self._exposure
 
-
     def set_gain(self, gain):
-        """ Set the gain
+        """Set the gain
 
         @param float gain: desired new gain
 
@@ -151,18 +147,15 @@ class CameraDummy(Base, CameraInterface):
         return self._gain
 
     def get_gain(self):
-        """ Get the gain
+        """Get the gain
 
         @return float: exposure gain
         """
         return self._gain
 
-
     def get_ready_state(self):
-        """ Is the camera ready for an acquisition ?
+        """Is the camera ready for an acquisition ?
 
         @return bool: ready ?
         """
         return not (self._live or self._acquiring)
-
-

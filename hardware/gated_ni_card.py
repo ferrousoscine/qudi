@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Hardware module NICard class.
 
@@ -19,13 +17,14 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-from interface.slow_counter_interface import SlowCounterConstraints
-from interface.slow_counter_interface import CountingMode
+
+from interface.slow_counter_interface import CountingMode, SlowCounterConstraints
+
 from .national_instruments_x_series import NationalInstrumentsXSeries
 
 
 class SlowGatedNICard(NationalInstrumentsXSeries):
-    """ Enable the usage of the gated counter in the slow counter interface.
+    """Enable the usage of the gated counter in the slow counter interface.
     Overwrite in this new class therefore the appropriate methods.
 
     Example config for copy-paste:
@@ -74,19 +73,18 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
 
     """
 
-    _photon_sources = ConfigOption('photon_sources', missing='error')
+    _photon_sources = ConfigOption("photon_sources", missing="error")
 
     def on_activate(self):
-        """ Starts up the NI Card at activation.
-        """
+        """Starts up the NI Card at activation."""
         self._gated_counter_daq_task = None
         self._counter_channels = []
-        self._counter_channel = '/Dev1/Ctr0'
+        self._counter_channel = "/Dev1/Ctr0"
 
         self._ph_source = self._photon_sources[0]
 
     def get_constraints(self):
-        """ Get hardware limits of NI device.
+        """Get hardware limits of NI device.
 
         @return SlowCounterConstraints: constraints class for slow counter
 
@@ -99,9 +97,9 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         constraints.counting_mode = [CountingMode.FINITE_GATED]
         return constraints
 
-    #overwrite the SlowCounterInterface commands of the class NICard:
+    # overwrite the SlowCounterInterface commands of the class NICard:
     def set_up_clock(self, clock_frequency=None, clock_channel=None, scanner=False, idle=False):
-        """ Configures the hardware clock of the NiDAQ card to give the timing.
+        """Configures the hardware clock of the NiDAQ card to give the timing.
 
         @param float clock_frequency: if defined, this sets the frequency of
                                       the clock in Hz
@@ -121,14 +119,16 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         # you do not need a clock signal).
         return 0
 
-    def set_up_counter(self,
-                       counter_channel=None,
-                       photon_source=None,
-                       counter_channel2=None,
-                       photon_source2=None,
-                       clock_channel=None,
-                       counter_buffer=None):
-        """ Configures the actual counter with a given clock.
+    def set_up_counter(
+        self,
+        counter_channel=None,
+        photon_source=None,
+        counter_channel2=None,
+        photon_source2=None,
+        clock_channel=None,
+        counter_buffer=None,
+    ):
+        """Configures the actual counter with a given clock.
 
         @param str counter_channel: optional, physical channel of the counter
         @param str photon_source: optional, physical channel where the photons
@@ -149,7 +149,7 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         return self.start_gated_counter()
 
     def get_counter(self, samples=None):
-        """ Returns the current counts per second of the counter.
+        """Returns the current counts per second of the counter.
 
         @param int samples: if defined, number of samples to read in one go
 
@@ -158,7 +158,7 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         return self.get_gated_counts(samples=samples)
 
     def close_counter(self, scanner=False):
-        """ Closes the counter or scanner and cleans up afterwards.
+        """Closes the counter or scanner and cleans up afterwards.
 
         @param bool scanner: specifies if the counter- or scanner- function
                              will be excecuted to close the device.
@@ -172,7 +172,7 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         return self.close_gated_counter()
 
     def close_clock(self, scanner=False):
-        """ Closes the clock and cleans up afterwards.
+        """Closes the clock and cleans up afterwards.
 
         @param bool scanner: specifies if the counter- or scanner- function
                              should be used to close the device.
@@ -182,4 +182,3 @@ class SlowGatedNICard(NationalInstrumentsXSeries):
         @return int: error code (0:OK, -1:error)
         """
         return 0
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi remote widget class.
 
@@ -18,17 +17,18 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-from qtpy.QtWidgets import QWidget
-from qtpy import uic
+
 import os
+
+from qtpy import uic
+from qtpy.QtWidgets import QWidget
 
 
 class ThreadWidget(QWidget):
-
     def __init__(self):
         super().__init__()
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_threadwidget.ui')
+        ui_file = os.path.join(this_dir, "ui_threadwidget.ui")
 
         # Load it
         uic.loadUi(ui_file, self)

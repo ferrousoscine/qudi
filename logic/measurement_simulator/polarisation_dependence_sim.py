@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 This file contains a simulator for testing polarisation-dependence measurment tools
 
@@ -19,29 +18,28 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
 import random
 import time
 
-from core.module import Base
+import numpy as np
+from qtpy import QtCore
+
 from core.connector import Connector
+from core.module import Base
 from interface.motor_interface import MotorInterface
 from interface.slow_counter_interface import SlowCounterInterface
-from qtpy import QtCore
 
 
 class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
-    """ This class wraps the slow-counter dummy and adds polarisation angle dependence in order to simulate dipole polarisation measurements.
-    """
+    """This class wraps the slow-counter dummy and adds polarisation angle dependence in order to simulate dipole polarisation measurements."""
 
     # Connectors
-    counter1 = Connector(interface='SlowCounterInterface')
+    counter1 = Connector(interface="SlowCounterInterface")
 
     _move_signal = QtCore.Signal()
 
     def on_activate(self):
-        """ Activation of the class
-        """
+        """Activation of the class"""
         # name connected modules
         self._counter_hw = self.counter1()
 
@@ -51,7 +49,7 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         # initialize class variables
         self.hwp_angle = 0
 
-        self.dipole_angle = random.uniform(0,360)
+        self.dipole_angle = random.uniform(0, 360)
 
         self.velocity = 10
         self.clock_frequency = 50
@@ -66,33 +64,36 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         self._counter_hw.close_clock()
 
     # Wrapping the slow counter methods
-    def set_up_clock(self, clock_frequency = None, clock_channel = None):
-        """ Direct pass-through to the counter hardware module
-        """
+    def set_up_clock(self, clock_frequency=None, clock_channel=None):
+        """Direct pass-through to the counter hardware module"""
         self.clock_frequency = clock_frequency
-        return self._counter_hw.set_up_clock(clock_frequency = clock_frequency, clock_channel = clock_channel)
+        return self._counter_hw.set_up_clock(
+            clock_frequency=clock_frequency, clock_channel=clock_channel
+        )
 
     def get_constraints(self):
-        """ Pass through counter constraints. """
+        """Pass through counter constraints."""
         return self._counter_hw.get_constraints()
 
-    def set_up_counter(self,
-                       counter_channel=None,
-                       photon_source=None,
-                       counter_channel2=None,
-                       photon_source2=None,
-                       clock_channel=None):
-        """ Direct pass-through to the counter hardware module
-        """
-        return self._counter_hw.set_up_counter(counter_channel=counter_channel,
-                                        photon_source=photon_source,
-                                        counter_channel2=counter_channel2,
-                                        photon_source2=photon_source2,
-                                        clock_channel=clock_channel)
+    def set_up_counter(
+        self,
+        counter_channel=None,
+        photon_source=None,
+        counter_channel2=None,
+        photon_source2=None,
+        clock_channel=None,
+    ):
+        """Direct pass-through to the counter hardware module"""
+        return self._counter_hw.set_up_counter(
+            counter_channel=counter_channel,
+            photon_source=photon_source,
+            counter_channel2=counter_channel2,
+            photon_source2=photon_source2,
+            clock_channel=clock_channel,
+        )
 
     def get_counter(self, samples=None):
-        """ Direct pass-through to the counter hardware module
-        """
+        """Direct pass-through to the counter hardware module"""
         raw_count = self._counter_hw.get_counter(samples=samples)
 
         # modulate the counts with a polarisation dependence
@@ -101,22 +102,19 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         return count
 
     def close_counter(self):
-        """ Direct pass-through to the counter hardware module
-        """
+        """Direct pass-through to the counter hardware module"""
         return self._counter_hw.close_counter()
 
     def close_clock(self, power=0):
-        """ Direct pass-through to the counter hardware module
-        """
+        """Direct pass-through to the counter hardware module"""
         return self._counter_hw.close_clock(power=power)
 
     # Satisfy the motor interface
 
     def move_rel(self, axis=None, distance=None):
-        """ Move the polarisation angle by relative degrees
-        """
+        """Move the polarisation angle by relative degrees"""
         if distance is None:
-            #TODO warning
+            # TODO warning
             pass
 
         self.destination = self.hwp_angle + distance
@@ -132,10 +130,9 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         return 0
 
     def move_abs(self, axis=None, position=None):
-        """ Move the polarisation angle to absolute degrees
-        """
+        """Move the polarisation angle to absolute degrees"""
         if position is None:
-            #TODO warning
+            # TODO warning
             pass
         self.destination = position
 
@@ -150,8 +147,7 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         return 0
 
     def _move_step(self):
-        """Make movement steps in a threaded loop
-        """
+        """Make movement steps in a threaded loop"""
 
         # if abort is requested, then stop moving
         if not self.moving:
@@ -174,7 +170,7 @@ class PolarizationDependenceSim(Base, SlowCounterInterface, MotorInterface):
         else:
             self.hwp_angle -= step_size
 
-        time.sleep(1./self.clock_frequency)
+        time.sleep(1.0 / self.clock_frequency)
         self._move_signal.emit()
 
     def abort(self):

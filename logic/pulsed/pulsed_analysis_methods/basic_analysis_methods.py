@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains basic pulse analysis methods for Qudi.
 
@@ -25,14 +24,14 @@ from logic.pulsed.pulse_analyzer import PulseAnalyzerBase
 
 
 class BasicPulseAnalyzer(PulseAnalyzerBase):
-    """
+    """ """
 
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def analyse_mean_norm(self, laser_data, signal_start=0.0, signal_end=200e-9, norm_start=300e-9,
-                          norm_end=500e-9):
+    def analyse_mean_norm(
+        self, laser_data, signal_start=0.0, signal_end=200e-9, norm_start=300e-9, norm_end=500e-9
+    ):
         """
 
         @param laser_data:
@@ -45,7 +44,7 @@ class BasicPulseAnalyzer(PulseAnalyzerBase):
         # Get number of lasers
         num_of_lasers = laser_data.shape[0]
         # Get counter bin width
-        bin_width = self.fast_counter_settings.get('bin_width')
+        bin_width = self.fast_counter_settings.get("bin_width")
 
         if not isinstance(bin_width, float):
             return np.zeros(num_of_lasers), np.zeros(num_of_lasers)
@@ -97,7 +96,7 @@ class BasicPulseAnalyzer(PulseAnalyzerBase):
         # Get number of lasers
         num_of_lasers = laser_data.shape[0]
         # Get counter bin width
-        bin_width = self.fast_counter_settings.get('bin_width')
+        bin_width = self.fast_counter_settings.get("bin_width")
 
         if not isinstance(bin_width, float):
             return np.zeros(num_of_lasers), np.zeros(num_of_lasers)
@@ -137,7 +136,7 @@ class BasicPulseAnalyzer(PulseAnalyzerBase):
         # Get number of lasers
         num_of_lasers = laser_data.shape[0]
         # Get counter bin width
-        bin_width = self.fast_counter_settings.get('bin_width')
+        bin_width = self.fast_counter_settings.get("bin_width")
 
         if not isinstance(bin_width, float):
             return np.zeros(num_of_lasers), np.zeros(num_of_lasers)
@@ -184,8 +183,9 @@ class BasicPulseAnalyzer(PulseAnalyzerBase):
             data = np.ravel(laser_data)
         return data, np.zeros_like(length)
 
-    def analyse_mean_reference(self, laser_data, signal_start=0.0, signal_end=200e-9, norm_start=300e-9,
-                          norm_end=500e-9):
+    def analyse_mean_reference(
+        self, laser_data, signal_start=0.0, signal_end=200e-9, norm_start=300e-9, norm_end=500e-9
+    ):
         """
         This method takes the mean of the signal window.
         It then does not divide by the background window to normalize
@@ -203,7 +203,7 @@ class BasicPulseAnalyzer(PulseAnalyzerBase):
         # Get number of lasers
         num_of_lasers = laser_data.shape[0]
         # Get counter bin width
-        bin_width = self.fast_counter_settings.get('bin_width')
+        bin_width = self.fast_counter_settings.get("bin_width")
 
         if not isinstance(bin_width, float):
             return np.zeros(num_of_lasers), np.zeros(num_of_lasers)

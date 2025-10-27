@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains a widget for fit parameters.
 
@@ -19,28 +17,32 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-from qtpy import QtCore, QtGui, QtWidgets
-from collections import OrderedDict
-from qtwidgets.scientific_spinbox import ScienDSpinBox
-import numpy as np
-import math
 
 import logging
+import math
+from collections import OrderedDict
+
+import numpy as np
+from qtpy import QtCore, QtGui, QtWidgets
+
+from qtwidgets.scientific_spinbox import ScienDSpinBox
+
 logger = logging.getLogger(__name__)
 
 
 class FitSettingsDialog(QtWidgets.QDialog):
-    """ A dialog that is used to configure the fits in a FitContainer. """
+    """A dialog that is used to configure the fits in a FitContainer."""
+
     sigFitsUpdated = QtCore.Signal(dict)
 
     def __init__(self, fit_container):
-        """ Create a FitSettingsDialog for a matching FitContainer.
-            @param fit_container FitContainer: the FitContainer that this dialog should manipulate
+        """Create a FitSettingsDialog for a matching FitContainer.
+        @param fit_container FitContainer: the FitContainer that this dialog should manipulate
         """
         super().__init__()
 
         self.fc = fit_container
-        self.title = '{0} fit settings'.format(self.fc.name)
+        self.title = f"{self.fc.name} fit settings"
 
         # set up window
         self.setModal(False)
@@ -66,13 +68,13 @@ class FitSettingsDialog(QtWidgets.QDialog):
         self._scrLayout = QtWidgets.QVBoxLayout()
         self._dbox = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok
-                | QtWidgets.QDialogButtonBox.Apply
-                | QtWidgets.QDialogButtonBox.Cancel,
-            QtCore.Qt.Horizontal
+            | QtWidgets.QDialogButtonBox.Apply
+            | QtWidgets.QDialogButtonBox.Cancel,
+            QtCore.Qt.Horizontal,
         )
-        self._addFitButton = QtWidgets.QPushButton('Add fit')
-        self._saveFitButton = QtWidgets.QPushButton('Save fits')
-        self._loadFitButton = QtWidgets.QPushButton('Load fits')
+        self._addFitButton = QtWidgets.QPushButton("Add fit")
+        self._saveFitButton = QtWidgets.QPushButton("Save fits")
+        self._loadFitButton = QtWidgets.QPushButton("Load fits")
 
         # layout construction
         self._scrollWidget.setLayout(self._scrLayout)
@@ -84,7 +86,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
         self._firstPageLayout.addLayout(self._btnLayout)
         self._firstPageLayout.addWidget(self._scrollArea)
         self._firstPage.setLayout(self._firstPageLayout)
-        self._tabWidget.addTab(self._firstPage, 'Fit functions')
+        self._tabWidget.addTab(self._firstPage, "Fit functions")
         self._dialogLayout.addWidget(self._tabWidget)
         self._dialogLayout.addWidget(self._dbox)
         self.setLayout(self._dialogLayout)
@@ -107,74 +109,74 @@ class FitSettingsDialog(QtWidgets.QDialog):
 
     @QtCore.Slot(QtWidgets.QAbstractButton)
     def buttonClicked(self, button):
-        """ Slot for signals from dialog button box.
-            @param button QAbstractButton: designates which button was clicked.
+        """Slot for signals from dialog button box.
+        @param button QAbstractButton: designates which button was clicked.
         """
-        if self._dbox.buttonRole(button) ==  QtWidgets.QDialogButtonBox.ApplyRole:
+        if self._dbox.buttonRole(button) == QtWidgets.QDialogButtonBox.ApplyRole:
             self.applySettings()
 
     @QtCore.Slot()
     def addFitButtonClicked(self):
-        """ The 'Add Fit' button was clicked. Display a name input dialog and add the fit. """
+        """The 'Add Fit' button was clicked. Display a name input dialog and add the fit."""
         res = QtWidgets.QInputDialog.getText(
             self,
-            'New fit',
-            'Enter a name for this fit:',
-            )
+            "New fit",
+            "Enter a name for this fit:",
+        )
         if res[1]:
             self.addFit(res[0])
 
     @QtCore.Slot()
     def saveFitButtonClicked(self):
-        """ The 'Save Fits' button was clicked. Display file chooser and save fits to file. """
+        """The 'Save Fits' button was clicked. Display file chooser and save fits to file."""
         res = QtWidgets.QFileDialog.getSaveFileName(
             self,
-            'Save fit collection for {0}'.format(self.title),
-            '/path',
-            'Fit files (*.fit *.yml)'
-            )
+            f"Save fit collection for {self.title}",
+            "/path",
+            "Fit files (*.fit *.yml)",
+        )
         self.fc.fit_logic.save_fits(res[0], {self.fc.dimension: self.fc.fit_list})
 
     @QtCore.Slot()
     def loadFitButtonClicked(self):
-        """ The 'Load Fits' button was clicked. Display file chooser and load fits from file. """
+        """The 'Load Fits' button was clicked. Display file chooser and load fits from file."""
         res = QtWidgets.QFileDialog.getOpenFileName(
             self,
-            'Load fit collection for {0}'.format(self.title),
-            '/path',
-            'Fit files (*.fit *.yml)'
-            )
+            f"Load fit collection for {self.title}",
+            "/path",
+            "Fit files (*.fit *.yml)",
+        )
         fits = self.fc.fit_logic.load_fits(res[0])
         self.loadFits(fits[self.fc.dimension])
 
     def loadFits(self, user_fits):
-        """ Take a fit config dictionary and create widgets for the fits inside.
-            @param user_fits dict: configured fits dictionary
+        """Take a fit config dictionary and create widgets for the fits inside.
+        @param user_fits dict: configured fits dictionary
         """
         self.removeAllFits()
         self.applySettings()
 
         for name, fit in user_fits.items():
-            self.addFit(name, fit=fit['fit_name'], estimator=fit['est_name'])
+            self.addFit(name, fit=fit["fit_name"], estimator=fit["est_name"])
 
             # add new tab for new fit
-            model, params = self.all_functions[fit['fit_name']]['make_model']()
+            model, params = self.all_functions[fit["fit_name"]]["make_model"]()
             self.tabs[name] = FitParametersWidget(params)
             self._tabWidget.addTab(self.tabs[name], name)
-            self.updateParameters(name, fit['parameters'])
+            self.updateParameters(name, fit["parameters"])
         # build fit list and send update signals
         self.applySettings()
 
     def addFit(self, name, fit=None, estimator=None):
-        """ Add a new fit to the dialog.
-            @param name str: configured name for fit
-            @param fit str: name of the fit function for this fit
-            @param estimator str: name of the estimator function for this fit
+        """Add a new fit to the dialog.
+        @param name str: configured name for fit
+        @param fit str: name of the fit function for this fit
+        @param estimator str: name of the estimator function for this fit
         """
         if len(name) < 1:
             return
         if name in self.fitWidgets:
-            logging.error('{0}: Fit {1} already exists.'.format(self.title, name))
+            logging.error(f"{self.title}: Fit {name} already exists.")
             return
         fcw = FitConfigWidget(name, self.all_functions, fit, estimator)
         self.currentFitWidgets[name] = fcw
@@ -184,8 +186,8 @@ class FitSettingsDialog(QtWidgets.QDialog):
 
     @QtCore.Slot(str)
     def removeFit(self, name):
-        """ Remove a fit from the dialog. Hides the FitonfigWidet and disables the parameter tab.
-            @param name str: name of fit to remove
+        """Remove a fit from the dialog. Hides the FitonfigWidet and disables the parameter tab.
+        @param name str: name of fit to remove
         """
         widget = self.currentFitWidgets.pop(name)
         widget.hide()
@@ -194,18 +196,16 @@ class FitSettingsDialog(QtWidgets.QDialog):
         tab.setEnabled(False)
 
     def removeAllFits(self):
-        """ Remove all configured fits from dialog.
-        """
+        """Remove all configured fits from dialog."""
         for name in self.currentFits.keys():
             self.removeFit(name)
 
     def getFits(self):
-        """ Return all configured fits from this dialog.
-        """
+        """Return all configured fits from this dialog."""
         return self.currentFits
 
     def applySettings(self):
-        """ Apply all settings that the user has made in the dialog and send out update signals.
+        """Apply all settings that the user has made in the dialog and send out update signals.
 
         This copies all input widget values to thei coresponding internal data structures,
         creates an removes widgets and parameter tabs.
@@ -233,7 +233,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
                 index = self._tabWidget.indexOf(tab)
                 if index >= 0:
                     self._tabWidget.removeTab(index)
-                model, params = self.all_functions[widget.fit]['make_model']()
+                model, params = self.all_functions[widget.fit]["make_model"]()
                 self.tabs[name] = FitParametersWidget(params)
                 if index >= 0:
                     self._tabWidget.insertTab(index, self.tabs[name], name)
@@ -242,7 +242,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
 
             elif name not in self.tabs:
                 # add new tab for new fir
-                model, params = self.all_functions[widget.fit]['make_model']()
+                model, params = self.all_functions[widget.fit]["make_model"]()
                 self.tabs[name] = FitParametersWidget(params)
                 self._tabWidget.addTab(self.tabs[name], name)
 
@@ -260,27 +260,25 @@ class FitSettingsDialog(QtWidgets.QDialog):
         self.sigFitsUpdated.emit(self.currentFits)
 
     def buildCurrentFits(self):
-        """ Update dictionary of the configured fits for FitContainer or other componenrs.
-        """
+        """Update dictionary of the configured fits for FitContainer or other componenrs."""
         # arrange all of this information in a convenient form
         self.currentFits = OrderedDict()
         for name, widget in self.fitWidgets.items():
             try:
                 self.currentFits[name] = {
-                    'fit_name': widget.fit,
-                    'est_name': widget.estimator,
-                    'make_fit': self.all_functions[widget.fit]['make_fit'],
-                    'make_model': self.all_functions[widget.fit]['make_model'],
-                    'estimator': self.all_functions[widget.fit][widget.estimator],
-                    'parameters': self.parameters[name],
-                    'use_settings': self.parameterUse[name]
+                    "fit_name": widget.fit,
+                    "est_name": widget.estimator,
+                    "make_fit": self.all_functions[widget.fit]["make_fit"],
+                    "make_model": self.all_functions[widget.fit]["make_model"],
+                    "estimator": self.all_functions[widget.fit][widget.estimator],
+                    "parameters": self.parameters[name],
+                    "use_settings": self.parameterUse[name],
                 }
             except KeyError:
                 continue
 
     def resetSettings(self):
-        """ Reset all input widgets to their stored values, discarding changes by the user.
-        """
+        """Reset all input widgets to their stored values, discarding changes by the user."""
         for name, widget in self.currentFitWidgets.items():
             if name not in self.fitWidgets:
                 self._scrLayout.removeWidget(widget)
@@ -297,15 +295,15 @@ class FitSettingsDialog(QtWidgets.QDialog):
             tab.resetFitParameters()
 
     def getParameters(self, fit_name):
-        """ Return Parameters object for a given fit.
-            @param fit_name str: name of the fit
+        """Return Parameters object for a given fit.
+        @param fit_name str: name of the fit
 
-            @return Parameters: lmfit parameters container
+        @return Parameters: lmfit parameters container
         """
         return self.parameters[fit_name]
 
     def updateParameters(self, fit_name, parameters):
-        """ Update parameters of a given fit.
+        """Update parameters of a given fit.
             @param fit_name str: name of fit
             @param parameters Parameters: lmfit Parameters container
 
@@ -320,31 +318,31 @@ class FitSettingsDialog(QtWidgets.QDialog):
 
 
 class FitSettingsComboBox(QtWidgets.QComboBox):
-    """ A QComboBox for use with FitContainer. """
+    """A QComboBox for use with FitContainer."""
 
     sigFitUpdated = QtCore.Signal(tuple)
 
     def __init__(self, *args, **kwargs):
-        """ Create a FitSettingxComboBox.
-            @param args list(): positional arguments passed to QComboBox
-            @param kwargs dict(): keyword arguments passed to QComboBox
+        """Create a FitSettingxComboBox.
+        @param args list(): positional arguments passed to QComboBox
+        @param kwargs dict(): keyword arguments passed to QComboBox
         """
         super().__init__(*args, **kwargs)
         self.fit_functions = OrderedDict()
-        self.fit_functions['No Fit'] = None
-        self.addItem('No Fit')
-        self.setCurrentIndex(self.findText('No Fit'))
+        self.fit_functions["No Fit"] = None
+        self.addItem("No Fit")
+        self.setCurrentIndex(self.findText("No Fit"))
 
     @QtCore.Slot(dict)
     def setFitFunctions(self, user_fits):
-        """ Set the fit functions that can be chosen in this combobox
-            @param user_fits dict: fit dictionary of configured fits
+        """Set the fit functions that can be chosen in this combobox
+        @param user_fits dict: fit dictionary of configured fits
         """
         current = self.getCurrentFit()
         self.clear()
         self.fit_functions = OrderedDict()
-        self.fit_functions['No Fit'] = None
-        self.addItem('No Fit')
+        self.fit_functions["No Fit"] = None
+        self.addItem("No Fit")
 
         for name, fit in user_fits.items():
             self.fit_functions[name] = fit
@@ -353,40 +351,39 @@ class FitSettingsComboBox(QtWidgets.QComboBox):
         self.setCurrentFit(current[0])
 
     def getCurrentFit(self):
-        """ Return name and fit dictionary for the current fit.
+        """Return name and fit dictionary for the current fit.
 
-            @return tuple(str, dict): name nad fit dict for current fit
+        @return tuple(str, dict): name nad fit dict for current fit
         """
         name = self.currentText()
         return name, self.fit_functions[name]
 
     def setCurrentFit(self, name):
-        """ Set current fit by name. 'No Fit' if the name is invalid.
-            @param name str: name of the fit to be set as current fit
+        """Set current fit by name. 'No Fit' if the name is invalid.
+        @param name str: name of the fit to be set as current fit
         """
         if name in self.fit_functions:
             self.setCurrentIndex(self.findText(name))
         else:
-            self.setCurrentIndex(self.findText('No Fit'))
+            self.setCurrentIndex(self.findText("No Fit"))
 
 
 class FitConfigWidget(QtWidgets.QWidget):
-    """ A widget that contains a fit function combobox, an estimator combobox and a remove button.
-    """
+    """A widget that contains a fit function combobox, an estimator combobox and a remove button."""
 
     sigRemoveFit = QtCore.Signal(str)
 
     def __init__(self, name, all_fits, fit=None, estimator=None):
-        """ Create a FitConfigWidget.
-            @param name str: name of the fit
-            @param all_fits dict: dict of all fits, their estimators and parameters
-            @param fit str: optional name of fit function to be selected
-            @param etimator str: optional name of estimator to be selected
+        """Create a FitConfigWidget.
+        @param name str: name of the fit
+        @param all_fits dict: dict of all fits, their estimators and parameters
+        @param fit str: optional name of fit function to be selected
+        @param etimator str: optional name of estimator to be selected
         """
         super().__init__()
         self.name = name
-        self.fit = ''
-        self.estimator = ''
+        self.fit = ""
+        self.estimator = ""
         self.all_fits = all_fits
 
         self.nameLabel = QtWidgets.QLabel(name)
@@ -395,7 +392,7 @@ class FitConfigWidget(QtWidgets.QWidget):
         self.delButton = QtWidgets.QToolButton()
 
         self.delIcon = QtGui.QIcon()
-        self.delIcon.addFile('artwork/icons/oxygen/22x22/edit-delete.png')
+        self.delIcon.addFile("artwork/icons/oxygen/22x22/edit-delete.png")
         self.delButton.setIcon(self.delIcon)
 
         self._layout = QtWidgets.QHBoxLayout()
@@ -407,7 +404,7 @@ class FitConfigWidget(QtWidgets.QWidget):
         self.setLayout(self._layout)
 
         for name, afit in self.all_fits.items():
-            if 'make_fit' in afit and 'make_model' in afit:
+            if "make_fit" in afit and "make_model" in afit:
                 self.fitComboBox.addItem(name)
 
         if fit is not None and fit in all_fits:
@@ -429,31 +426,28 @@ class FitConfigWidget(QtWidgets.QWidget):
 
     @QtCore.Slot(int)
     def fitChanged(self, index):
-        """ The fit changed, update the estimator ComboBox.
-            @param index int: index of the new selected fit
+        """The fit changed, update the estimator ComboBox.
+        @param index int: index of the new selected fit
         """
         name = self.fitComboBox.itemText(index)
         self.estComboBox.clear()
         for estimator in self.all_fits[name]:
-            if not estimator.startswith('make_'):
+            if not estimator.startswith("make_"):
                 self.estComboBox.addItem(estimator)
 
     @QtCore.Slot(int)
     def estimatorChanged(self, index):
-        """ Estimator changed. Nothing really needs to happen.
-        """
+        """Estimator changed. Nothing really needs to happen."""
         name = self.estComboBox.itemText(index)
         # FIXME: remove this maybe?
 
     def applySettings(self):
-        """ Copy widget contents to internal variables.
-        """
+        """Copy widget contents to internal variables."""
         self.fit = self.fitComboBox.currentText()
         self.estimator = self.estComboBox.currentText()
 
     def resetSettings(self):
-        """ Restore widget contents from external variable.
-        """
+        """Restore widget contents from external variable."""
         self.fitComboBox.setCurrentIndex(self.fitComboBox.findText(self.fit))
         self.fitChanged(self.fitComboBox.findText(self.fit))
         self.estComboBox.setCurrentIndex(self.estComboBox.findText(self.estimator))
@@ -461,19 +455,18 @@ class FitConfigWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def removeWidget(self):
-        """ Remove button pressed, hide widget and send signal for removal.
-        """
+        """Remove button pressed, hide widget and send signal for removal."""
         self.hide()
         self.sigRemoveFit.emit(self.name)
 
 
 class FitParametersWidget(QtWidgets.QWidget):
-    """ A widget that manages the parameters for a fit. """
+    """A widget that manages the parameters for a fit."""
 
     def __init__(self, parameters):
-        """ Definition, configuration and initialisation of the optimizer settings GUI. Adds a row
-            with the value, min, max and vary for each variable in parameters.
-            @param parameters Parameters: lmfit parameters collection to be displayed here
+        """Definition, configuration and initialisation of the optimizer settings GUI. Adds a row
+        with the value, min, max and vary for each variable in parameters.
+        @param parameters Parameters: lmfit parameters collection to be displayed here
         """
         super().__init__()
 
@@ -481,12 +474,12 @@ class FitParametersWidget(QtWidgets.QWidget):
 
         # create labels and layout
         self._layout = QtWidgets.QGridLayout(self)
-        self.useLabel = QtWidgets.QLabel('Edit?')
-        self.valueLabel = QtWidgets.QLabel('Value')
-        self.minimumLabel = QtWidgets.QLabel('Minimum')
-        self.maximumLabel = QtWidgets.QLabel('Maximum')
-        self.exprLabel = QtWidgets.QLabel('Expression')
-        self.varyLabel = QtWidgets.QLabel('Vary?')
+        self.useLabel = QtWidgets.QLabel("Edit?")
+        self.valueLabel = QtWidgets.QLabel("Value")
+        self.minimumLabel = QtWidgets.QLabel("Minimum")
+        self.maximumLabel = QtWidgets.QLabel("Maximum")
+        self.exprLabel = QtWidgets.QLabel("Expression")
+        self.varyLabel = QtWidgets.QLabel("Vary?")
 
         # add labels to layout
         self._layout.addWidget(self.useLabel, 0, 0)
@@ -502,13 +495,13 @@ class FitParametersWidget(QtWidgets.QWidget):
         n = 2
         for name, param in parameters.items():
             self.paramUseSettings[name] = False
-            self.widgets[name + '_use'] = useCheckbox = QtWidgets.QCheckBox()
-            self.widgets[name + '_label'] = parameterNameLabel = QtWidgets.QLabel(str(name))
-            self.widgets[name + '_value'] = valueSpinbox = ScienDSpinBox()
-            self.widgets[name + '_min'] = minimumSpinbox = ScienDSpinBox()
-            self.widgets[name + '_max'] = maximumSpinbox = ScienDSpinBox()
-            self.widgets[name + '_expr'] = expressionLineEdit = QtWidgets.QLineEdit()
-            self.widgets[name + '_vary'] = varyCheckbox = QtWidgets.QCheckBox()
+            self.widgets[name + "_use"] = useCheckbox = QtWidgets.QCheckBox()
+            self.widgets[name + "_label"] = parameterNameLabel = QtWidgets.QLabel(str(name))
+            self.widgets[name + "_value"] = valueSpinbox = ScienDSpinBox()
+            self.widgets[name + "_min"] = minimumSpinbox = ScienDSpinBox()
+            self.widgets[name + "_max"] = maximumSpinbox = ScienDSpinBox()
+            self.widgets[name + "_expr"] = expressionLineEdit = QtWidgets.QLineEdit()
+            self.widgets[name + "_vary"] = varyCheckbox = QtWidgets.QCheckBox()
             valueSpinbox.setMaximum(np.inf)
             valueSpinbox.setMinimum(-np.inf)
             valueSpinbox.setMinimumSize(QtCore.QSize(60, 16777215))
@@ -539,46 +532,45 @@ class FitParametersWidget(QtWidgets.QWidget):
         self._layout.setRowStretch(n, 1)
 
     def applyFitParameters(self):
-        """ Updates the fit parameters with the new values from the widget.
+        """Updates the fit parameters with the new values from the widget.
 
-            @return tuple(Parameters, dict): new lmfit Parameters and a dict indicating their use
+        @return tuple(Parameters, dict): new lmfit Parameters and a dict indicating their use
         """
         for name, param in self.parameters.items():
-            self.paramUseSettings[name] = self.widgets[name + '_use'].isChecked()
-            param.value = self.widgets[name + '_value'].value()
-            param.min = self.widgets[name + '_min'].value()
-            param.max = self.widgets[name + '_max'].value()
-            param.expr = str(self.widgets[name + '_expr'].displayText())
-            param.vary = self.widgets[name + '_vary'].isChecked()
+            self.paramUseSettings[name] = self.widgets[name + "_use"].isChecked()
+            param.value = self.widgets[name + "_value"].value()
+            param.min = self.widgets[name + "_min"].value()
+            param.max = self.widgets[name + "_max"].value()
+            param.expr = str(self.widgets[name + "_expr"].displayText())
+            param.vary = self.widgets[name + "_vary"].isChecked()
         return self.parameters, self.paramUseSettings
 
     def resetFitParameters(self):
-        """ Resets the parameters in the widget to the stored values.
+        """Resets the parameters in the widget to the stored values.
 
-            @return tuple(Parameters, dict): old Parameters and dict indicating their use
+        @return tuple(Parameters, dict): old Parameters and dict indicating their use
         """
         for name, param in self.parameters.items():
             if param.value is not None and not math.isnan(param.value):
-                self.widgets[name + '_use'].setChecked(self.paramUseSettings[name])
-                self.widgets[name + '_value'].setValue(param.value)
-                self.widgets[name + '_min'].setValue(param.min)
-                self.widgets[name + '_max'].setValue(param.max)
-                self.widgets[name + '_expr'].setText(param.expr)
-                self.widgets[name + '_vary'].setChecked(param.vary)
+                self.widgets[name + "_use"].setChecked(self.paramUseSettings[name])
+                self.widgets[name + "_value"].setValue(param.value)
+                self.widgets[name + "_min"].setValue(param.min)
+                self.widgets[name + "_max"].setValue(param.max)
+                self.widgets[name + "_expr"].setText(param.expr)
+                self.widgets[name + "_vary"].setChecked(param.vary)
         return self.parameters, self.paramUseSettings
 
     def updateFitParameters(self, parameters):
-        """ Update all the parameter values.
-            @param parameters Parameters: lmfit Parameters to update the widget with
+        """Update all the parameter values.
+        @param parameters Parameters: lmfit Parameters to update the widget with
         """
         for name, param in parameters.items():
             v = param.value
             if name in self.parameters and v is not None and not math.isnan(v):
-                self.widgets[name + '_value'].setValue(v)
-                self.widgets[name + '_min'].setValue(param.min)
-                self.widgets[name + '_max'].setValue(param.max)
-                self.widgets[name + '_expr'].setText(param.expr)
-                self.widgets[name + '_vary'].setChecked(param.vary)
+                self.widgets[name + "_value"].setValue(v)
+                self.widgets[name + "_min"].setValue(param.min)
+                self.widgets[name + "_max"].setValue(param.max)
+                self.widgets[name + "_expr"].setText(param.expr)
+                self.widgets[name + "_vary"].setChecked(param.vary)
                 self.parameters[name] = param
         return self.parameters, self.paramUseSettings
-

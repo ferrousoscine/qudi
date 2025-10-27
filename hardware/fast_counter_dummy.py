@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi hardware dummy for fast counting devices.
 
@@ -20,18 +18,19 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import time
 import os
+import time
+
 import numpy as np
 
-from core.module import Base
 from core.configoption import ConfigOption
+from core.module import Base
 from core.util.modules import get_main_dir
 from interface.fast_counter_interface import FastCounterInterface
 
 
 class FastCounterDummy(Base, FastCounterInterface):
-    """ Implementation of the FastCounter interface methods for a dummy usage.
+    """Implementation of the FastCounter interface methods for a dummy usage.
 
     Example config for copy-paste:
 
@@ -43,40 +42,35 @@ class FastCounterDummy(Base, FastCounterInterface):
     """
 
     # config option
-    _gated = ConfigOption('gated', False, missing='warn')
-    trace_path = ConfigOption('load_trace', None)
+    _gated = ConfigOption("gated", False, missing="warn")
+    trace_path = ConfigOption("load_trace", None)
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
 
-        self.log.debug('The following configuration was found.')
+        self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
         for key in config.keys():
-            self.log.info('{0}: {1}'.format(key,config[key]))
+            self.log.info(f"{key}: {config[key]}")
 
         if self.trace_path is None:
-            self.trace_path = os.path.join(
-                get_main_dir(),
-                'tools',
-                'FastComTec_demo_timetrace.asc')
+            self.trace_path = os.path.join(get_main_dir(), "tools", "FastComTec_demo_timetrace.asc")
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self.statusvar = 0
         self._binwidth = 1
         self._gate_length_bins = 8192
         return
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         self.statusvar = -1
         return
 
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the Fast counting device.
+        """Retrieve the hardware constrains from the Fast counting device.
 
         @return dict: dict with keys being the constraint names as string and
                       items are the definition for the constaints.
@@ -113,12 +107,12 @@ class FastCounterDummy(Base, FastCounterInterface):
 
         # the unit of those entries are seconds per bin. In order to get the
         # current binwidth in seonds use the get_binwidth method.
-        constraints['hardware_binwidth_list'] = [1/950e6, 2/950e6, 4/950e6, 8/950e6]
+        constraints["hardware_binwidth_list"] = [1 / 950e6, 2 / 950e6, 4 / 950e6, 8 / 950e6]
 
         return constraints
 
-    def configure(self, bin_width_s, record_length_s, number_of_gates = 0):
-        """ Configuration of the fast counter.
+    def configure(self, bin_width_s, record_length_s, number_of_gates=0):
+        """Configuration of the fast counter.
 
         @param float bin_width_s: Length of a single time bin in the time trace
                                   histogram in seconds.
@@ -139,9 +133,8 @@ class FastCounterDummy(Base, FastCounterInterface):
         self.statusvar = 1
         return actual_binwidth, actual_length, number_of_gates
 
-
     def get_status(self):
-        """ Receives the current status of the Fast Counter and outputs it as
+        """Receives the current status of the Fast Counter and outputs it as
             return value.
 
         0 = unconfigured
@@ -156,7 +149,7 @@ class FastCounterDummy(Base, FastCounterInterface):
         time.sleep(1)
         self.statusvar = 2
         try:
-            self._count_data = np.loadtxt(self.trace_path, dtype='int64')
+            self._count_data = np.loadtxt(self.trace_path, dtype="int64")
         except:
             return -1
 
@@ -165,7 +158,7 @@ class FastCounterDummy(Base, FastCounterInterface):
         return 0
 
     def pause_measure(self):
-        """ Pauses the current measurement.
+        """Pauses the current measurement.
 
         Fast counter must be initially in the run state to make it pause.
         """
@@ -174,14 +167,14 @@ class FastCounterDummy(Base, FastCounterInterface):
         return 0
 
     def stop_measure(self):
-        """ Stop the fast counter. """
+        """Stop the fast counter."""
 
         time.sleep(1)
         self.statusvar = 1
         return 0
 
     def continue_measure(self):
-        """ Continues the current measurement.
+        """Continues the current measurement.
 
         If fast counter is in pause state, then fast counter will be continued.
         """
@@ -190,7 +183,7 @@ class FastCounterDummy(Base, FastCounterInterface):
         return 0
 
     def is_gated(self):
-        """ Check the gated counting possibility.
+        """Check the gated counting possibility.
 
         @return bool: Boolean value indicates if the fast counter is a gated
                       counter (TRUE) or not (FALSE).
@@ -199,15 +192,15 @@ class FastCounterDummy(Base, FastCounterInterface):
         return self._gated
 
     def get_binwidth(self):
-        """ Returns the width of a single timebin in the timetrace in seconds.
+        """Returns the width of a single timebin in the timetrace in seconds.
 
         @return float: current length of a single bin in seconds (seconds/bin)
         """
-        width_in_seconds = self._binwidth * 1/950e6
+        width_in_seconds = self._binwidth * 1 / 950e6
         return width_in_seconds
 
     def get_data_trace(self):
-        """ Polls the current timetrace data from the fast counter.
+        """Polls the current timetrace data from the fast counter.
 
         Return value is a numpy array (dtype = int64).
         The binning, specified by calling configure() in forehand, must be
@@ -227,10 +220,10 @@ class FastCounterDummy(Base, FastCounterInterface):
 
         # include an artificial waiting time
         time.sleep(0.5)
-        info_dict = {'elapsed_sweeps': None, 'elapsed_time': None}
+        info_dict = {"elapsed_sweeps": None, "elapsed_time": None}
         return self._count_data, info_dict
 
     def get_frequency(self):
-        freq = 950.
+        freq = 950.0
         time.sleep(0.5)
         return freq

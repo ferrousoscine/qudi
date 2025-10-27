@@ -19,16 +19,18 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License. See documentation/BSDLicense_IPython.md
 
-import matplotlib
-from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg # analysis: ignore
-from matplotlib._pylab_helpers import Gcf
-from io import BytesIO
 import struct
+from io import BytesIO
+
+import matplotlib
+from matplotlib._pylab_helpers import Gcf
+from matplotlib.backends.backend_agg import FigureCanvasAgg  # analysis: ignore
 
 from .config import InlineBackend
 
 # You really have to monkeypatch this for the backend to work
 qudikernel = None
+
 
 def show(close=None, block=None):
     """Show all figures as SVG/PNG payloads sent to the IPython clients.
@@ -54,7 +56,7 @@ def show(close=None, block=None):
         # only call close('all') if any to close
         # close triggers gc.collect, which can be slow
         if close and Gcf.get_all_fig_managers():
-            matplotlib.pyplot.close('all')
+            matplotlib.pyplot.close("all")
 
 
 # This flag will be reset by draw_if_interactive when called
@@ -62,11 +64,13 @@ show._draw_called = False
 # list of figures to draw when flush_figures is called
 show._to_draw = []
 
+
 def display(fig):
-    #print('Matplotlib has something to show:')
+    # print('Matplotlib has something to show:')
     imgdata, metadata = print_figure(fig)
-    fmt_dict = {'image/png': imgdata}
-    qudikernel.display_data('image/png', fmt_dict, metadata)
+    fmt_dict = {"image/png": imgdata}
+    qudikernel.display_data("image/png", fmt_dict, metadata)
+
 
 def draw_if_interactive():
     """
@@ -90,7 +94,7 @@ def draw_if_interactive():
     # https://github.com/ipython/ipython/issues/1612
     # https://github.com/matplotlib/matplotlib/issues/835
 
-    if not hasattr(fig, 'show'):
+    if not hasattr(fig, "show"):
         # Queue up `fig` for display
         fig.show = lambda *a: display(fig)
 
@@ -158,59 +162,59 @@ def flush_figures():
         show._to_draw = []
         show._draw_called = False
 
+
 def _pngxy(data):
     """read the (width, height) from a PNG header"""
-    ihdr = data.index(b'IHDR')
+    ihdr = data.index(b"IHDR")
     # next 8 bytes are width/height
-    w4h4 = data[ihdr+4:ihdr+12]
-    return struct.unpack('>ii', w4h4)
+    w4h4 = data[ihdr + 4 : ihdr + 12]
+    return struct.unpack(">ii", w4h4)
 
-def print_figure(fig, fmt='png', bbox_inches='tight', **kwargs):
+
+def print_figure(fig, fmt="png", bbox_inches="tight", **kwargs):
     """Print a figure to an image, and return the resulting file data
-    
+
     Returned data will be bytes unless ``fmt='svg'``,
     in which case it will be unicode.
-    
+
     Any keyword args are passed to fig.canvas.print_figure,
     such as ``quality`` or ``bbox_inches``.
     """
     from matplotlib import rcParams
+
     metadata = {}
     # When there's an empty figure, we shouldn't return anything, otherwise we
     # get big blank areas in the qt console.
     if not fig.axes and not fig.lines:
         return
 
-    dpi = rcParams['savefig.dpi']
-    if fmt == 'retina':
+    dpi = rcParams["savefig.dpi"]
+    if fmt == "retina":
         dpi = dpi * 2
-        fmt = 'png'
-    
+        fmt = "png"
+
     # build keyword args
     kw = {
-        'format': fmt,
-        'facecolor': fig.get_facecolor(),
-        'edgecolor': fig.get_edgecolor(),
-        'dpi': dpi,
-        'bbox_inches': bbox_inches,
+        "format": fmt,
+        "facecolor": fig.get_facecolor(),
+        "edgecolor": fig.get_edgecolor(),
+        "dpi": dpi,
+        "bbox_inches": bbox_inches,
     }
     # **kwargs get higher priority
     kw.update(kwargs)
-    
+
     bytes_io = BytesIO()
     fig.canvas.print_figure(bytes_io, **kw)
     data = bytes_io.getvalue()
-    if fmt == 'svg':
-        data = data.decode('utf-8')
-    if fmt == 'png':
+    if fmt == "svg":
+        data = data.decode("utf-8")
+    if fmt == "png":
         w, h = _pngxy(data)
-        metadata = {
-            'image/png': {
-                'width': w,
-                'height': h
-            }}
+        metadata = {"image/png": {"width": w, "height": h}}
     return data, metadata
-    
+
+
 # Changes to matplotlib in version 1.2 requires a mpl backend to supply a default
 # figurecanvas. This is set here to a Agg canvas
 # See https://github.com/matplotlib/matplotlib/pull/1125

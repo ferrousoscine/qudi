@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-"""
+""" """
 
 import sys
 
 
 class _RedirectStream:
-    """ A base class for a context manager to redirect streams from the sys module."""
+    """A base class for a context manager to redirect streams from the sys module."""
+
     _stream = None
 
     def __init__(self, new_target=None):
@@ -37,9 +36,11 @@ class _RedirectStream:
 
 class RedirectedStdOut(_RedirectStream):
     """Context manager for temporarily redirecting stdout to another file."""
+
     _stream = "stdout"
 
 
 class RedirectedStdErr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
+
     _stream = "stderr"

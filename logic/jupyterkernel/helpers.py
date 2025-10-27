@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Qt-based IPython/jupyter kernel
 
@@ -18,7 +17,7 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 
-Parts of this file are 
+Parts of this file are
 Copyright (C) 2008-2011  The IPython Development Team
 
 Distributed under the terms of the BSD License.  The full license is in
@@ -26,10 +25,10 @@ the file document documentation/BSDLicense_IPython.md,
 distributed as part of this software.
 """
 
-import sys
 import builtins
-from base64 import encodebytes
+import sys
 import threading
+from base64 import encodebytes
 
 
 class ThreadFixer(threading.Thread):
@@ -37,8 +36,7 @@ class ThreadFixer(threading.Thread):
 
 
 class ExecutionResult:
-    """The result of a call to run_cell. Stores information about what took place.
-    """
+    """The result of a call to run_cell. Stores information about what took place."""
 
     def __init__(self):
         self.execution_count = None
@@ -46,8 +44,8 @@ class ExecutionResult:
         self.error_in_exec = None
         self.result = list()
         self.display_data = dict()
-        self.captured_stdout = ''
-        self.captured_stderr = ''
+        self.captured_stdout = ""
+        self.captured_stderr = ""
 
     @property
     def success(self):
@@ -62,8 +60,7 @@ class ExecutionResult:
 
 
 class DisplayHook:
-    """A simple displayhook that publishes the object's repr over a ZeroMQ socket.
-    """
+    """A simple displayhook that publishes the object's repr over a ZeroMQ socket."""
 
     def __init__(self):
         self.result = None
@@ -71,7 +68,7 @@ class DisplayHook:
     def __call__(self, obj):
         """Be callable, catch objects that should be displayed.
 
-          @param obj: object to be displayed
+        @param obj: object to be displayed
         """
         if obj is None:
             return
@@ -83,20 +80,20 @@ class DisplayHook:
             self.result.result.append(repr(obj))
 
     def pass_result_ref(self, result):
-        """ Set reference to result container for current cell
-        
-          @param result: reference to ExecutionResult
+        """Set reference to result container for current cell
+
+        @param result: reference to ExecutionResult
         """
         self.result = result
 
 
 def cursor_pos_to_lc(text, cursor_pos):
     """Calulate line, coulumn number from position in string.
-      
-      @param str text: string to calculate position in.
-      @param int cursor_pos: cursor position in text.
 
-      @return (int, int): tuple of line and column number of cursor in string
+    @param str text: string to calculate position in.
+    @param int cursor_pos: cursor position in text.
+
+    @return (int, int): tuple of line and column number of cursor in string
     """
     lines = text.splitlines(True)
     linenr = 1
@@ -111,9 +108,9 @@ def cursor_pos_to_lc(text, cursor_pos):
 
 def softspace(f, newvalue):
     """Try setting softspace on stream.
-    
-      @param f: stream
-      @param newvalue: value to set softspace to
+
+    @param f: stream
+    @param newvalue: value to set softspace to
     """
 
     oldvalue = 0
@@ -144,36 +141,36 @@ def encode_images(format_dict):
 
     """
     # constants for identifying png/jpeg data
-    PNG = b'\x89PNG\r\n\x1a\n'
+    PNG = b"\x89PNG\r\n\x1a\n"
     # front of PNG base64-encoded
-    PNG64 = b'iVBORw0KG'
-    JPEG = b'\xff\xd8'
+    PNG64 = b"iVBORw0KG"
+    JPEG = b"\xff\xd8"
     # front of JPEG base64-encoded
-    JPEG64 = b'/9'
+    JPEG64 = b"/9"
     # front of PDF base64-encoded
-    PDF64 = b'JVBER'
+    PDF64 = b"JVBER"
 
     encoded = format_dict.copy()
-    pngdata = format_dict.get('image/png')
+    pngdata = format_dict.get("image/png")
     if isinstance(pngdata, bytes):
         # make sure we don't double-encode
         if not pngdata.startswith(PNG64):
             pngdata = encodebytes(pngdata)
-        encoded['image/png'] = pngdata.decode('ascii')
+        encoded["image/png"] = pngdata.decode("ascii")
 
-    jpegdata = format_dict.get('image/jpeg')
+    jpegdata = format_dict.get("image/jpeg")
     if isinstance(jpegdata, bytes):
         # make sure we don't double-encode
         if not jpegdata.startswith(JPEG64):
             jpegdata = encodebytes(jpegdata)
-        encoded['image/jpeg'] = jpegdata.decode('ascii')
+        encoded["image/jpeg"] = jpegdata.decode("ascii")
 
-    pdfdata = format_dict.get('application/pdf')
+    pdfdata = format_dict.get("application/pdf")
     if isinstance(pdfdata, bytes):
         # make sure we don't double-encode
         if not pdfdata.startswith(PDF64):
             pdfdata = encodebytes(pdfdata)
-        encoded['application/pdf'] = pdfdata.decode('ascii')
+        encoded["application/pdf"] = pdfdata.decode("ascii")
 
     return encoded
 
@@ -189,6 +186,7 @@ def getfigs(*fig_nums):
         A tuple of ints giving the figure numbers of the figures to return.
     """
     from matplotlib._pylab_helpers import Gcf
+
     if not fig_nums:
         fig_managers = Gcf.get_all_fig_managers()
         return [fm.canvas.figure for fm in fig_managers]
@@ -197,24 +195,21 @@ def getfigs(*fig_nums):
         for num in fig_nums:
             f = Gcf.figs.get(num)
             if f is None:
-                print('Warning: figure {0!s} not available.'.format(num))
+                print(f"Warning: figure {num!s} not available.")
             else:
                 figs.append(f.canvas.figure)
         return figs
 
 
 def setup_matplotlib(kernel):
-    """ Prepare matplotlib inline backend for use
-    
-      @param kernel: reference to the kernel using the backend
+    """Prepare matplotlib inline backend for use
+
+    @param kernel: reference to the kernel using the backend
     """
     import matplotlib
     import matplotlib.pyplot
-    matplotlib.pyplot.switch_backend('module://logic.jupyterkernel.mpl.backend_inline')
-    import matplotlib.pylab as pylab
 
-    from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg  # analysis: ignore
-    from matplotlib._pylab_helpers import Gcf
+    matplotlib.pyplot.switch_backend("module://logic.jupyterkernel.mpl.backend_inline")
 
     from logic.jupyterkernel.mpl.backend_inline import InlineBackend
 
@@ -228,5 +223,6 @@ def setup_matplotlib(kernel):
     # kernel.user_ns['getfigs'] = getfigs
 
     import logic.jupyterkernel.mpl.backend_inline as bi
+
     bi.qudikernel = kernel
-    kernel.events.register('post_execute', bi.flush_figures)
+    kernel.events.register("post_execute", bi.flush_figures)

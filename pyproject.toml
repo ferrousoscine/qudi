@@ -1,0 +1,66 @@
+# Qudi tool configuration
+# All dependencies and build environment managed by flake.nix
+# This file only contains tool-specific configuration
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+exclude = [
+    "notebooks/**",
+    "tools/**",
+    "documentation/**",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "NPY", # numpy-specific rules
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B905",  # zip strict parameter (Python 3.10+)
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports in __init__.py
+"*.ipynb" = ["E501", "F401"]  # notebooks
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Set to true when ready for strict typing
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["core", "logic", "gui", "hardware"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

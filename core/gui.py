@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi console app class.
 
@@ -20,38 +19,35 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import platform
-from qtpy.QtCore import QObject
-from qtpy.QtWidgets import QApplication
+
+from qtpy.QtCore import QObject, QSize
 from qtpy.QtGui import QIcon
-from qtpy.QtCore import QSize
+from qtpy.QtWidgets import QApplication
 
 
 class Gui(QObject):
-    """ Set up all necessary GUI elements, like application icons, themes, etc.
-    """
+    """Set up all necessary GUI elements, like application icons, themes, etc."""
 
     def __init__(self):
         super().__init__()
         QApplication.instance().setQuitOnLastWindowClosed(False)
 
     def setAppIcon(self):
-        """ Set up the Qudi application icon.
-        """
-        iconpath = 'artwork/logo/logo-qudi-'
+        """Set up the Qudi application icon."""
+        iconpath = "artwork/logo/logo-qudi-"
         self.appIcon = QIcon()
-        self.appIcon.addFile('{0}16x16.png'.format(iconpath), QSize(16, 16))
-        self.appIcon.addFile('{0}24x24.png'.format(iconpath), QSize(24, 24))
-        self.appIcon.addFile('{0}32x32.png'.format(iconpath), QSize(32, 32))
-        self.appIcon.addFile('{0}48x48.png'.format(iconpath), QSize(48, 48))
-        self.appIcon.addFile('{0}256x256.png'.format(iconpath),
-                             QSize(256, 256))
+        self.appIcon.addFile(f"{iconpath}16x16.png", QSize(16, 16))
+        self.appIcon.addFile(f"{iconpath}24x24.png", QSize(24, 24))
+        self.appIcon.addFile(f"{iconpath}32x32.png", QSize(32, 32))
+        self.appIcon.addFile(f"{iconpath}48x48.png", QSize(48, 48))
+        self.appIcon.addFile(f"{iconpath}256x256.png", QSize(256, 256))
         QApplication.instance().setWindowIcon(self.appIcon)
 
     def setTheme(self, theme, path):
-        """ Set icon theme for qudi app.
-            
-            @param str theme: Qudi theme name
-            @param str path: search path for qudi icons
+        """Set icon theme for qudi app.
+
+        @param str theme: Qudi theme name
+        @param str path: search path for qudi icons
         """
         # Make icons work on non-X11 platforms, set custom theme
         # if not sys.platform.startswith('linux') and not sys.platform.startswith('freebsd'):
@@ -65,27 +61,26 @@ class Gui(QObject):
         QIcon.setThemeName(theme)
 
     def setStyleSheet(self, stylesheetpath):
-        """ Set qss style sheet for application.
+        """Set qss style sheet for application.
 
-            @param str stylesheetpath: path to style sheet file
+        @param str stylesheetpath: path to style sheet file
         """
-        with open(stylesheetpath, 'r') as stylesheetfile:
+        with open(stylesheetpath) as stylesheetfile:
             stylesheet = stylesheetfile.read()
 
         # see issue #12 on qdarkstyle github
-        if platform.system().lower() == 'darwin' and stylesheetpath.endswith('qdark.qss'):
-            mac_fix = '''
+        if platform.system().lower() == "darwin" and stylesheetpath.endswith("qdark.qss"):
+            mac_fix = """
             QDockWidget::title
             {
                 background-color: #31363b;
                 text-align: center;
                 height: 12px;
             }
-            '''
+            """
             stylesheet += mac_fix
         QApplication.instance().setStyleSheet(stylesheet)
 
     def closeWindows(self):
-        """ Close all application windows.
-        """
+        """Close all application windows."""
         QApplication.instance().closeAllWindows()

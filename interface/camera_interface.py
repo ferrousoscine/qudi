@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interface for a camera.
 
@@ -26,12 +24,11 @@ from core.meta import InterfaceMetaclass
 
 
 class CameraInterface(metaclass=InterfaceMetaclass):
-    """ This interface is used to manage and visualize a simple camera
-    """
+    """This interface is used to manage and visualize a simple camera"""
 
     @abstract_interface_method
     def get_name(self):
-        """ Retrieve an identifier of the camera that the GUI can print
+        """Retrieve an identifier of the camera that the GUI can print
 
         @return string: name for the camera
         """
@@ -39,7 +36,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_size(self):
-        """ Retrieve size of the image in pixel
+        """Retrieve size of the image in pixel
 
         @return tuple: Size (width, height)
         """
@@ -47,7 +44,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def support_live_acquisition(self):
-        """ Return whether or not the camera can take care of live acquisition
+        """Return whether or not the camera can take care of live acquisition
 
         @return bool: True if supported, False if not
         """
@@ -55,7 +52,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def start_live_acquisition(self):
-        """ Start a continuous acquisition
+        """Start a continuous acquisition
 
         @return bool: Success ?
         """
@@ -63,7 +60,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def start_single_acquisition(self):
-        """ Start a single acquisition
+        """Start a single acquisition
 
         @return bool: Success ?
         """
@@ -71,7 +68,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def stop_acquisition(self):
-        """ Stop/abort live or single acquisition
+        """Stop/abort live or single acquisition
 
         @return bool: Success ?
         """
@@ -79,7 +76,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_acquired_data(self):
-        """ Return an array of last acquired image.
+        """Return an array of last acquired image.
 
         @return numpy array: image data in format [[row],[row]...]
 
@@ -89,7 +86,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_exposure(self, exposure):
-        """ Set the exposure time in seconds
+        """Set the exposure time in seconds
 
         @param float exposure: desired new exposure time
 
@@ -99,7 +96,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_exposure(self):
-        """ Get the exposure time in seconds
+        """Get the exposure time in seconds
 
         @return float exposure time
         """
@@ -107,7 +104,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_gain(self, gain):
-        """ Set the gain
+        """Set the gain
 
         @param float gain: desired new gain
 
@@ -117,7 +114,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_gain(self):
-        """ Get the gain
+        """Get the gain
 
         @return float: exposure gain
         """
@@ -125,7 +122,7 @@ class CameraInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_ready_state(self):
-        """ Is the camera ready for an acquisition ?
+        """Is the camera ready for an acquisition ?
 
         @return bool: ready ?
         """

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains custom item widgets for the pulse editor QTableViews.
 
@@ -20,15 +18,17 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtCore, QtGui
 from collections import OrderedDict
-from qtwidgets.scientific_spinbox import ScienDSpinBox, ScienSpinBox
 from enum import Enum
+
+from qtpy import QtCore, QtGui
+
+from qtwidgets.scientific_spinbox import ScienDSpinBox, ScienSpinBox
 
 
 class MultipleCheckboxWidget(QtGui.QWidget):
-    """
-    """
+    """ """
+
     stateChanged = QtCore.Signal()
 
     def __init__(self, parent=None, checkbox_labels=None):
@@ -49,7 +49,7 @@ class MultipleCheckboxWidget(QtGui.QWidget):
             widget = QtGui.QCheckBox()
             widget.setFixedWidth(19)
             widget.setChecked(False)
-            self._checkboxes[box_label] = {'label': label, 'widget': widget}
+            self._checkboxes[box_label] = {"label": label, "widget": widget}
 
             # Forward editingFinished signal of child widget
             widget.stateChanged.connect(self.stateChanged)
@@ -69,12 +69,12 @@ class MultipleCheckboxWidget(QtGui.QWidget):
     def data(self):
         checkbox_states = OrderedDict()
         for box_label, box_dict in self._checkboxes.items():
-            checkbox_states[box_label] = box_dict['widget'].isChecked()
+            checkbox_states[box_label] = box_dict["widget"].isChecked()
         return checkbox_states
 
     def setData(self, data):
         for label, state in data.items():
-            self._checkboxes[label]['widget'].setChecked(state)
+            self._checkboxes[label]["widget"].setChecked(state)
         self.stateChanged.emit()
         return
 
@@ -83,8 +83,8 @@ class MultipleCheckboxWidget(QtGui.QWidget):
 
 
 class AnalogParametersWidget(QtGui.QWidget):
-    """
-    """
+    """ """
+
     editingFinished = QtCore.Signal()
 
     def __init__(self, parent=None, parameters_dict=None):
@@ -101,52 +101,52 @@ class AnalogParametersWidget(QtGui.QWidget):
         for param in self._parameters:
             label = QtGui.QLabel(param)
             label.setAlignment(QtCore.Qt.AlignCenter)
-            if self._parameters[param]['type'] == float:
+            if self._parameters[param]["type"] == float:
                 widget = ScienDSpinBox()
-                widget.setMinimum(self._parameters[param]['min'])
-                widget.setMaximum(self._parameters[param]['max'])
+                widget.setMinimum(self._parameters[param]["min"])
+                widget.setMaximum(self._parameters[param]["max"])
                 widget.setDecimals(6, False)
-                widget.setValue(self._parameters[param]['init'])
-                widget.setSuffix(self._parameters[param]['unit'])
+                widget.setValue(self._parameters[param]["init"])
+                widget.setSuffix(self._parameters[param]["unit"])
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]['type'] == int:
+            elif self._parameters[param]["type"] == int:
                 widget = ScienSpinBox()
-                widget.setValue(self._parameters[param]['init'])
-                widget.setMinimum(self._parameters[param]['min'])
-                widget.setMaximum(self._parameters[param]['max'])
-                widget.setSuffix(self._parameters[param]['unit'])
+                widget.setValue(self._parameters[param]["init"])
+                widget.setMinimum(self._parameters[param]["min"])
+                widget.setMaximum(self._parameters[param]["max"])
+                widget.setSuffix(self._parameters[param]["unit"])
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]['type'] == str:
+            elif self._parameters[param]["type"] == str:
                 widget = QtGui.QLineEdit()
-                widget.setText(self._parameters[param]['init'])
+                widget.setText(self._parameters[param]["init"])
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]['type'] == bool:
+            elif self._parameters[param]["type"] == bool:
                 widget = QtGui.QCheckBox()
-                widget.setChecked(self._parameters[param]['init'])
+                widget.setChecked(self._parameters[param]["init"])
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.stateChanged.connect(self.editingFinished)
-            elif issubclass(self._parameters[param]['type'], Enum):
+            elif issubclass(self._parameters[param]["type"], Enum):
                 widget = QtGui.QComboBox()
-                for option in self._parameters[param]['type']:
+                for option in self._parameters[param]["type"]:
                     widget.addItem(option.name, option)
-                widget.setCurrentText(self._parameters[param]['init'].name)
+                widget.setCurrentText(self._parameters[param]["init"].name)
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.currentIndexChanged.connect(self.editingFinished)
 
-            self._ach_widgets[param] = {'label': label, 'widget': widget}
+            self._ach_widgets[param] = {"label": label, "widget": widget}
 
             v_layout = QtGui.QVBoxLayout()
             v_layout.addWidget(label)
@@ -163,14 +163,14 @@ class AnalogParametersWidget(QtGui.QWidget):
     def setData(self, data):
         # Set analog parameter widget values
         for param in self._ach_widgets:
-            widget = self._ach_widgets[param]['widget']
-            if self._parameters[param]['type'] in [int, float]:
+            widget = self._ach_widgets[param]["widget"]
+            if self._parameters[param]["type"] in [int, float]:
                 widget.setValue(data[param])
-            elif self._parameters[param]['type'] == str:
+            elif self._parameters[param]["type"] == str:
                 widget.setText(data[param])
-            elif self._parameters[param]['type'] == bool:
+            elif self._parameters[param]["type"] == bool:
                 widget.setChecked(data[param])
-            elif issubclass(self._parameters[param]['type'], Enum):
+            elif issubclass(self._parameters[param]["type"], Enum):
                 widget.setCurrentText(data[param].name)
 
         self.editingFinished.emit()
@@ -180,14 +180,14 @@ class AnalogParametersWidget(QtGui.QWidget):
         # Get all analog parameters from widgets
         analog_params = OrderedDict()
         for param in self._parameters:
-            widget = self._ach_widgets[param]['widget']
-            if self._parameters[param]['type'] in [int, float]:
+            widget = self._ach_widgets[param]["widget"]
+            if self._parameters[param]["type"] in [int, float]:
                 analog_params[param] = widget.value()
-            elif self._parameters[param]['type'] == str:
+            elif self._parameters[param]["type"] == str:
                 analog_params[param] = widget.text()
-            elif self._parameters[param]['type'] == bool:
+            elif self._parameters[param]["type"] == bool:
                 analog_params[param] = widget.isChecked()
-            elif issubclass(self._parameters[param]['type'], Enum):
+            elif issubclass(self._parameters[param]["type"], Enum):
                 analog_params[param] = widget.itemData(widget.currentIndex())
         return analog_params
 

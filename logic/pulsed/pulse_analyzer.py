@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi logic for analysis of laser pulses.
 
@@ -19,13 +18,13 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import importlib
+import inspect
 import os
 import sys
-import inspect
-import importlib
 
-from core.util.modules import get_main_dir
 from core.util.helpers import natural_sort
+from core.util.modules import get_main_dir
 
 
 class PulseAnalyzerBase:
@@ -36,12 +35,13 @@ class PulseAnalyzerBase:
 
     See BasicPulseAnalyzer class for an example usage.
     """
+
     def __init__(self, pulsedmeasurementlogic):
         self.__pulsedmeasurementlogic = pulsedmeasurementlogic
 
     @property
     def is_gated(self):
-        return self.__pulsedmeasurementlogic.fast_counter_settings.get('is_gated')
+        return self.__pulsedmeasurementlogic.fast_counter_settings.get("is_gated")
 
     @property
     def measurement_settings(self):
@@ -93,7 +93,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
         self._current_analysis_method = None
 
         # import path for analysis modules from default directory (logic.pulse_analysis_methods)
-        path_list = [os.path.join(get_main_dir(), 'logic', 'pulsed', 'pulsed_analysis_methods')]
+        path_list = [os.path.join(get_main_dir(), "logic", "pulsed", "pulsed_analysis_methods")]
         # import path for analysis modules from non-default directory if a path has been given
         if isinstance(pulsedmeasurementlogic.analysis_import_path, str):
             path_list.append(pulsedmeasurementlogic.analysis_import_path)
@@ -116,8 +116,11 @@ class PulseAnalyzer(PulseAnalyzerBase):
         # Update from parameter_dict if handed over
         if isinstance(pulsedmeasurementlogic.analysis_parameters, dict):
             # Delete unused parameters
-            params = [p for p in pulsedmeasurementlogic.analysis_parameters if
-                      p not in self._parameters and p != 'method']
+            params = [
+                p
+                for p in pulsedmeasurementlogic.analysis_parameters
+                if p not in self._parameters and p != "method"
+            ]
             for param in params:
                 del pulsedmeasurementlogic.analysis_parameters[param]
             # Update parameter dict and current method
@@ -139,7 +142,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
         settings_dict = self._get_analysis_method_kwargs(method)
 
         # Attach current analysis method name
-        settings_dict['method'] = self._current_analysis_method
+        settings_dict["method"] = self._current_analysis_method
         return settings_dict
 
     @analysis_settings.setter
@@ -157,17 +160,20 @@ class PulseAnalyzer(PulseAnalyzerBase):
         # go through all key-value pairs in settings_dict and update self._parameters and
         # self._current_analysis_method accordingly. Ignore unknown parameters.
         for parameter, value in settings_dict.items():
-            if parameter == 'method':
+            if parameter == "method":
                 if value in self._analysis_methods:
                     self._current_analysis_method = value
                 else:
-                    self.log.error('Analysis method "{0}" could not be found in PulseAnalyzer.'
-                                   ''.format(value))
+                    self.log.error(
+                        f'Analysis method "{value}" could not be found in PulseAnalyzer.'
+                    )
             elif parameter in self._parameters:
                 self._parameters[parameter] = value
             else:
-                self.log.warning('No analysis parameter "{0}" found in PulseAnalyzer.\n'
-                                 'Parameter will be ignored.'.format(parameter))
+                self.log.warning(
+                    f'No analysis parameter "{parameter}" found in PulseAnalyzer.\n'
+                    "Parameter will be ignored."
+                )
         return
 
     @property
@@ -188,7 +194,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
         @return dict: full set of parameters and currently selected analysis method.
         """
         settings_dict = self._parameters.copy()
-        settings_dict['method'] = self._current_analysis_method
+        settings_dict["method"] = self._current_analysis_method
         return settings_dict
 
     def analyse_laser_pulses(self, laser_data):
@@ -221,7 +227,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
         kwargs_dict = dict()
         method_signature = inspect.signature(method)
         for name in method_signature.parameters.keys():
-            if name == 'laser_data':
+            if name == "laser_data":
                 continue
 
             default = method_signature.parameters[name].default
@@ -245,14 +251,18 @@ class PulseAnalyzer(PulseAnalyzerBase):
         class_list = list()
         for path in paths:
             if not os.path.exists(path):
-                self.log.error('Unable to import analysis methods from "{0}".\n'
-                               'Path does not exist.'.format(path))
+                self.log.error(
+                    f'Unable to import analysis methods from "{path}".\nPath does not exist.'
+                )
                 continue
             # Get all python modules to import from.
             # The assumption is that in the directory pulse_analysis_methods, there are
             # *.py files, which contain only analyzer classes!
-            module_list = [name[:-3] for name in os.listdir(path) if
-                           os.path.isfile(os.path.join(path, name)) and name.endswith('.py')]
+            module_list = [
+                name[:-3]
+                for name in os.listdir(path)
+                if os.path.isfile(os.path.join(path, name)) and name.endswith(".py")
+            ]
 
             # append import path to sys.path
             if path not in sys.path:
@@ -261,7 +271,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
             # Go through all modules and create instances of each class found.
             for module_name in module_list:
                 # import module
-                mod = importlib.import_module('{0}'.format(module_name))
+                mod = importlib.import_module(f"{module_name}")
                 importlib.reload(mod)
                 # get all analyzer class references defined in the module
                 tmp_list = [m[1] for m in inspect.getmembers(mod, self.__is_analyzer_class)]
@@ -279,7 +289,7 @@ class PulseAnalyzer(PulseAnalyzerBase):
         self._analysis_methods = dict()
         for instance in instance_list:
             for method_name, method_ref in inspect.getmembers(instance, inspect.ismethod):
-                if method_name.startswith('analyse_'):
+                if method_name.startswith("analyse_"):
                     self._analysis_methods[method_name[8:]] = method_ref
         return
 

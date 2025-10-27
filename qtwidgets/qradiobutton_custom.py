@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the a wrapper around QRadioButton, to customize it.
 
@@ -20,12 +18,11 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from qtpy import QtWidgets
-from qtpy import QtCore
+from qtpy import QtCore, QtWidgets
 
 
 class CustomQRadioButton(QtWidgets.QRadioButton):
-    """ Class which customize QRadioButton behaviour.
+    """Class which customize QRadioButton behaviour.
 
     The following customization have been applied:
         - Make the QRadioButton readonly, i.e. catch all the Signals and pass
@@ -38,11 +35,11 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
         self._readOnly = False
 
     def isReadOnly(self):
-        """ Check the current state of the Radiobox. """
+        """Check the current state of the Radiobox."""
         return self._readOnly
 
     def mousePressEvent(self, event):
-        """ Handle what happens on press event of the mouse.
+        """Handle what happens on press event of the mouse.
 
         @param event: QEvent of a Mouse Release action
         """
@@ -60,11 +57,11 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
     #         super(CustomQRadioButton, self).mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """ Handle what happens on release of the mouse.
+        """Handle what happens on release of the mouse.
 
         @param event: QEvent of a Mouse Release action
         """
-        if self.isReadOnly() :
+        if self.isReadOnly():
             event.accept()
         else:
             super(CustomQRadioButton, self).mouseReleaseEvent(event)
@@ -78,9 +75,10 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
 
     @QtCore.pyqtSlot(bool)
     def setReadOnly(self, state):
-        """ Set the Readonly state.
+        """Set the Readonly state.
 
         @param bool state: True or False, for having a readonly QRadioButton.
         """
         self._readOnly = state
+
     readOnly = QtCore.pyqtProperty(bool, isReadOnly, setReadOnly)

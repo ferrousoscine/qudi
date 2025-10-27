@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi hardware dummy for slow counting devices.
 
@@ -19,20 +18,22 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import numpy as np
-
 import random
 import time
 
-from core.module import Base
+import numpy as np
+
 from core.configoption import ConfigOption
-from interface.slow_counter_interface import SlowCounterInterface
-from interface.slow_counter_interface import SlowCounterConstraints
-from interface.slow_counter_interface import CountingMode
+from core.module import Base
+from interface.slow_counter_interface import (
+    CountingMode,
+    SlowCounterConstraints,
+    SlowCounterInterface,
+)
 
 
 class SlowCounterDummy(Base, SlowCounterInterface):
-    """ Dummy hardware class to emulate a slow counter with various distributions.
+    """Dummy hardware class to emulate a slow counter with various distributions.
 
     Example config for copy-paste:
 
@@ -48,10 +49,10 @@ class SlowCounterDummy(Base, SlowCounterInterface):
     """
 
     # config
-    _clock_frequency = ConfigOption('clock_frequency', 100, missing='warn')
-    _samples_number = ConfigOption('samples_number', 10, missing='warn')
-    source_channels = ConfigOption('source_channels', 2, missing='warn')
-    dist = ConfigOption('count_distribution', 'dark_bright_gaussian')
+    _clock_frequency = ConfigOption("clock_frequency", 100, missing="warn")
+    _samples_number = ConfigOption("samples_number", 10, missing="warn")
+    source_channels = ConfigOption("source_channels", 2, missing="warn")
+    dist = ConfigOption("count_distribution", "dark_bright_gaussian")
 
     # 'No parameter "count_distribution" given in the configuration for the'
     # 'Slow Counter Dummy. Possible distributions are "dark_bright_gaussian",'
@@ -62,10 +63,9 @@ class SlowCounterDummy(Base, SlowCounterInterface):
         super().__init__(config=config, **kwargs)
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         # parameters
-        if self.dist == 'dark_bright_poisson':
+        if self.dist == "dark_bright_poisson":
             self.mean_signal = 250
             self.contrast = 0.2
         else:
@@ -84,24 +84,24 @@ class SlowCounterDummy(Base, SlowCounterInterface):
         self.total_time = 0.0
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
-        self.log.warning('slowcounterdummy>deactivation')
+        """Deinitialisation performed during deactivation of the module."""
+        self.log.warning("slowcounterdummy>deactivation")
 
     def get_constraints(self):
-        """ Return a constraints class for the slow counter."""
+        """Return a constraints class for the slow counter."""
         constraints = SlowCounterConstraints()
         constraints.min_count_frequency = 5e-5
         constraints.max_count_frequency = 5e5
         constraints.counting_mode = [
             CountingMode.CONTINUOUS,
             CountingMode.GATED,
-            CountingMode.FINITE_GATED]
+            CountingMode.FINITE_GATED,
+        ]
 
         return constraints
 
     def set_up_clock(self, clock_frequency=None, clock_channel=None):
-        """ Configures the hardware clock of the NiDAQ card to give the timing.
+        """Configures the hardware clock of the NiDAQ card to give the timing.
 
         @param float clock_frequency: if defined, this sets the frequency of the clock
         @param string clock_channel: if defined, this is the physical channel of the clock
@@ -111,16 +111,14 @@ class SlowCounterDummy(Base, SlowCounterInterface):
 
         if clock_frequency is not None:
             self._clock_frequency = float(clock_frequency)
-        self.log.warning('slowcounterdummy>set_up_clock')
+        self.log.warning("slowcounterdummy>set_up_clock")
         time.sleep(0.1)
         return 0
 
-    def set_up_counter(self,
-                       counter_channels=None,
-                       sources=None,
-                       clock_channel=None,
-                       counter_buffer=None):
-        """ Configures the actual counter with a given clock.
+    def set_up_counter(
+        self, counter_channels=None, sources=None, clock_channel=None, counter_buffer=None
+    ):
+        """Configures the actual counter with a given clock.
 
         @param string counter_channel: if defined, this is the physical channel of the counter
         @param string photon_source: if defined, this is the physical channel where the photons are to count from
@@ -129,34 +127,36 @@ class SlowCounterDummy(Base, SlowCounterInterface):
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.warning('slowcounterdummy>set_up_counter')
+        self.log.warning("slowcounterdummy>set_up_counter")
         time.sleep(0.1)
         return 0
 
     def get_counter(self, samples=None):
-        """ Returns the current counts per second of the counter.
+        """Returns the current counts per second of the counter.
 
         @param int samples: if defined, number of samples to read in one go
 
         @return float: the photon counts per second
         """
         count_data = np.array(
-            [self._simulate_counts(samples) + i * self.mean_signal
-                for i, ch in enumerate(self.get_counter_channels())]
-            )
+            [
+                self._simulate_counts(samples) + i * self.mean_signal
+                for i, ch in enumerate(self.get_counter_channels())
+            ]
+        )
 
         time.sleep(1 / self._clock_frequency * samples)
         return count_data
 
     def get_counter_channels(self):
-        """ Returns the list of counter channel names.
+        """Returns the list of counter channel names.
         @return tuple(str): channel names
         Most methods calling this might just care about the number of channels, though.
         """
-        return ['Ctr{0}'.format(i) for i in range(self.source_channels)]
+        return [f"Ctr{i}" for i in range(self.source_channels)]
 
     def _simulate_counts(self, samples=None):
-        """ Simulate counts signal from an APD.  This can be called for each dummy counter channel.
+        """Simulate counts signal from an APD.  This can be called for each dummy counter channel.
 
         @param int samples: if defined, number of samples to read in one go
 
@@ -174,9 +174,9 @@ class SlowCounterDummy(Base, SlowCounterInterface):
         count_data = np.empty([samples], dtype=np.uint32)
 
         for i in range(samples):
-            if self.dist == 'single_gaussian':
+            if self.dist == "single_gaussian":
                 count_data[i] = np.random.normal(self.mean_signal, self.noise_amplitude / 2)
-            elif self.dist == 'dark_bright_gaussian':
+            elif self.dist == "dark_bright_gaussian":
                 self.total_time = self.total_time + timestep
                 if self.total_time > self.current_dec_time:
                     if self.curr_state_b:
@@ -188,19 +188,24 @@ class SlowCounterDummy(Base, SlowCounterInterface):
                         self.current_dec_time = np.random.exponential(self.life_time_bright)
                     self.total_time = 0.0
 
-                count_data[i] = (np.random.normal(self.mean_signal, self.noise_amplitude) * self.curr_state_b
-                                + np.random.normal(self.mean_signal2, self.noise_amplitude) * (1-self.curr_state_b))
+                count_data[i] = np.random.normal(
+                    self.mean_signal, self.noise_amplitude
+                ) * self.curr_state_b + np.random.normal(
+                    self.mean_signal2, self.noise_amplitude
+                ) * (1 - self.curr_state_b)
 
-            elif self.dist == 'uniform':
-                count_data[i] = self.mean_signal + random.uniform(-self.noise_amplitude / 2, self.noise_amplitude / 2)
+            elif self.dist == "uniform":
+                count_data[i] = self.mean_signal + random.uniform(
+                    -self.noise_amplitude / 2, self.noise_amplitude / 2
+                )
 
-            elif self.dist == 'exponential':
+            elif self.dist == "exponential":
                 count_data[i] = np.random.exponential(self.mean_signal)
 
-            elif self.dist == 'single_poisson':
+            elif self.dist == "single_poisson":
                 count_data[i] = np.random.poisson(self.mean_signal)
 
-            elif self.dist == 'dark_bright_poisson':
+            elif self.dist == "dark_bright_poisson":
                 self.total_time = self.total_time + timestep
 
                 if self.total_time > self.current_dec_time:
@@ -213,28 +218,33 @@ class SlowCounterDummy(Base, SlowCounterInterface):
                         self.current_dec_time = np.random.exponential(self.life_time_bright)
                     self.total_time = 0.0
 
-                count_data[i] = (np.random.poisson(self.mean_signal) * self.curr_state_b
-                                + np.random.poisson(self.mean_signal2) * (1-self.curr_state_b))
+                count_data[i] = np.random.poisson(
+                    self.mean_signal
+                ) * self.curr_state_b + np.random.poisson(self.mean_signal2) * (
+                    1 - self.curr_state_b
+                )
             else:
                 # make uniform as default
-                count_data[0][i] = self.mean_signal + random.uniform(-self.noise_amplitude/2, self.noise_amplitude/2)
+                count_data[0][i] = self.mean_signal + random.uniform(
+                    -self.noise_amplitude / 2, self.noise_amplitude / 2
+                )
 
         return count_data
 
     def close_counter(self):
-        """ Closes the counter and cleans up afterwards.
+        """Closes the counter and cleans up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.warning('slowcounterdummy>close_counter')
+        self.log.warning("slowcounterdummy>close_counter")
         return 0
 
-    def close_clock(self,power=0):
-        """ Closes the clock and cleans up afterwards.
+    def close_clock(self, power=0):
+        """Closes the clock and cleans up afterwards.
 
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.warning('slowcounterdummy>close_clock')
+        self.log.warning("slowcounterdummy>close_clock")
         return 0

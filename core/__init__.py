@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file contains the Qudi Manager class.
 
@@ -19,31 +18,36 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-__version__ = '0.1'
+__version__ = "0.1"
 
 # import Qt
 import os
 
-if not 'QT_API' in os.environ:
+if "QT_API" not in os.environ:
     # use PyQt4 as default
-    os.environ['QT_API'] = 'pyqt5'
+    os.environ["QT_API"] = "pyqt5"
 else:
-    print('Specified Qt API:', os.environ['QT_API'])
+    print("Specified Qt API:", os.environ["QT_API"])
     # if pyqt4 check environment variable is 'pyqt' and not 'pyqt4' (ipython,
     # matplotlib, etc)
-    if os.environ['QT_API'].lower() == 'pyqt4':
-        os.environ['QT_API'] = 'pyqt'
+    if os.environ["QT_API"].lower() == "pyqt4":
+        os.environ["QT_API"] = "pyqt"
 
 import qtpy
-print('Used Qt API:', qtpy.API_NAME)
+
+print("Used Qt API:", qtpy.API_NAME)
 
 import sys
+
 # Make icons work on non-X11 platforms, import a custom theme
-if sys.platform == 'win32':
+if sys.platform == "win32":
     try:
         import ctypes
-        myappid = 'quantumoptics.quantumdiamond.mainapp'  # arbitrary string
+
+        myappid = "quantumoptics.quantumdiamond.mainapp"  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     except:
-        print('SetCurrentProcessExplicitAppUserModelID failed! This is '
-              'probably not Microsoft Windows!')
+        print(
+            "SetCurrentProcessExplicitAppUserModelID failed! This is "
+            "probably not Microsoft Windows!"
+        )

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi hardware interface for pulsing devices.
 
@@ -20,15 +18,14 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-
-from core.interface import abstract_interface_method
-from core.meta import InterfaceMetaclass
-from core.interface import ScalarConstraint
 from enum import Enum
+
+from core.interface import ScalarConstraint, abstract_interface_method
+from core.meta import InterfaceMetaclass
 
 
 class PulserInterface(metaclass=InterfaceMetaclass):
-    """ Interface class to define the abstract controls and communication with all pulsing devices.
+    """Interface class to define the abstract controls and communication with all pulsing devices.
 
     A pulsing device is a device that will generate outputs, generally voltages, to control an experiment in a timely
     resolved way. This is by example useful to control a modulator device with a short risetime on a very short
@@ -152,7 +149,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def pulser_on(self):
-        """ Switches the pulsing device on.
+        """Switches the pulsing device on.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -160,7 +157,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def pulser_off(self):
-        """ Switches the pulsing device off.
+        """Switches the pulsing device off.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -168,7 +165,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def load_waveform(self, load_dict):
-        """ Loads a waveform to the specified channel of the pulsing device.
+        """Loads a waveform to the specified channel of the pulsing device.
 
         @param dict|list load_dict: a dictionary with keys being one of the available channel
                                     index and values being the name of the already written
@@ -207,7 +204,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def load_sequence(self, sequence_name):
-        """ Loads a sequence to the channels of the device in order to be ready for playback.
+        """Loads a sequence to the channels of the device in order to be ready for playback.
         For devices that have a workspace (i.e. AWG) this will load the sequence from the device
         workspace into the channels.
         For a device without mass memory this will make the waveform/pattern that has been
@@ -243,7 +240,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def clear_all(self):
-        """ Clears all loaded waveforms from the pulse generators RAM/workspace.
+        """Clears all loaded waveforms from the pulse generators RAM/workspace.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -251,7 +248,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_status(self):
-        """ Retrieves the status of the pulsing hardware
+        """Retrieves the status of the pulsing hardware
 
         @return (int, dict): tuple with an integer value of the current status and a corresponding
                              dictionary containing status description for all the possible status
@@ -261,7 +258,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_sample_rate(self):
-        """ Get the sample rate of the pulse generator hardware
+        """Get the sample rate of the pulse generator hardware
 
         @return float: The current sample rate of the device (in Hz)
 
@@ -272,7 +269,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_sample_rate(self, sample_rate):
-        """ Set the sample rate of the pulse generator hardware.
+        """Set the sample rate of the pulse generator hardware.
 
         @param float sample_rate: The sampling rate to be set (in Hz)
 
@@ -285,7 +282,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_analog_level(self, amplitude=None, offset=None):
-        """ Retrieve the analog amplitude and offset of the provided channels.
+        """Retrieve the analog amplitude and offset of the provided channels.
 
         @param list amplitude: optional, if the amplitude value (in Volt peak to peak, i.e. the
                                full amplitude) of a specific channel is desired.
@@ -311,7 +308,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_analog_level(self, amplitude=None, offset=None):
-        """ Set amplitude and/or offset value of the provided analog channel(s).
+        """Set amplitude and/or offset value of the provided analog channel(s).
 
         @param dict amplitude: dictionary, with key being the channel descriptor string
                                (i.e. 'a_ch1', 'a_ch2') and items being the amplitude values
@@ -333,7 +330,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_digital_level(self, low=None, high=None):
-        """ Retrieve the digital low and high level of the provided/all channels.
+        """Retrieve the digital low and high level of the provided/all channels.
 
         @param list low: optional, if the low value (in Volt) of a specific channel is desired.
         @param list high: optional, if the high value (in Volt) of a specific channel is desired.
@@ -358,7 +355,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_digital_level(self, low=None, high=None):
-        """ Set low and/or high value of the provided digital channel.
+        """Set low and/or high value of the provided digital channel.
 
         @param dict low: dictionary, with key being the channel descriptor string
                          (i.e. 'd_ch1', 'd_ch2') and items being the low values (in volt) for the
@@ -380,7 +377,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_active_channels(self, ch=None):
-        """ Get the active channels of the pulse generator hardware.
+        """Get the active channels of the pulse generator hardware.
 
         @param list ch: optional, if specific analog or digital channels are needed to be asked
                         without obtaining all the channels.
@@ -429,8 +426,15 @@ class PulserInterface(metaclass=InterfaceMetaclass):
         pass
 
     @abstract_interface_method
-    def write_waveform(self, name, analog_samples, digital_samples, is_first_chunk, is_last_chunk,
-                       total_number_of_samples):
+    def write_waveform(
+        self,
+        name,
+        analog_samples,
+        digital_samples,
+        is_first_chunk,
+        is_last_chunk,
+        total_number_of_samples,
+    ):
         """
         Write a new waveform or append samples to an already existing waveform on the device memory.
         The flags is_first_chunk and is_last_chunk can be used as indicator if a new waveform should
@@ -476,7 +480,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_waveform_names(self):
-        """ Retrieve the names of all uploaded waveforms on the device.
+        """Retrieve the names of all uploaded waveforms on the device.
 
         @return list: List of all uploaded waveform name strings in the device workspace.
         """
@@ -484,7 +488,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_sequence_names(self):
-        """ Retrieve the names of all uploaded sequence on the device.
+        """Retrieve the names of all uploaded sequence on the device.
 
         @return list: List of all uploaded sequence name strings in the device workspace.
         """
@@ -492,7 +496,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def delete_waveform(self, waveform_name):
-        """ Delete the waveform with name "waveform_name" from the device memory.
+        """Delete the waveform with name "waveform_name" from the device memory.
 
         @param str waveform_name: The name of the waveform to be deleted
                                   Optionally a list of waveform names can be passed.
@@ -503,7 +507,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def delete_sequence(self, sequence_name):
-        """ Delete the sequence with name "sequence_name" from the device memory.
+        """Delete the sequence with name "sequence_name" from the device memory.
 
         @param str sequence_name: The name of the sequence to be deleted
                                   Optionally a list of sequence names can be passed.
@@ -514,7 +518,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_interleave(self):
-        """ Check whether Interleave is ON or OFF in AWG.
+        """Check whether Interleave is ON or OFF in AWG.
 
         @return bool: True: ON, False: OFF
 
@@ -524,7 +528,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_interleave(self, state=False):
-        """ Turns the interleave of an AWG on or off.
+        """Turns the interleave of an AWG on or off.
 
         @param bool state: The state the interleave should be set to
                            (True: ON, False: OFF)
@@ -540,7 +544,7 @@ class PulserInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def reset(self):
-        """ Reset the device.
+        """Reset the device.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -551,30 +555,33 @@ class SequenceOption(Enum):
     """
     Different options of the sequence mode in the pulser device.
     """
+
     NON = 0  # No sequence mode, only waveforms can be used
     OPTIONAL = 1  # Pulser can either work with waveforms directly or use sequences for the output
-    FORCED = 2  # Output is only allowed for sequences. Waveforms might still be uploaded but not played.
+    FORCED = (
+        2  # Output is only allowed for sequences. Waveforms might still be uploaded but not played.
+    )
 
 
 class PulserConstraints:
     def __init__(self):
         # sample rate, i.e. the time base of the pulser
-        self.sample_rate = ScalarConstraint(unit='Hz')
+        self.sample_rate = ScalarConstraint(unit="Hz")
         # The peak-to-peak amplitude and voltage offset of the analog channels
-        self.a_ch_amplitude = ScalarConstraint(unit='Vpp')
-        self.a_ch_offset = ScalarConstraint(unit='V')
+        self.a_ch_amplitude = ScalarConstraint(unit="Vpp")
+        self.a_ch_offset = ScalarConstraint(unit="V")
         # Low and high voltage level of the digital channels
-        self.d_ch_low = ScalarConstraint(unit='V')
-        self.d_ch_high = ScalarConstraint(unit='V')
+        self.d_ch_low = ScalarConstraint(unit="V")
+        self.d_ch_high = ScalarConstraint(unit="V")
         # length of the created waveform in samples
-        self.waveform_length = ScalarConstraint(unit='Samples')
+        self.waveform_length = ScalarConstraint(unit="Samples")
         # number of waveforms/sequences to put in a single asset (sequence mode)
-        self.waveform_num = ScalarConstraint(unit='#')
-        self.sequence_num = ScalarConstraint(unit='#')
-        self.subsequence_num = ScalarConstraint(unit='#')
+        self.waveform_num = ScalarConstraint(unit="#")
+        self.sequence_num = ScalarConstraint(unit="#")
+        self.subsequence_num = ScalarConstraint(unit="#")
         # Sequence parameters
-        self.sequence_steps = ScalarConstraint(unit='#', min=0)
-        self.repetitions = ScalarConstraint(unit='#')
+        self.sequence_steps = ScalarConstraint(unit="#", min=0)
+        self.repetitions = ScalarConstraint(unit="#")
         self.event_triggers = list()
         self.flags = list()
 

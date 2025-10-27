@@ -12,6 +12,7 @@ import os
 import platform
 import signal
 import time
+
 try:
     from _thread import interrupt_main  # Py 3
 except ImportError:
@@ -22,7 +23,7 @@ from warnings import warn
 
 
 class ParentPollerUnix:
-    """ A Unix-specific daemon thread that terminates the program immediately
+    """A Unix-specific daemon thread that terminates the program immediately
     when the parent process no longer exists.
     """
 
@@ -33,6 +34,7 @@ class ParentPollerUnix:
     def run(self):
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
+
         while True:
             try:
                 if os.getppid() == 1:
@@ -45,13 +47,13 @@ class ParentPollerUnix:
 
 
 class ParentPollerWindows:
-    """ A Windows-specific daemon thread that listens for a special event that
+    """A Windows-specific daemon thread that listens for a special event that
     signals an interrupt and, optionally, terminates the program immediately
     when the parent process no longer exists.
     """
 
     def __init__(self, interrupt_handle=None, parent_handle=None):
-        """ Create the poller. At least one of the optional parameters must be
+        """Create the poller. At least one of the optional parameters must be
         provided.
 
         Parameters
@@ -64,7 +66,7 @@ class ParentPollerWindows:
             If provided, the program will terminate immediately when this
             handle is signaled.
         """
-        assert(interrupt_handle or parent_handle)
+        assert interrupt_handle or parent_handle
         super(ParentPollerWindows, self).__init__()
         if ctypes is None:
             raise ImportError("ParentPollerWindows requires ctypes")
@@ -73,8 +75,7 @@ class ParentPollerWindows:
         self.parent_handle = parent_handle
 
     def run(self):
-        """ Run the poll loop. This method never returns.
-        """
+        """Run the poll loop. This method never returns."""
         try:
             from _winapi import WAIT_OBJECT_0, INFINITE
         except ImportError:
@@ -87,15 +88,16 @@ class ParentPollerWindows:
         if self.parent_handle:
             handles.append(self.parent_handle)
         arch = platform.architecture()[0]
-        c_int = ctypes.c_int64 if arch.startswith('64') else ctypes.c_int
+        c_int = ctypes.c_int64 if arch.startswith("64") else ctypes.c_int
 
         # Listen forever.
         while True:
             result = ctypes.windll.kernel32.WaitForMultipleObjects(
-                len(handles),                            # nCount
-                (c_int * len(handles))(*handles),        # lpHandles
-                False,                                   # bWaitAll
-                INFINITE)                                # dwMilliseconds
+                len(handles),  # nCount
+                (c_int * len(handles))(*handles),  # lpHandles
+                False,  # bWaitAll
+                INFINITE,
+            )  # dwMilliseconds
 
             if WAIT_OBJECT_0 <= result < len(handles):
                 handle = handles[result - WAIT_OBJECT_0]

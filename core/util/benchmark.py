@@ -1,16 +1,18 @@
-from collections import deque
-import scipy
-import numpy as np
 import copy
+from collections import deque
+
+import numpy as np
+import scipy
 
 
-class BenchmarkTool(object):
+class BenchmarkTool:
     """
     Helper that allows to benchmark a (generic) task. To this end, data of type 'quantity' vs 'time needed'
     can be supplied (by querying the task). Eg. created samples vs the time needed to generate them.
     Based on the gathered data, a speed value [quantity/time] or a time prediction
     for a given quantity is obtained.
     """
+
     def __init__(self, n_save_datapoints=20):
         self._n_save_datapoints = n_save_datapoints
         # data point: a tuple of (time [s], 'quantity')
@@ -47,7 +49,7 @@ class BenchmarkTool(object):
         :return:
         """
 
-        if time_s <= 0.:
+        if time_s <= 0.0:
             return
 
         if not is_persistent:
@@ -79,7 +81,7 @@ class BenchmarkTool(object):
         a, t0, _ = self._get_speed_fit()
 
         if self.sanity or not check_sanity:
-            return 1. / a
+            return 1.0 / a
 
         return np.nan
 
@@ -88,37 +90,39 @@ class BenchmarkTool(object):
 
         save_dict = copy.deepcopy(self.__dict__)
         # make deque serializable
-        save_dict['_datapoints'] = copy.deepcopy(list(self._datapoints))
+        save_dict["_datapoints"] = copy.deepcopy(list(self._datapoints))
 
         return save_dict
 
     def load_from_dict(self, obj=None, saved_dict=None):
-
         if saved_dict != None:
-            saved_dict['_datapoints'] = deque(saved_dict['_datapoints'], maxlen=self._n_save_datapoints)
+            saved_dict["_datapoints"] = deque(
+                saved_dict["_datapoints"], maxlen=self._n_save_datapoints
+            )
 
             self.__dict__.update(saved_dict)
 
     def _get_speed_fit(self):
-
         # linear fit t= a*y + t0 over all data with t: time, y: benchmark quantitiy
         all_data = np.asarray(self._datapoints_fixed + list(self._datapoints))
 
         if len(self._datapoints) > len(self._datapoints_fixed):
             # ensure rolling data has max 50:50 weight
-            weighted_data = np.asarray(self._datapoints_fixed + list(self._datapoints)[-len(self._datapoints_fixed):])
+            weighted_data = np.asarray(
+                self._datapoints_fixed + list(self._datapoints)[-len(self._datapoints_fixed) :]
+            )
         else:
             weighted_data = all_data
 
         if len(all_data) < 1:
             return np.nan, np.nan, np.nan
-        if len(np.unique(all_data[:,1])) == 1:
+        if len(np.unique(all_data[:, 1])) == 1:
             # fit needs at least 2 different datapoints in y
-            return np.average(all_data[:,0])/all_data[0,1], 0, np.nan
+            return np.average(all_data[:, 0]) / all_data[0, 1], 0, np.nan
         try:
             a, t0, _, _, da = scipy.stats.linregress(weighted_data[:, 1], weighted_data[:, 0])
         except Exception:
-            self.log.exception('Linear fit failed: ')
+            self.log.exception("Linear fit failed: ")
             return np.nan, np.nan, np.nan
 
         return a, t0, da

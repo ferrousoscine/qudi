@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi hardware interface for fast counting devices.
 
@@ -25,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class FastCounterInterface(metaclass=InterfaceMetaclass):
-    """ Interface class to define the controls for fast counting devices.
+    """Interface class to define the controls for fast counting devices.
 
     A "fast counter" is a hardware device that count events with a "good" time resolution.
     The goal is generally to detect when events happen after an time defining trigger. These events can be photons
@@ -42,7 +40,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the Fast counting device.
+        """Retrieve the hardware constrains from the Fast counting device.
 
         @return dict: dict with keys being the constraint names as string and
                       items are the definition for the constaints.
@@ -87,7 +85,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def configure(self, bin_width_s, record_length_s, number_of_gates=0):
-        """ Configuration of the fast counter.
+        """Configuration of the fast counter.
 
         @param float bin_width_s: Length of a single time bin in the time race histogram in seconds.
         @param float record_length_s: Total length of the timetrace/each single gate in seconds.
@@ -102,29 +100,29 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_status(self):
-        """ Receives the current status of the hardware and outputs it as return value.
+        """Receives the current status of the hardware and outputs it as return value.
 
-        0 = unconfigured
-        1 = idle
-        2 = running
-        3 = paused
-       -1 = error state
+         0 = unconfigured
+         1 = idle
+         2 = running
+         3 = paused
+        -1 = error state
         """
         pass
 
     @abstract_interface_method
     def start_measure(self):
-        """ Start the fast counter. """
+        """Start the fast counter."""
         pass
 
     @abstract_interface_method
     def stop_measure(self):
-        """ Stop the fast counter. """
+        """Stop the fast counter."""
         pass
 
     @abstract_interface_method
     def pause_measure(self):
-        """ Pauses the current measurement.
+        """Pauses the current measurement.
 
         Fast counter must be initially in the run state to make it pause.
         """
@@ -132,7 +130,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def continue_measure(self):
-        """ Continues the current measurement.
+        """Continues the current measurement.
 
         If fast counter is in pause state, then fast counter will be continued.
         """
@@ -140,7 +138,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def is_gated(self):
-        """ Check the gated counting possibility.
+        """Check the gated counting possibility.
 
         @return bool: Boolean value indicates if the fast counter is a gated
                       counter (TRUE) or not (FALSE).
@@ -149,7 +147,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_binwidth(self):
-        """ Returns the width of a single timebin in the timetrace in seconds.
+        """Returns the width of a single timebin in the timetrace in seconds.
 
         @return float: current length of a single bin in seconds (seconds/bin)
         """
@@ -157,7 +155,7 @@ class FastCounterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_data_trace(self):
-        """ Polls the current timetrace data from the fast counter.
+        """Polls the current timetrace data from the fast counter.
 
         Return value is a numpy array (dtype = int64).
         The binning, specified by calling configure() in forehand, must be

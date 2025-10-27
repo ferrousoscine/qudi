@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Interface for logging small amounts of time series data to some place.
 First use case is Influxdb.
@@ -41,4 +40,3 @@ class DataLoggerInterface(metaclass=InterfaceMetaclass):
     @abstract_interface_method
     def log_to_channel(self, channel, value):
         pass
-

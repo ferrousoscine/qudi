@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi interfuse between a process control and a process control.
 ---
@@ -20,18 +18,19 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
+
 import numpy as np
 from scipy.interpolate import interp1d
 
-from core.connector import Connector
 from core.configoption import ConfigOption
+from core.connector import Connector
 from core.statusvariable import StatusVar
-from logic.generic_logic import GenericLogic
 from interface.process_control_interface import ProcessControlInterface
+from logic.generic_logic import GenericLogic
 
 
 class ProcessControlModifier(GenericLogic, ProcessControlInterface):
-    """ This interfuse can be used to modify a process control on the fly. It needs a 2D array to interpolate
+    """This interfuse can be used to modify a process control on the fly. It needs a 2D array to interpolate
     General form : [[x_0, y_0], [x_1, y_1], ... , [x_n, y_n]]
     Example : [[0,0], [1,10]]
     With this example, the value 0.5 sent from the logic would be transformed to 5 sent to the hardware.
@@ -45,40 +44,41 @@ class ProcessControlModifier(GenericLogic, ProcessControlInterface):
     1   10
     """
 
-    hardware = Connector(interface='ProcessControlInterface')
+    hardware = Connector(interface="ProcessControlInterface")
 
     _calibration = StatusVar(default=None)
-    _calibration_file = ConfigOption('calibration_file', None)
-    _force_calibration_from_file = ConfigOption('force_calibration_from_file', False)
+    _calibration_file = ConfigOption("calibration_file", None)
+    _force_calibration_from_file = ConfigOption("force_calibration_from_file", False)
     _interpolated_function = None
     _interpolated_function_reversed = None
 
-    _new_unit = ConfigOption('new_unit', None)
+    _new_unit = ConfigOption("new_unit", None)
 
     _last_control_value = None
 
     def on_activate(self):
-        """ Activate module.
-        """
+        """Activate module."""
         self._hardware = self.hardware()
 
         if self._force_calibration_from_file and self._calibration_file is None:
-            self.log.error('Loading from calibration is enforced but no calibration file has been'
-                           'given.')
-        if self._force_calibration_from_file or (self._calibration is None and self._calibration_file is not None):
-            self.log.info('Loading from calibration file.')
+            self.log.error(
+                "Loading from calibration is enforced but no calibration file has beengiven."
+            )
+        if self._force_calibration_from_file or (
+            self._calibration is None and self._calibration_file is not None
+        ):
+            self.log.info("Loading from calibration file.")
             calibration = np.loadtxt(self._calibration_file)
             self.update_calibration(calibration)
         else:
             self.update_calibration()
 
     def on_deactivate(self):
-        """ Deactivate module.
-        """
+        """Deactivate module."""
         pass
 
     def update_calibration(self, calibration=None):
-        """ Construct the interpolated function from the calibration data
+        """Construct the interpolated function from the calibration data
 
         calibration (optional) 2d array : A new calibration to set
 
@@ -90,42 +90,44 @@ class ProcessControlModifier(GenericLogic, ProcessControlInterface):
             self._interpolated_function_reversed = lambda x: x
         else:
             self._interpolated_function = interp1d(self._calibration[:, 0], self._calibration[:, 1])
-            self._interpolated_function_reversed = interp1d(self._calibration[:, 1], self._calibration[:, 0])
+            self._interpolated_function_reversed = interp1d(
+                self._calibration[:, 1], self._calibration[:, 0]
+            )
         if self._last_control_value is not None:
             self.set_control_value(self._last_control_value)
 
     def reset_to_identity(self):
-        """ Reset the calibration data to use identity """
+        """Reset the calibration data to use identity"""
         self._calibration = None
         self.update_calibration()
 
     def get_control_value(self):
-        """ Return the original control value
-        """
+        """Return the original control value"""
         if self._interpolated_function_reversed is not None:
             return self._interpolated_function_reversed(self._hardware.get_control_value())
         else:
-            self.log.error('No calibration was found, please set the control value modifier data first.')
+            self.log.error(
+                "No calibration was found, please set the control value modifier data first."
+            )
 
     def set_control_value(self, value):
-        """ Set the control value modified
-        """
+        """Set the control value modified"""
         if self._interpolated_function is not None:
             self._hardware.set_control_value(self._interpolated_function(value))
         else:
-            self.log.error('No calibration was found, please set the control value modifier data first.')
+            self.log.error(
+                "No calibration was found, please set the control value modifier data first."
+            )
 
     def get_control_unit(self):
-        """ Return the process unit
-        """
+        """Return the process unit"""
         if self._new_unit is not None:
             return self._new_unit
         else:
             return self._hardware.get_control_unit()
 
     def get_control_limit(self):
-        """ Return limits within which the controlled value can be set as a tuple of (low limit, high limit)
-        """
+        """Return limits within which the controlled value can be set as a tuple of (low limit, high limit)"""
         mini, maxi = self._hardware.get_control_limit()
         mini = float(self._interpolated_function_reversed(mini))
         maxi = float(self._interpolated_function_reversed(maxi))

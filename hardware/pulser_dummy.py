@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi hardware dummy for pulsing devices.
 
@@ -23,15 +21,15 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 import time
 from collections import OrderedDict
 
+from core.configoption import ConfigOption
 from core.module import Base
 from core.statusvariable import StatusVar
-from core.configoption import ConfigOption
 from core.util.helpers import natural_sort
-from interface.pulser_interface import PulserInterface, PulserConstraints, SequenceOption
+from interface.pulser_interface import PulserConstraints, PulserInterface, SequenceOption
 
 
 class PulserDummy(Base, PulserInterface):
-    """ Dummy class for  PulseInterface
+    """Dummy class for  PulseInterface
 
     Be careful in adjusting the method names in that class, since some of them
     are also connected to the mwsourceinterface (to give the AWG the possibility
@@ -45,30 +43,56 @@ class PulserDummy(Base, PulserInterface):
     """
 
     activation_config = StatusVar(default=None)
-    force_sequence_option = ConfigOption('force_sequence_option', default=False)
+    force_sequence_option = ConfigOption("force_sequence_option", default=False)
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
 
-        self.log.info('Dummy Pulser: I will simulate an AWG :) !')
+        self.log.info("Dummy Pulser: I will simulate an AWG :) !")
 
         self.connected = False
         self.sample_rate = 25e9
 
         # Deactivate all channels at first:
-        self.channel_states = {'a_ch1': False, 'a_ch2': False, 'a_ch3': False,
-                               'd_ch1': False, 'd_ch2': False, 'd_ch3': False, 'd_ch4': False,
-                               'd_ch5': False, 'd_ch6': False, 'd_ch7': False, 'd_ch8': False}
+        self.channel_states = {
+            "a_ch1": False,
+            "a_ch2": False,
+            "a_ch3": False,
+            "d_ch1": False,
+            "d_ch2": False,
+            "d_ch3": False,
+            "d_ch4": False,
+            "d_ch5": False,
+            "d_ch6": False,
+            "d_ch7": False,
+            "d_ch8": False,
+        }
 
         # for each analog channel one value
-        self.amplitude_dict = {'a_ch1': 1.0, 'a_ch2': 1.0, 'a_ch3': 1.0}
-        self.offset_dict = {'a_ch1': 0.0, 'a_ch2': 0.0, 'a_ch3': 0.0}
+        self.amplitude_dict = {"a_ch1": 1.0, "a_ch2": 1.0, "a_ch3": 1.0}
+        self.offset_dict = {"a_ch1": 0.0, "a_ch2": 0.0, "a_ch3": 0.0}
 
         # for each digital channel one value
-        self.digital_high_dict = {'d_ch1': 5.0, 'd_ch2': 5.0, 'd_ch3': 5.0, 'd_ch4': 5.0,
-                                  'd_ch5': 5.0, 'd_ch6': 5.0, 'd_ch7': 5.0, 'd_ch8': 5.0}
-        self.digital_low_dict = {'d_ch1': 0.0, 'd_ch2': 0.0, 'd_ch3': 0.0, 'd_ch4': 0.0,
-                                 'd_ch5': 0.0, 'd_ch6': 0.0, 'd_ch7': 0.0, 'd_ch8': 0.0}
+        self.digital_high_dict = {
+            "d_ch1": 5.0,
+            "d_ch2": 5.0,
+            "d_ch3": 5.0,
+            "d_ch4": 5.0,
+            "d_ch5": 5.0,
+            "d_ch6": 5.0,
+            "d_ch7": 5.0,
+            "d_ch8": 5.0,
+        }
+        self.digital_low_dict = {
+            "d_ch1": 0.0,
+            "d_ch2": 0.0,
+            "d_ch3": 0.0,
+            "d_ch4": 0.0,
+            "d_ch5": 0.0,
+            "d_ch6": 0.0,
+            "d_ch7": 0.0,
+            "d_ch8": 0.0,
+        }
 
         self.waveform_set = set()
         self.sequence_dict = dict()
@@ -78,28 +102,37 @@ class PulserDummy(Base, PulserInterface):
         self.use_sequencer = True
         self.interleave = False
 
-        self.current_status = 0    # that means off, not running.
+        self.current_status = 0  # that means off, not running.
 
     def on_activate(self):
-        """ Initialisation performed during activation of the module.
-        """
+        """Initialisation performed during activation of the module."""
         self.connected = True
 
-        self.channel_states = {'a_ch1': False, 'a_ch2': False, 'a_ch3': False,
-                               'd_ch1': False, 'd_ch2': False, 'd_ch3': False, 'd_ch4': False,
-                               'd_ch5': False, 'd_ch6': False, 'd_ch7': False, 'd_ch8': False}
+        self.channel_states = {
+            "a_ch1": False,
+            "a_ch2": False,
+            "a_ch3": False,
+            "d_ch1": False,
+            "d_ch2": False,
+            "d_ch3": False,
+            "d_ch4": False,
+            "d_ch5": False,
+            "d_ch6": False,
+            "d_ch7": False,
+            "d_ch8": False,
+        }
 
-        if self.activation_config is None:
-            self.activation_config = self.get_constraints().activation_config['config0']
-        elif self.activation_config not in self.get_constraints().activation_config.values():
-            self.activation_config = self.get_constraints().activation_config['config0']
+        if (
+            self.activation_config is None
+            or self.activation_config not in self.get_constraints().activation_config.values()
+        ):
+            self.activation_config = self.get_constraints().activation_config["config0"]
 
         for chnl in self.activation_config:
             self.channel_states[chnl] = True
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         self.connected = False
 
     def get_constraints(self):
@@ -189,8 +222,8 @@ class PulserDummy(Base, PulserInterface):
         constraints.repetitions.step = 1
         constraints.repetitions.default = 0
 
-        constraints.event_triggers = ['A', 'B']
-        constraints.flags = ['A', 'B', 'C', 'D']
+        constraints.event_triggers = ["A", "B"]
+        constraints.flags = ["A", "B", "C", "D"]
 
         constraints.sequence_steps.min = 0
         constraints.sequence_steps.max = 8000
@@ -201,56 +234,68 @@ class PulserDummy(Base, PulserInterface):
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
         activation_config = OrderedDict()
-        activation_config['config0'] = frozenset(
-            {'a_ch1', 'd_ch1', 'd_ch2', 'a_ch2', 'd_ch3', 'd_ch4'})
-        activation_config['config1'] = frozenset(
-            {'a_ch2', 'd_ch1', 'd_ch2', 'a_ch3', 'd_ch3', 'd_ch4'})
+        activation_config["config0"] = frozenset(
+            {"a_ch1", "d_ch1", "d_ch2", "a_ch2", "d_ch3", "d_ch4"}
+        )
+        activation_config["config1"] = frozenset(
+            {"a_ch2", "d_ch1", "d_ch2", "a_ch3", "d_ch3", "d_ch4"}
+        )
         # Usage of channel 1 only:
-        activation_config['config2'] = frozenset({'a_ch2', 'd_ch1', 'd_ch2'})
+        activation_config["config2"] = frozenset({"a_ch2", "d_ch1", "d_ch2"})
         # Usage of channel 2 only:
-        activation_config['config3'] = frozenset({'a_ch3', 'd_ch3', 'd_ch4'})
+        activation_config["config3"] = frozenset({"a_ch3", "d_ch3", "d_ch4"})
         # Usage of Interleave mode:
-        activation_config['config4'] = frozenset({'a_ch1', 'd_ch1', 'd_ch2'})
+        activation_config["config4"] = frozenset({"a_ch1", "d_ch1", "d_ch2"})
         # Usage of only digital channels:
-        activation_config['config5'] = frozenset(
-            {'d_ch1', 'd_ch2', 'd_ch3', 'd_ch4', 'd_ch5', 'd_ch6', 'd_ch7', 'd_ch8'})
+        activation_config["config5"] = frozenset(
+            {"d_ch1", "d_ch2", "d_ch3", "d_ch4", "d_ch5", "d_ch6", "d_ch7", "d_ch8"}
+        )
         # Usage of only one analog channel:
-        activation_config['config6'] = frozenset({'a_ch1'})
-        activation_config['config7'] = frozenset({'a_ch2'})
-        activation_config['config8'] = frozenset({'a_ch3'})
+        activation_config["config6"] = frozenset({"a_ch1"})
+        activation_config["config7"] = frozenset({"a_ch2"})
+        activation_config["config8"] = frozenset({"a_ch3"})
         # Usage of only the analog channels:
-        activation_config['config9'] = frozenset({'a_ch2', 'a_ch3'})
+        activation_config["config9"] = frozenset({"a_ch2", "a_ch3"})
         constraints.activation_config = activation_config
 
-        constraints.sequence_option = SequenceOption.FORCED if self.force_sequence_option else SequenceOption.OPTIONAL
+        constraints.sequence_option = (
+            SequenceOption.FORCED if self.force_sequence_option else SequenceOption.OPTIONAL
+        )
 
         return constraints
 
     def pulser_on(self):
-        """ Switches the pulsing device on.
+        """Switches the pulsing device on.
 
         @return int: error code (0:stopped, -1:error, 1:running)
         """
         if self.current_status == 0:
             self.current_status = 1
-            self.log.info('PulserDummy: Switch on the Output.')
+            self.log.info("PulserDummy: Switch on the Output.")
             time.sleep(1)
             return 0
         else:
             return -1
 
     def pulser_off(self):
-        """ Switches the pulsing device off.
+        """Switches the pulsing device off.
 
         @return int: error code (0:stopped, -1:error, 1:running)
         """
         if self.current_status == 1:
             self.current_status = 0
-            self.log.info('PulserDummy: Switch off the Output.')
+            self.log.info("PulserDummy: Switch off the Output.")
         return 0
 
-    def write_waveform(self, name, analog_samples, digital_samples, is_first_chunk, is_last_chunk,
-                       total_number_of_samples):
+    def write_waveform(
+        self,
+        name,
+        analog_samples,
+        digital_samples,
+        is_first_chunk,
+        is_last_chunk,
+        total_number_of_samples,
+    ):
         """
         Write a new waveform or append samples to an already existing waveform on the device memory.
         The flags is_first_chunk and is_last_chunk can be used as indicator if a new waveform should
@@ -284,19 +329,22 @@ class PulserDummy(Base, PulserInterface):
         elif len(digital_samples) > 0:
             number_of_samples = len(digital_samples[list(digital_samples)[0]])
         else:
-            self.log.error('No analog or digital samples passed to write_waveform method in dummy '
-                           'pulser.')
+            self.log.error(
+                "No analog or digital samples passed to write_waveform method in dummy pulser."
+            )
             return -1, waveforms
 
         for chnl, samples in analog_samples.items():
             if len(samples) != number_of_samples:
-                self.log.error('Unequal length of sample arrays for different channels in dummy '
-                               'pulser.')
+                self.log.error(
+                    "Unequal length of sample arrays for different channels in dummy pulser."
+                )
                 return -1, waveforms
         for chnl, samples in digital_samples.items():
             if len(samples) != number_of_samples:
-                self.log.error('Unequal length of sample arrays for different channels in dummy '
-                               'pulser.')
+                self.log.error(
+                    "Unequal length of sample arrays for different channels in dummy pulser."
+                )
                 return -1, waveforms
 
         # Determine if only digital samples are active. In that case each channel will get a
@@ -307,15 +355,15 @@ class PulserDummy(Base, PulserInterface):
         if len(analog_samples) > 0:
             for chnl in analog_samples:
                 waveforms.append(name + chnl[1:])
-                time.sleep(number_of_samples * 5 * 8 / 1024 ** 3)
+                time.sleep(number_of_samples * 5 * 8 / 1024**3)
         else:
             for chnl in digital_samples:
                 waveforms.append(name + chnl[1:])
-                time.sleep(number_of_samples * 8 / 1024 ** 3)
+                time.sleep(number_of_samples * 8 / 1024**3)
 
         self.waveform_set.update(waveforms)
 
-        self.log.info('Waveforms with nametag "{0}" directly written on dummy pulser.'.format(name))
+        self.log.info(f'Waveforms with nametag "{name}" directly written on dummy pulser.')
         return number_of_samples, waveforms
 
     def write_sequence(self, name, sequence_parameter_list):
@@ -332,8 +380,10 @@ class PulserDummy(Base, PulserInterface):
         for waveform_tuple, param_dict in sequence_parameter_list:
             for waveform in waveform_tuple:
                 if waveform not in self.waveform_set:
-                    self.log.error('Failed to create sequence "{0}" due to waveform "{1}" not '
-                                   'present in device memory.'.format(name, waveform))
+                    self.log.error(
+                        f'Failed to create sequence "{name}" due to waveform "{waveform}" not '
+                        "present in device memory."
+                    )
                     return -1
 
         if name in self.sequence_dict:
@@ -342,25 +392,25 @@ class PulserDummy(Base, PulserInterface):
         self.sequence_dict[name] = len(sequence_parameter_list[0][0])
         time.sleep(1)
 
-        self.log.info('Sequence with name "{0}" directly written on dummy pulser.'.format(name))
+        self.log.info(f'Sequence with name "{name}" directly written on dummy pulser.')
         return len(sequence_parameter_list)
 
     def get_waveform_names(self):
-        """ Retrieve the names of all uploaded waveforms on the device.
+        """Retrieve the names of all uploaded waveforms on the device.
 
         @return list: List of all uploaded waveform name strings in the device workspace.
         """
         return list(self.waveform_set)
 
     def get_sequence_names(self):
-        """ Retrieve the names of all uploaded sequence on the device.
+        """Retrieve the names of all uploaded sequence on the device.
 
         @return list: List of all uploaded sequence name strings in the device workspace.
         """
         return list(self.sequence_dict)
 
     def delete_waveform(self, waveform_name):
-        """ Delete the waveform with name "waveform_name" from the device memory.
+        """Delete the waveform with name "waveform_name" from the device memory.
 
         @param str waveform_name: The name of the waveform to be deleted
                                   Optionally a list of waveform names can be passed.
@@ -379,7 +429,7 @@ class PulserDummy(Base, PulserInterface):
         return deleted_waveforms
 
     def delete_sequence(self, sequence_name):
-        """ Delete the sequence with name "sequence_name" from the device memory.
+        """Delete the sequence with name "sequence_name" from the device memory.
 
         @param str sequence_name: The name of the sequence to be deleted
                                   Optionally a list of sequence names can be passed.
@@ -398,7 +448,7 @@ class PulserDummy(Base, PulserInterface):
         return deleted_sequences
 
     def load_waveform(self, load_dict):
-        """ Loads a waveform to the specified channel of the pulsing device.
+        """Loads a waveform to the specified channel of the pulsing device.
 
         @param dict|list load_dict: a dictionary with keys being one of the available channel
                                     index and values being the name of the already written
@@ -432,13 +482,13 @@ class PulserDummy(Base, PulserInterface):
         if isinstance(load_dict, list):
             new_dict = dict()
             for waveform in load_dict:
-                channel = int(waveform.rsplit('_ch', 1)[1])
+                channel = int(waveform.rsplit("_ch", 1)[1])
                 new_dict[channel] = waveform
             load_dict = new_dict
 
         # Determine if the device is purely digital and get all active channels
-        analog_channels = [chnl for chnl in self.activation_config if chnl.startswith('a')]
-        digital_channels = [chnl for chnl in self.activation_config if chnl.startswith('d')]
+        analog_channels = [chnl for chnl in self.activation_config if chnl.startswith("a")]
+        digital_channels = [chnl for chnl in self.activation_config if chnl.startswith("d")]
         pure_digital = len(analog_channels) == 0
 
         # Check if waveforms are present in virtual dummy device memory and specified channels are
@@ -446,25 +496,22 @@ class PulserDummy(Base, PulserInterface):
         new_loaded_assets = dict()
         for channel, waveform in load_dict.items():
             if waveform not in self.waveform_set:
-                self.log.error('Loading failed. Waveform "{0}" not found on device memory.'
-                               ''.format(waveform))
+                self.log.error(f'Loading failed. Waveform "{waveform}" not found on device memory.')
                 return self.current_loaded_assets
             if pure_digital:
-                if 'd_ch{0:d}'.format(channel) not in digital_channels:
-                    self.log.error('Loading failed. Digital channel {0:d} not active.'
-                                   ''.format(channel))
+                if f"d_ch{channel:d}" not in digital_channels:
+                    self.log.error(f"Loading failed. Digital channel {channel:d} not active.")
                     return self.current_loaded_assets
             else:
-                if 'a_ch{0:d}'.format(channel) not in analog_channels:
-                    self.log.error('Loading failed. Analog channel {0:d} not active.'
-                                   ''.format(channel))
+                if f"a_ch{channel:d}" not in analog_channels:
+                    self.log.error(f"Loading failed. Analog channel {channel:d} not active.")
                     return self.current_loaded_assets
             new_loaded_assets[channel] = waveform
         self.current_loaded_assets = new_loaded_assets
         return self.get_loaded_assets()[0]
 
     def load_sequence(self, sequence_name):
-        """ Loads a sequence to the channels of the device in order to be ready for playback.
+        """Loads a sequence to the channels of the device in order to be ready for playback.
         For devices that have a workspace (i.e. AWG) this will load the sequence from the device
         workspace into the channels.
         For a device without mass memory this will make the waveform/pattern that has been
@@ -481,35 +528,43 @@ class PulserDummy(Base, PulserInterface):
         @return dict: Dictionary containing the actually loaded waveforms per channel.
         """
         if sequence_name not in self.sequence_dict:
-            self.log.error('Sequence loading failed. No sequence with name "{0}" found on device '
-                           'memory.'.format(sequence_name))
+            self.log.error(
+                f'Sequence loading failed. No sequence with name "{sequence_name}" found on device '
+                "memory."
+            )
             return self.get_loaded_assets()[0]
 
         # Determine if the device is purely digital and get all active channels
-        analog_channels = natural_sort(chnl for chnl in self.activation_config if chnl.startswith('a'))
-        digital_channels = natural_sort(chnl for chnl in self.activation_config if chnl.startswith('d'))
+        analog_channels = natural_sort(
+            chnl for chnl in self.activation_config if chnl.startswith("a")
+        )
+        digital_channels = natural_sort(
+            chnl for chnl in self.activation_config if chnl.startswith("d")
+        )
         pure_digital = len(analog_channels) == 0
 
         if pure_digital and len(digital_channels) != self.sequence_dict[sequence_name]:
-            self.log.error('Sequence loading failed. Number of active digital channels ({0:d}) does'
-                           ' not match the number of tracks in the sequence ({1:d}).'
-                           ''.format(len(digital_channels), self.sequence_dict[sequence_name]))
+            self.log.error(
+                f"Sequence loading failed. Number of active digital channels ({len(digital_channels):d}) does"
+                f" not match the number of tracks in the sequence ({self.sequence_dict[sequence_name]:d})."
+            )
             return self.get_loaded_assets()[0]
         if not pure_digital and len(analog_channels) != self.sequence_dict[sequence_name]:
-            self.log.error('Sequence loading failed. Number of active analog channels ({0:d}) does'
-                           ' not match the number of tracks in the sequence ({1:d}).'
-                           ''.format(len(analog_channels), self.sequence_dict[sequence_name]))
+            self.log.error(
+                f"Sequence loading failed. Number of active analog channels ({len(analog_channels):d}) does"
+                f" not match the number of tracks in the sequence ({self.sequence_dict[sequence_name]:d})."
+            )
             return self.get_loaded_assets()[0]
 
         new_loaded_assets = dict()
         if pure_digital:
             for track_index, chnl in enumerate(digital_channels):
-                chnl_num = int(chnl.split('ch')[1])
-                new_loaded_assets[chnl_num] = '{0}_{1:d}'.format(sequence_name, track_index)
+                chnl_num = int(chnl.split("ch")[1])
+                new_loaded_assets[chnl_num] = f"{sequence_name}_{track_index:d}"
         else:
             for track_index, chnl in enumerate(analog_channels):
-                chnl_num = int(chnl.split('ch')[1])
-                new_loaded_assets[chnl_num] = '{0}_{1:d}'.format(sequence_name, track_index)
+                chnl_num = int(chnl.split("ch")[1])
+                new_loaded_assets[chnl_num] = f"{sequence_name}_{track_index:d}"
 
         self.current_loaded_assets = new_loaded_assets
         return self.get_loaded_assets()[0]
@@ -529,22 +584,24 @@ class PulserDummy(Base, PulserInterface):
         # Determine if it's a waveform or a sequence
         asset_type = None
         for asset_name in self.current_loaded_assets.values():
-            if 'ch' in asset_name.rsplit('_', 1)[1]:
-                current_type = 'waveform'
+            if "ch" in asset_name.rsplit("_", 1)[1]:
+                current_type = "waveform"
             else:
-                current_type = 'sequence'
+                current_type = "sequence"
 
             if asset_type is None or asset_type == current_type:
                 asset_type = current_type
             else:
-                self.log.error('Unable to determine loaded asset type. Mixed naming convention '
-                               'assets loaded (waveform and sequence tracks).')
-                return dict(), ''
+                self.log.error(
+                    "Unable to determine loaded asset type. Mixed naming convention "
+                    "assets loaded (waveform and sequence tracks)."
+                )
+                return dict(), ""
 
         return self.current_loaded_assets, asset_type
 
     def clear_all(self):
-        """ Clears all loaded waveform from the pulse generators RAM.
+        """Clears all loaded waveform from the pulse generators RAM.
 
         @return int: error code (0:OK, -1:error)
 
@@ -557,21 +614,24 @@ class PulserDummy(Base, PulserInterface):
         return 0
 
     def get_status(self):
-        """ Retrieves the status of the pulsing hardware
+        """Retrieves the status of the pulsing hardware
 
         @return (int, dict): inter value of the current status with the
                              corresponding dictionary containing status
                              description for all the possible status variables
                              of the pulse generator hardware
         """
-        status_dic = {-1: 'Failed Request or Communication', 0: 'Device has stopped, but can receive commands.',
-                      1: 'Device is active and running.'}
+        status_dic = {
+            -1: "Failed Request or Communication",
+            0: "Device has stopped, but can receive commands.",
+            1: "Device is active and running.",
+        }
         # All the other status messages should have higher integer values
         # then 1.
         return self.current_status, status_dic
 
     def get_sample_rate(self):
-        """ Get the sample rate of the pulse generator hardware
+        """Get the sample rate of the pulse generator hardware
 
         @return float: The current sample rate of the device (in Hz)
 
@@ -582,7 +642,7 @@ class PulserDummy(Base, PulserInterface):
         return self.sample_rate
 
     def set_sample_rate(self, sample_rate):
-        """ Set the sample rate of the pulse generator hardware
+        """Set the sample rate of the pulse generator hardware
 
         @param float sample_rate: The sampling rate to be set (in Hz)
 
@@ -602,7 +662,7 @@ class PulserDummy(Base, PulserInterface):
         return self.sample_rate
 
     def get_analog_level(self, amplitude=None, offset=None):
-        """ Retrieve the analog amplitude and offset of the provided channels.
+        """Retrieve the analog amplitude and offset of the provided channels.
 
         @param list amplitude: optional, if a specific amplitude value (in Volt
                                peak to peak, i.e. the full amplitude) of a
@@ -646,7 +706,6 @@ class PulserDummy(Base, PulserInterface):
         off = dict()
 
         if not amplitude and not offset:
-
             for a_ch, pp_amp in self.amplitude_dict.items():
                 ampl[a_ch] = pp_amp
 
@@ -663,7 +722,7 @@ class PulserDummy(Base, PulserInterface):
         return ampl, off
 
     def set_analog_level(self, amplitude=None, offset=None):
-        """ Set amplitude and/or offset value of the provided analog channel.
+        """Set amplitude and/or offset value of the provided analog channel.
 
         @param dict amplitude: dictionary, with key being the channel and items
                                being the amplitude values (in Volt peak to peak,
@@ -705,7 +764,7 @@ class PulserDummy(Base, PulserInterface):
         return self.get_analog_level(amplitude=list(amplitude), offset=list(offset))
 
     def get_digital_level(self, low=None, high=None):
-        """ Retrieve the digital low and high level of the provided channels.
+        """Retrieve the digital low and high level of the provided channels.
 
         @param list low: optional, if a specific low value (in Volt) of a
                          channel is desired.
@@ -758,7 +817,7 @@ class PulserDummy(Base, PulserInterface):
         return low_val, high_val
 
     def set_digital_level(self, low=None, high=None):
-        """ Set low and/or high value of the provided digital channel.
+        """Set low and/or high value of the provided digital channel.
 
         @param dict low: dictionary, with key being the channel and items being
                          the low values (in volt) for the desired channel.
@@ -798,7 +857,7 @@ class PulserDummy(Base, PulserInterface):
         return self.get_digital_level(low=list(low), high=list(high))
 
     def get_active_channels(self, ch=None):
-        """ Get the active channels of the pulse generator hardware.
+        """Get the active channels of the pulse generator hardware.
 
         @param list ch: optional, if specific analog or digital channels are
                         needed to be asked without obtaining all the channels.
@@ -864,8 +923,10 @@ class PulserDummy(Base, PulserInterface):
 
         active_channel_set = {chnl for chnl, is_active in self.channel_states.items() if is_active}
         if active_channel_set not in self.get_constraints().activation_config.values():
-            self.log.error('Channel activation to be set not found in constraints.\n'
-                           'Channel activation unchanged.')
+            self.log.error(
+                "Channel activation to be set not found in constraints.\n"
+                "Channel activation unchanged."
+            )
             self.channel_states = old_activation
         else:
             self.activation_config = active_channel_set
@@ -873,7 +934,7 @@ class PulserDummy(Base, PulserInterface):
         return self.get_active_channels(ch=list(ch))
 
     def get_interleave(self):
-        """ Check whether Interleave is ON or OFF in AWG.
+        """Check whether Interleave is ON or OFF in AWG.
 
         @return bool: True: ON, False: OFF
 
@@ -883,7 +944,7 @@ class PulserDummy(Base, PulserInterface):
         return self.interleave
 
     def set_interleave(self, state=False):
-        """ Turns the interleave of an AWG on or off.
+        """Turns the interleave of an AWG on or off.
 
         @param bool state: The state the interleave should be set to
                            (True: ON, False: OFF)
@@ -900,35 +961,38 @@ class PulserDummy(Base, PulserInterface):
         return self.get_interleave()
 
     def write(self, command):
-        """ Sends a command string to the device.
+        """Sends a command string to the device.
 
         @param string command: string containing the command
 
         @return int: error code (0:OK, -1:error)
         """
 
-        self.log.info('It is so nice that you talk to me and told me "{0}"; '
-                      'as a dummy it is very dull out here! :) '.format(command))
+        self.log.info(
+            f'It is so nice that you talk to me and told me "{command}"; '
+            "as a dummy it is very dull out here! :) "
+        )
         return 0
 
     def query(self, question):
-        """ Asks the device a 'question' and receive and return an answer from it.
+        """Asks the device a 'question' and receive and return an answer from it.
 
         @param string question: string containing the command
 
         @return string: the answer of the device to the 'question' in a string
         """
 
-        self.log.info('Dude, I\'m a dummy! Your question \'{0}\' is way too '
-                      'complicated for me :D !'.format(question))
-        return 'I am a dummy!'
+        self.log.info(
+            f"Dude, I'm a dummy! Your question '{question}' is way too complicated for me :D !"
+        )
+        return "I am a dummy!"
 
     def reset(self):
-        """ Reset the device.
+        """Reset the device.
 
         @return int: error code (0:OK, -1:error)
         """
         self.__init__()
         self.connected = True
-        self.log.info('Dummy reset!')
+        self.log.info("Dummy reset!")
         return 0

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dummy preposttask
 
@@ -18,26 +17,26 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-from logic.generic_task import PrePostTask
+
 import time
 
+from logic.generic_task import PrePostTask
+
+
 class Task(PrePostTask):
-    """ Dummy thask that does nothing before and after a different task has run. """
+    """Dummy thask that does nothing before and after a different task has run."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print('PrePost init task {0}'.format(name))
+        print(f"PrePost init task {name}")
         print(self.config)
 
     def preExecute(self):
-        """ Do nothing befoer other task runs
-        """
+        """Do nothing befoer other task runs"""
         time.sleep(1)
-        print('pre action of task {0}'.format(self.name))
+        print(f"pre action of task {self.name}")
 
     def postExecute(self):
-        """ Do more nothing after other task has finished running
-        """
+        """Do more nothing after other task has finished running"""
         time.sleep(1)
-        print('post action of task {0}'.format(self.name))
-
+        print(f"post action of task {self.name}")

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interface file to control motorized stages.
 
@@ -25,15 +23,15 @@ from core.meta import InterfaceMetaclass
 
 
 class MotorInterface(metaclass=InterfaceMetaclass):
-    """ This is the Interface class to define the controls for the simple
-        step motor device. The actual hardware implementation might have a
-        different amount of axis. Implement each single axis as 'private'
-        methods for the hardware class, which get called by the general method.
+    """This is the Interface class to define the controls for the simple
+    step motor device. The actual hardware implementation might have a
+    different amount of axis. Implement each single axis as 'private'
+    methods for the hardware class, which get called by the general method.
     """
 
     @abstract_interface_method
     def get_constraints(self):
-        """ Retrieve the hardware constrains from the motor device.
+        """Retrieve the hardware constrains from the motor device.
 
         @return dict: dict with constraints for the magnet hardware. These
                       constraints will be passed via the logic to the GUI so
@@ -95,8 +93,8 @@ class MotorInterface(metaclass=InterfaceMetaclass):
         pass
 
     @abstract_interface_method
-    def move_rel(self,  param_dict):
-        """ Moves stage in given direction (relative movement)
+    def move_rel(self, param_dict):
+        """Moves stage in given direction (relative movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -112,7 +110,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def move_abs(self, param_dict):
-        """ Moves stage to absolute position (absolute movement)
+        """Moves stage to absolute position (absolute movement)
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:
@@ -126,7 +124,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def abort(self):
-        """ Stops movement of the stage
+        """Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
@@ -134,7 +132,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_pos(self, param_list=None):
-        """ Gets current position of the stage arms
+        """Gets current position of the stage arms
 
         @param list param_list: optional, if a specific position of an axis
                                 is desired, then the labels of the needed
@@ -149,7 +147,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_status(self, param_list=None):
-        """ Get the status of the position
+        """Get the status of the position
 
         @param list param_list: optional, if a specific status of an axis
                                 is desired, then the labels of the needed
@@ -163,7 +161,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def calibrate(self, param_list=None):
-        """ Calibrates the stage.
+        """Calibrates the stage.
 
         @param dict param_list: param_list: optional, if a specific calibration
                                 of an axis is desired, then the labels of the
@@ -181,7 +179,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_velocity(self, param_list=None):
-        """ Gets the current velocity for all connected axes.
+        """Gets the current velocity for all connected axes.
 
         @param dict param_list: optional, if a specific velocity of an axis
                                 is desired, then the labels of the needed
@@ -195,7 +193,7 @@ class MotorInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_velocity(self, param_dict):
-        """ Write new value for velocity.
+        """Write new value for velocity.
 
         @param dict param_dict: dictionary, which passes all the relevant
                                 parameters, which should be changed. Usage:

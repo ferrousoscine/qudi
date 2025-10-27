@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Interface file for a PID device.
 
@@ -24,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class PIDControllerInterface(metaclass=InterfaceMetaclass):
-    """ This interface is used to control a PID device.
+    """This interface is used to control a PID device.
 
     From Wikipedia : https://en.wikipedia.org/wiki/PID_controller
     A proportional–integral–derivative controller (PID controller or three-term controller) is a control loop mechanism
@@ -40,63 +39,63 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_kp(self):
-        """ Get the coefficient associated with the proportional term
+        """Get the coefficient associated with the proportional term
 
-         @return (float): The current kp coefficient associated with the proportional term
-         """
+        @return (float): The current kp coefficient associated with the proportional term
+        """
         pass
 
     @abstract_interface_method
     def set_kp(self, kp):
-        """ Set the coefficient associated with the proportional term
+        """Set the coefficient associated with the proportional term
 
-         @param (float) kp: The new kp coefficient associated with the proportional term
-         """
+        @param (float) kp: The new kp coefficient associated with the proportional term
+        """
         pass
 
     @abstract_interface_method
     def get_ki(self):
-        """ Get the coefficient associated with the integral term
+        """Get the coefficient associated with the integral term
 
-         @return (float): The current ki coefficient associated with the integral term
-         """
+        @return (float): The current ki coefficient associated with the integral term
+        """
         pass
 
     @abstract_interface_method
     def set_ki(self, ki):
-        """ Set the coefficient associated with the integral term
+        """Set the coefficient associated with the integral term
 
-         @param (float) ki: The new ki coefficient associated with the integral term
-         """
+        @param (float) ki: The new ki coefficient associated with the integral term
+        """
         pass
 
     @abstract_interface_method
     def get_kd(self):
-        """ Get the coefficient associated with the derivative term
+        """Get the coefficient associated with the derivative term
 
-         @return (float): The current kd coefficient associated with the derivative term
-         """
+        @return (float): The current kd coefficient associated with the derivative term
+        """
         pass
 
     @abstract_interface_method
     def set_kd(self, kd):
-        """ Set the coefficient associated with the derivative term
+        """Set the coefficient associated with the derivative term
 
-         @param (float) kd: The new kd coefficient associated with the derivative term
-         """
+        @param (float) kd: The new kd coefficient associated with the derivative term
+        """
         pass
 
     @abstract_interface_method
     def get_setpoint(self):
-        """ Get the setpoint value of the hardware device
+        """Get the setpoint value of the hardware device
 
-         @return (float): The current setpoint value
-         """
+        @return (float): The current setpoint value
+        """
         pass
 
     @abstract_interface_method
     def set_setpoint(self, setpoint):
-        """ Set the setpoint value of the hardware device
+        """Set the setpoint value of the hardware device
 
         @param (float) setpoint: The new setpoint value
         """
@@ -104,7 +103,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_manual_value(self):
-        """ Get the manual value, used if the device is disabled
+        """Get the manual value, used if the device is disabled
 
         @return (float): The current manual value
         """
@@ -112,7 +111,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_manual_value(self, manualvalue):
-        """ Set the manual value, used if the device is disabled
+        """Set the manual value, used if the device is disabled
 
         @param (float) manualvalue: The new manual value
         """
@@ -120,7 +119,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_enabled(self):
-        """ Get if the PID is enabled (True) or if it is disabled (False) and the manual value is used
+        """Get if the PID is enabled (True) or if it is disabled (False) and the manual value is used
 
         @return (bool): True if enabled, False otherwise
         """
@@ -128,7 +127,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_enabled(self, enabled):
-        """ Set if the PID is enabled (True) or if it is disabled (False) and the manual value is used
+        """Set if the PID is enabled (True) or if it is disabled (False) and the manual value is used
 
         @param (bool) enabled: True to enabled, False otherwise
         """
@@ -136,7 +135,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_control_limits(self):
-        """ Get the current limits of the control value as a tuple
+        """Get the current limits of the control value as a tuple
 
         @return (tuple(float, float)): The current control limits
         """
@@ -144,7 +143,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_control_limits(self, limits):
-        """ Set the current limits of the control value as a tuple
+        """Set the current limits of the control value as a tuple
 
         @param (tuple(float, float)) limits: The new control limits
 
@@ -154,7 +153,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_process_value(self):
-        """ Get the current process value read
+        """Get the current process value read
 
         @return (float): The current process value
         """
@@ -162,7 +161,7 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_control_value(self):
-        """ Get the current control value read
+        """Get the current control value read
 
         @return (float): The current control value
         """
@@ -170,8 +169,8 @@ class PIDControllerInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_extra(self):
-        """ Get the P, I and D terms computed bu the hardware if available
+        """Get the P, I and D terms computed bu the hardware if available
 
-         @return dict(): A dict with keys 'P', 'I', 'D' if available, an empty dict otherwise
-         """
+        @return dict(): A dict with keys 'P', 'I', 'D' if available, an empty dict otherwise
+        """
         pass

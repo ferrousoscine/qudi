@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi file with all available sampling functions.
 
@@ -20,15 +18,16 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import os
-import importlib
-import sys
-import inspect
 import copy
+import importlib
+import inspect
 import logging
-import numpy as np
+import os
+import sys
 from collections import OrderedDict
 from enum import Enum
+
+import numpy as np
 
 ##############################################################
 # Helper class for everything that need dynamical decoupling #
@@ -36,39 +35,67 @@ from enum import Enum
 
 
 class DDMethods(Enum):
-
     # define a function to nest the phases of sequence 1 into sequence 2
     def nest_phases_function(xseq1, xseq2):
-        return [((xseq1[j] + xseq2[k]) % 360.) for k in range(len(xseq2)) for j in range(len(xseq1))]
+        return [
+            ((xseq1[j] + xseq2[k]) % 360.0) for k in range(len(xseq2)) for j in range(len(xseq1))
+        ]
 
     # define a function to calculate the phases of the UR sequences,
     # reference: DOI:https://doi.org/10.1103/PhysRevLett.118.133202
     def ur_phases_function(xn):
         # define phi_large, depending on the number of pulses in the UR sequence
         if xn % 4 == 0:
-            phi_large = 720./xn
+            phi_large = 720.0 / xn
         elif xn % 4 == 2:
-            phi_large = 180. * (xn - 2) / xn
+            phi_large = 180.0 * (xn - 2) / xn
         else:
-            phi_large = 0.
+            phi_large = 0.0
             print("Error: the UR sequence can only have an even number of pulses")
         # formula for the UR sequences phases, we round the degrees to the 8th digit to avoid some small machine
         # numbers in the phases when calculated from the formula but such rounding is in principle not necessary
-        ur_phases_array = [(round(k * ((k-1) * phi_large / 2 + phi_large) % 360., 8)) for k in range(xn)]
+        ur_phases_array = [
+            (round(k * ((k - 1) * phi_large / 2 + phi_large) % 360.0, 8)) for k in range(xn)
+        ]
         return ur_phases_array
 
     # # define a function to compare the phases of sequence 1 and sequence 2, useful for testing after uncommenting
     # def compare_phases_function(xseq1, xseq2):
     #     return [((xseq1[k] - xseq2[k]) % 360.) for k in range(len(xseq2))]
 
-    SE =    [0., ]
-    CPMG =  [90., 90.]
-    XY4 =   [0., 90., 0., 90.]
-    XY8 =   [0., 90., 0., 90., 90., 0., 90., 0.]
-    XY16 =  [0., 90., 0., 90., 90., 0., 90., 0., 180., -90., 180., -90., -90., 180., -90., 180.]
-    YY8 =   [-90., 90., 90., -90., -90., -90., 90., 90.]
-    KDD =   [30., 0., 90., 0., 30.] # composite pulse (CP) for population inversion, U5b shifted by 30 degrees
-    KDD2 = nest_phases_function(KDD, [0., 0.])
+    SE = [
+        0.0,
+    ]
+    CPMG = [90.0, 90.0]
+    XY4 = [0.0, 90.0, 0.0, 90.0]
+    XY8 = [0.0, 90.0, 0.0, 90.0, 90.0, 0.0, 90.0, 0.0]
+    XY16 = [
+        0.0,
+        90.0,
+        0.0,
+        90.0,
+        90.0,
+        0.0,
+        90.0,
+        0.0,
+        180.0,
+        -90.0,
+        180.0,
+        -90.0,
+        -90.0,
+        180.0,
+        -90.0,
+        180.0,
+    ]
+    YY8 = [-90.0, 90.0, 90.0, -90.0, -90.0, -90.0, 90.0, 90.0]
+    KDD = [
+        30.0,
+        0.0,
+        90.0,
+        0.0,
+        30.0,
+    ]  # composite pulse (CP) for population inversion, U5b shifted by 30 degrees
+    KDD2 = nest_phases_function(KDD, [0.0, 0.0])
     KDD4 = nest_phases_function(KDD, XY4)
     KDD8 = nest_phases_function(KDD, XY8)
     KDD16 = nest_phases_function(KDD, XY16)
@@ -98,29 +125,31 @@ class DDMethods(Enum):
     def phases(self):
         return np.array(self._phases)
 
+
 class SamplingBase:
     """
     Base class for all sampling functions
     """
+
     params = OrderedDict()
     log = logging.getLogger(__name__)
 
     def __repr__(self):
         kwargs = []
         for param, def_dict in self.params.items():
-            if def_dict['type'] is str:
-                kwargs.append('{0}=\'{1}\''.format(param, getattr(self, param)))
+            if def_dict["type"] is str:
+                kwargs.append(f"{param}='{getattr(self, param)}'")
             else:
-                kwargs.append('{0}={1}'.format(param, getattr(self, param)))
-        return '{0}({1})'.format(type(self).__name__, ', '.join(kwargs))
+                kwargs.append(f"{param}={getattr(self, param)}")
+        return "{0}({1})".format(type(self).__name__, ", ".join(kwargs))
 
     def __str__(self):
-        kwargs = ('='.join((param, str(getattr(self, param)))) for param in self.params)
-        return_str = 'Sampling Function: "{0}"\nParameters:'.format(type(self).__name__)
+        kwargs = ("=".join((param, str(getattr(self, param)))) for param in self.params)
+        return_str = f'Sampling Function: "{type(self).__name__}"\nParameters:'
         if len(self.params) < 1:
-            return_str += ' None'
+            return_str += " None"
         else:
-            return_str += '\n\t' + '\n\t'.join(kwargs)
+            return_str += "\n\t" + "\n\t".join(kwargs)
         return return_str
 
     def __eq__(self, other):
@@ -138,17 +167,16 @@ class SamplingBase:
 
     def get_dict_representation(self):
         dict_repr = dict()
-        dict_repr['name'] = type(self).__name__
-        dict_repr['params'] = dict()
+        dict_repr["name"] = type(self).__name__
+        dict_repr["params"] = dict()
         for param in self.params:
-            dict_repr['params'][param] = getattr(self, param)
+            dict_repr["params"][param] = getattr(self, param)
         return dict_repr
 
 
 class SamplingFunctions:
-    """
+    """ """
 
-    """
     parameters = dict()
 
     @classmethod
@@ -158,8 +186,11 @@ class SamplingFunctions:
             if not os.path.exists(path):
                 continue
             # Get all python modules to import from.
-            module_list = [name[:-3] for name in os.listdir(path) if
-                           os.path.isfile(os.path.join(path, name)) and name.endswith('.py')]
+            module_list = [
+                name[:-3]
+                for name in os.listdir(path)
+                if os.path.isfile(os.path.join(path, name)) and name.endswith(".py")
+            ]
 
             # append import path to sys.path
             if path not in sys.path:
@@ -168,7 +199,7 @@ class SamplingFunctions:
             # Go through all modules and get all sampling function classes.
             for module_name in module_list:
                 # import module
-                mod = importlib.import_module('{0}'.format(module_name))
+                mod = importlib.import_module(f"{module_name}")
                 # Delete all remaining references to sampling functions.
                 # This is neccessary if you have removed a sampling function class.
                 for attr in cls.parameters:
@@ -203,6 +234,3 @@ class SamplingFunctions:
         if inspect.isclass(obj):
             return SamplingBase in inspect.getmro(obj) and object not in obj.__bases__
         return False
-
-
-

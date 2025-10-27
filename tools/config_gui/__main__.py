@@ -16,9 +16,11 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
+
 if __package__ is None:
     import __init__
-    __package__ = 'config_gui'
+
+    __package__ = "config_gui"
 else:
     import __init__
 
@@ -44,22 +46,22 @@ import listmods
 import logging
 import argparse
 
-class ModNode:
 
+class ModNode:
     def __init__(self, module, node):
         self.module = module
         self.node = node
         self.cfgmodel = ModuleConfigModel(module)
 
+
 class ConfigMainWindow(QtWidgets.QMainWindow):
-    """ This class represents the Manager Window.
-    """
+    """This class represents the Manager Window."""
+
     def __init__(self, loadfile=None):
-        """ Create the Manager Window.
-        """
+        """Create the Manager Window."""
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_config_window.ui')
+        ui_file = os.path.join(this_dir, "ui_config_window.ui")
         self.log = logging.getLogger(__name__)
 
         # Load it
@@ -68,14 +70,14 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
         self.modnodes = dict()
         self.globalsection = OrderedDict()
-        self.currentFile = ''
+        self.currentFile = ""
 
         # palette
         self.colors = {
-            'hardware': palette.c2,
-            'logic': palette.c1,
-            'gui': palette.c4,
-            '': palette.c3
+            "hardware": palette.c2,
+            "logic": palette.c1,
+            "gui": palette.c4,
+            "": palette.c3,
         }
 
         # init
@@ -113,7 +115,7 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
         self.m = m
 
         if len(oe) > 0 or len(ie) > 0:
-            print('\n==========  ERRORS:  ===========', file=sys.stderr)
+            print("\n==========  ERRORS:  ===========", file=sys.stderr)
             for e in oe:
                 print(e[0], file=sys.stderr)
                 print(e[1], file=sys.stderr)
@@ -121,20 +123,20 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
             for e in ie:
                 print(e[0], file=sys.stderr)
                 print(e[1], file=sys.stderr)
-       #  print(self.m)
 
-    def addModule(self, module, name=None, pos=(0,0)):
-        """ Add a module to the GraphView
-        """
+    #  print(self.m)
+
+    def addModule(self, module, name=None, pos=(0, 0)):
+        """Add a module to the GraphView"""
 
         # sort out the module name
         if name is None:
-            name = 'new_module'
+            name = "new_module"
         n = 1
         if self.graphView.hasNode(name):
-            while self.graphView.hasNode('{}{}'.format(name, n)):
+            while self.graphView.hasNode("{}{}".format(name, n)):
                 n += 1
-            name = '{}{}'.format(name, n)
+            name = "{}{}".format(name, n)
 
         # chart view
         g = self.graphView
@@ -147,12 +149,12 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
         # check where the module belongs and what it can connect to
         for cname, conn in module.connections.items():
-            port_type = QudiPortType('in', module.base, [conn.interface])
+            port_type = QudiPortType("in", module.base, [conn.interface])
             node.addPort(InputPort(node, g, conn.name, palette.c3, port_type))
 
-        if module.base != 'gui':
-            port_type = QudiPortType('out', module.base, module.interfaces)
-            node.addPort(OutputPort(node, g, 'out', palette.c3, port_type))
+        if module.base != "gui":
+            port_type = QudiPortType("out", module.base, module.interfaces)
+            node.addPort(OutputPort(node, g, "out", palette.c3, port_type))
 
         # set position in view
         node.setGraphPos(QtCore.QPointF(pos[0], pos[1]))
@@ -163,14 +165,12 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
         g.addNode(node)
 
     def openConfigFile(self):
-        defaultconfigpath = ''
+        defaultconfigpath = ""
         filename = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            'Load Configration',
-            defaultconfigpath ,
-            'Configuration files (*.cfg)')[0]
+            self, "Load Configration", defaultconfigpath, "Configuration files (*.cfg)"
+        )[0]
         if len(filename) > 0:
-            print('Open:', filename)
+            print("Open:", filename)
             self.loadConfigFile(filename)
 
     def loadConfigFile(self, filename):
@@ -181,31 +181,29 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
     def newConfigFile(self):
         self.graphView.reset()
-        self.configFileName = 'New configuration'
-        self.updateWindowTitle(self.configFileName, extra='*')
+        self.configFileName = "New configuration"
+        self.updateWindowTitle(self.configFileName, extra="*")
 
     def saveConfigFile(self):
         if os.path.isfile(self.currentFile):
             config = self.nodesToConfig()
             core.config.save(self.currentFile, config)
         else:
-             self.saveConfigFileAs()
+            self.saveConfigFileAs()
 
     def saveConfigFileAs(self):
         defaultconfigpath = os.path.dirname(self.currentFile)
         filename = QtWidgets.QFileDialog.getSaveFileName(
-            self,
-            'Save Configration As',
-            defaultconfigpath ,
-            'Configuration files (*.cfg)')[0]
+            self, "Save Configration As", defaultconfigpath, "Configuration files (*.cfg)"
+        )[0]
         if len(filename) > 0:
-            print('Save:', filename)
+            print("Save:", filename)
             config = self.nodesToConfig()
             core.config.save(filename, config)
             self.currentFile = filename
 
-    def updateWindowTitle(self, filename, extra=''):
-        self.setWindowTitle('{}{} - Qudi configuration editor'.format(filename, extra))
+    def updateWindowTitle(self, filename, extra=""):
+        self.setWindowTitle("{}{} - Qudi configuration editor".format(filename, extra))
 
     def configToNodes(self, config):
         self.addNodes(config)
@@ -214,13 +212,15 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
     def addNodes(self, config):
         pos = [0, 0]
         for base, conf_modules in config.items():
-            if base not in ['hardware', 'logic', 'gui']:
+            if base not in ["hardware", "logic", "gui"]:
                 continue
             for mod_conf_name, mod_conf_values in conf_modules.items():
-                mc = 'module.Class'
-                #print(base, mod_conf_name, mod_conf_values)
-                if mc in mod_conf_values and self.mmroot.hasModule(base + '.' + mod_conf_values[mc]):
-                    mod = self.mmroot.getModule(base + '.' + mod_conf_values[mc])
+                mc = "module.Class"
+                # print(base, mod_conf_name, mod_conf_values)
+                if mc in mod_conf_values and self.mmroot.hasModule(
+                    base + "." + mod_conf_values[mc]
+                ):
+                    mod = self.mmroot.getModule(base + "." + mod_conf_values[mc])
                     self.addModule(mod, mod_conf_name, pos)
                 pos[1] += 100
             pos[0] += 600
@@ -228,62 +228,72 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
     def connectNodes(self, config):
         for base, conf_modules in config.items():
-            if base not in ['hardware', 'logic', 'gui']:
+            if base not in ["hardware", "logic", "gui"]:
                 continue
             for conf_mod_name, conf_mod_values in conf_modules.items():
-                if 'connect' in conf_mod_values:
+                if "connect" in conf_mod_values:
                     dst_mod_name = conf_mod_name
-                    for conn_in, conn_out in conf_mod_values['connect'].items():
+                    for conn_in, conn_out in conf_mod_values["connect"].items():
                         src_mod_name = conn_out
                         if conf_mod_name not in self.modnodes:
                             self.log.error(
-                                'Target module {} not present while connecting {} to {}'
-                                ''.format(dst_mod_name, conn_in, src_mod_name))
+                                "Target module {} not present while connecting {} to {}".format(
+                                    dst_mod_name, conn_in, src_mod_name
+                                )
+                            )
                             continue
-                        conn_names_dst = [c.name for cn, c in self.modnodes[dst_mod_name].module.connections.items()]
+                        conn_names_dst = [
+                            c.name
+                            for cn, c in self.modnodes[dst_mod_name].module.connections.items()
+                        ]
                         if conn_in not in conn_names_dst:
                             self.log.error(
-                                'Target connector {} not present while connecting {} to {}.{}'
-                                ''.format(conn_in, src_mod_name, dst_mod_name, conn_in))
+                                "Target connector {} not present while connecting {} to {}.{}"
+                                "".format(conn_in, src_mod_name, dst_mod_name, conn_in)
+                            )
                             continue
                         if src_mod_name not in self.modnodes:
                             self.log.error(
-                                'Source module {} not present while connecting it to {}.{}'
-                                ''.format(src_mod_name, dst_mod_name, conn_in))
+                                "Source module {} not present while connecting it to {}.{}".format(
+                                    src_mod_name, dst_mod_name, conn_in
+                                )
+                            )
                             continue
 
                         try:
                             self.graphView.connectPorts(
                                 self.modnodes[src_mod_name].node,
-                                'out',
+                                "out",
                                 self.modnodes[dst_mod_name].node,
-                                conn_in)
+                                conn_in,
+                            )
                         except:
                             self.log.exception(
-                                'pyflowgraph failed while connecting {} to {}.{}'
-                                ''.format(src_mod_name, dst_mod_name, conn_in))
+                                "pyflowgraph failed while connecting {} to {}.{}".format(
+                                    src_mod_name, dst_mod_name, conn_in
+                                )
+                            )
 
-        self.globalsection = config['global']
+        self.globalsection = config["global"]
 
     def nodesToConfig(self):
-        """ Convert nodes into OrderedDict for saving.
-        """
+        """Convert nodes into OrderedDict for saving."""
         config = OrderedDict()
-        config['global'] = OrderedDict()
-        config['hardware'] = OrderedDict()
-        config['logic'] = OrderedDict()
-        config['gui'] = OrderedDict()
+        config["global"] = OrderedDict()
+        config["hardware"] = OrderedDict()
+        config["logic"] = OrderedDict()
+        config["gui"] = OrderedDict()
 
         for key, value in self.globalsection.items():
-            config['global'][key] = value
+            config["global"][key] = value
 
         for mod_name, mod in self.modnodes.items():
             entry = OrderedDict()
-            path = mod.module.path.split('.')
+            path = mod.module.path.split(".")
 
-            if len(path) > 1 and path[0] in ('hardware', 'logic', 'gui'):
+            if len(path) > 1 and path[0] in ("hardware", "logic", "gui"):
                 config[path[0]][mod_name] = entry
-                entry['module.Class'] = '.'.join(path[1:])
+                entry["module.Class"] = ".".join(path[1:])
 
                 portin = (mod.node.getPort(x[0]) for x in mod.module.conn)
                 conndict = OrderedDict()
@@ -293,9 +303,9 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
                         c = tuple(conns)[0]
                         src = c.getSrcPort()
                         node = src.getNode()
-                        conndict[port.getName()] = '{}.{}'.format(node.getName(), src.getName())
+                        conndict[port.getName()] = "{}.{}".format(node.getName(), src.getName())
                 if len(conndict) > 0:
-                    entry['connect'] = conndict
+                    entry["connect"] = conndict
                 # FIXME: rest of the configuration
             print(entry)
         return config
@@ -312,7 +322,7 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
         modnode = self.modnodes.pop(oldName)
         if newName in self.modnodes:
-            newName = newName + '2'
+            newName = newName + "2"
         self.modnodes[newName] = modnode
 
     @QtCore.Slot(list, list)
@@ -321,25 +331,24 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
             self.setConfigEditor(newSelection[0])
 
     def setConfigEditor(self, node):
-            name = node.getName()
-            modnode = self.modnodes[name]
-            try:
-                self.nameLineEdit.textEdited.disconnect()
-            except:
-                pass
-            self.nameLineEdit.setText(name)
-            self.nameLineEdit.textEdited.connect(modnode.node.setName)
-            self.mcLabel.setText(modnode.module.path)
-            self.tableView.setModel(modnode.cfgmodel)
-            self.tableView.resizeColumnsToContents()
+        name = node.getName()
+        modnode = self.modnodes[name]
+        try:
+            self.nameLineEdit.textEdited.disconnect()
+        except:
+            pass
+        self.nameLineEdit.setText(name)
+        self.nameLineEdit.textEdited.connect(modnode.node.setName)
+        self.mcLabel.setText(modnode.module.path)
+        self.tableView.setModel(modnode.cfgmodel)
+        self.tableView.resizeColumnsToContents()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='config_gui')
-    parser.add_argument('-c', '--config', default=None, help='configuration file')
+    parser = argparse.ArgumentParser(prog="config_gui")
+    parser.add_argument("-c", "--config", default=None, help="configuration file")
     args = parser.parse_args()
 
     app = QtWidgets.QApplication(sys.argv)
     mw = ConfigMainWindow(loadfile=args.config)
     app.exec_()
-

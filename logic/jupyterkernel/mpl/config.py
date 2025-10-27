@@ -17,27 +17,25 @@ along with Qudi. If not, see <http://www.gnu.org/licenses/>.
 Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #       Copyright (C) 2011 The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file documentation/BSDLicense_IPython.md, distributed as part of this
 #  software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-from traitlets.config import Config
+from traitlets import Bool, Dict, Set, Unicode
 from traitlets.config.configurable import SingletonConfigurable
-from traitlets import (
-    Dict, Instance, CaselessStrEnum, Set, Bool, Int, TraitError, Unicode
-)
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Configurable for inline backend options
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class InlineBackend(SingletonConfigurable):
     """An object to store configuration of the inline backend."""
@@ -45,37 +43,48 @@ class InlineBackend(SingletonConfigurable):
     # The typical default figure size is too large for inline use,
     # so we shrink the figure size to 6x4, and tweak fonts to
     # make that fit.
-    rc = Dict({
-        # figures are
-        'figure.figsize': (9.0,6.0),
-        # play nicely with white background in the Qt and notebook frontend
-        'figure.facecolor': (1,1,1,0),
-        'figure.edgecolor': (1,1,1,0),
-        # 12pt labels get cutoff on 6x4 logplots, so use 10pt.
-        'font.size': 10,
-        # 72 dpi matches SVG/qtconsole
-        # this only affects PNG export, as SVG has no dpi setting
-        'savefig.dpi': 72,
-        # 10pt still needs a little more room on the xlabel:
-        'figure.subplot.bottom' : .125
+    rc = Dict(
+        {
+            # figures are
+            "figure.figsize": (9.0, 6.0),
+            # play nicely with white background in the Qt and notebook frontend
+            "figure.facecolor": (1, 1, 1, 0),
+            "figure.edgecolor": (1, 1, 1, 0),
+            # 12pt labels get cutoff on 6x4 logplots, so use 10pt.
+            "font.size": 10,
+            # 72 dpi matches SVG/qtconsole
+            # this only affects PNG export, as SVG has no dpi setting
+            "savefig.dpi": 72,
+            # 10pt still needs a little more room on the xlabel:
+            "figure.subplot.bottom": 0.125,
         },
         config=True,
         help="""Subset of matplotlib rcParams that should be different for the
-        inline backend."""
+        inline backend.""",
     )
 
-    figure_formats = Set({'png'}, config=True,
-                          help="""A set of figure formats to enable: 'png',
-                          'retina', 'jpeg', 'svg', 'pdf'.""")
-    figure_format = Unicode(config=True, help="""The figure format to enable (deprecated
-                                         use `figure_formats` instead)""")
-    print_figure_kwargs = Dict({'bbox_inches' : 'tight'}, config=True,
+    figure_formats = Set(
+        {"png"},
+        config=True,
+        help="""A set of figure formats to enable: 'png',
+                          'retina', 'jpeg', 'svg', 'pdf'.""",
+    )
+    figure_format = Unicode(
+        config=True,
+        help="""The figure format to enable (deprecated
+                                         use `figure_formats` instead)""",
+    )
+    print_figure_kwargs = Dict(
+        {"bbox_inches": "tight"},
+        config=True,
         help="""Extra kwargs to be passed to fig.canvas.print_figure.
 
         Logical examples include: bbox_inches, quality (for jpeg figures), etc.
-        """
+        """,
     )
-    close_figures = Bool(True, config=True,
+    close_figures = Bool(
+        True,
+        config=True,
         help="""Close all figures at the end of each cell.
 
         When True, ensures that each cell starts with no active figures, but it
@@ -90,4 +99,5 @@ class InlineBackend(SingletonConfigurable):
         iterative editing of figures, and behaves most consistently with
         other matplotlib backends, but figure barriers between cells must
         be explicit.
-        """)
+        """,
+    )

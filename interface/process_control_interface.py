@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface file to control processes in PID control.
 
@@ -25,7 +23,7 @@ from core.meta import InterfaceMetaclass
 
 
 class ProcessControlInterface(metaclass=InterfaceMetaclass):
-    """ A simple interface to control one or multiple process value.
+    """A simple interface to control one or multiple process value.
 
     This interface is in fact a very general/universal interface that can be used for a lot of things.
     It can be used to interface any hardware where one to control one or multiple control value, like a temperature
@@ -34,7 +32,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_control_value(self, value, channel=None):
-        """ Set the value of the controlled process variable
+        """Set the value of the controlled process variable
 
         @param (float) value: The value to set
         @param (int) channel: (Optional) The number of the channel
@@ -44,7 +42,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_control_value(self, channel=None):
-        """ Get the value of the controlled process variable
+        """Get the value of the controlled process variable
 
         @param (int) channel: (Optional) The number of the channel
 
@@ -54,7 +52,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_control_unit(self, channel=None):
-        """ Return the unit that the value is set in as a tuple of ('abbreviation', 'full unit name')
+        """Return the unit that the value is set in as a tuple of ('abbreviation', 'full unit name')
 
         @param (int) channel: (Optional) The number of the channel
 
@@ -64,7 +62,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_control_limit(self, channel=None):
-        """ Return limits within which the controlled value can be set as a tuple of (low limit, high limit)
+        """Return limits within which the controlled value can be set as a tuple of (low limit, high limit)
 
         @param (int) channel: (Optional) The number of the channel
 
@@ -73,7 +71,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
         pass
 
     def process_control_supports_multiple_channels(self):
-        """ Function to test if hardware support multiple channels
+        """Function to test if hardware support multiple channels
 
         @return (bool): Whether the hardware supports multiple channels
 
@@ -82,7 +80,7 @@ class ProcessControlInterface(metaclass=InterfaceMetaclass):
         return False
 
     def process_control_get_number_channels(self):
-        """ Function to get the number of channels available for control
+        """Function to get the number of channels available for control
 
         @return (int): The number of controllable channel(s)
 

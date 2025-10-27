@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Qudi is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,24 +23,28 @@ Copyright:
         Luke Campagnola    <luke.campagnola@gmail.com>
 """
 
-import os
-import re
-import sys
 import atexit
 import importlib
 import logging
+import os
+import re
+import sys
+
 import numpy as np
 
-# use setuptools parse_version if available and use distutils LooseVersion as
-# fallback
+# use packaging.version for version comparison
 try:
-    from pkg_resources import parse_version
+    from packaging.version import Version as parse_version
 except ImportError:
-    from distutils.version import LooseVersion as parse_version
+    # Fallback for environments without packaging
+    def parse_version(version_string):
+        return version_string
+
 
 has_pyqtgraph = False
 try:
     import pyqtgraph
+
     has_pyqtgraph = True
 except ImportError:
     pass
@@ -89,9 +92,8 @@ def exit(exitcode=0):
     # in this subprocess we redefine the stdout, therefore on Unix systems we
     # need to handle the opened file descriptors, see PEP 446:
     #       https://www.python.org/dev/peps/pep-0446/
-    if sys.platform in ['linux', 'darwin']:
-
-        if sys.platform == 'darwin':
+    if sys.platform in ["linux", "darwin"]:
+        if sys.platform == "darwin":
             # trying to close 7 produces an illegal instruction on the Mac.
             fd_except.add(7)
 
@@ -104,7 +106,7 @@ def exit(exitcode=0):
 
 
 def close_fd(fd_set):
-    """ Close routine for file descriptor
+    """Close routine for file descriptor
 
     @param set fd_set: set of integers indicating the file descriptors which
                        should be closed (or at least tried to close).
@@ -117,7 +119,7 @@ def close_fd(fd_set):
 
 
 def import_check():
-    """ Checks whether all the necessary modules are present upon start of qudi.
+    """Checks whether all the necessary modules are present upon start of qudi.
 
     @return: int, error code either 0 or 4.
 
@@ -126,11 +128,12 @@ def import_check():
     missing. Make a warning about missing packages. Check versions.
     """
     # encode like: (python-package-name, repository-name, version)
-    vital_pkg = [('ruamel.yaml', 'ruamel.yaml', None),
-                 ('fysom', 'fysom', '2.1.4')]
-    opt_pkg = [('rpyc', 'rpyc', '4.0.2'),
-               ('pyqtgraph', 'pyqtgraph', None),
-               ('git', 'gitpython', None)]
+    vital_pkg = [("ruamel.yaml", "ruamel.yaml", None), ("fysom", "fysom", "2.1.4")]
+    opt_pkg = [
+        ("rpyc", "rpyc", "4.0.2"),
+        ("pyqtgraph", "pyqtgraph", None),
+        ("git", "gitpython", None),
+    ]
 
     def check_package(check_pkg_name, check_repo_name, check_version, optional=False):
         """
@@ -146,41 +149,36 @@ def import_check():
             module = importlib.import_module(check_pkg_name)
         except ImportError:
             if optional:
-                additional_text = 'It is recommended to have this package installed. '
+                additional_text = "It is recommended to have this package installed. "
             else:
-                additional_text = ''
+                additional_text = ""
             logger.error(
-                'No Package "{0}" installed! {2}Perform e.g.\n\n'
-                '    pip install {1}\n\n'
-                'in the console to install the missing package.'.format(
-                    check_pkg_name,
-                    check_repo_name,
-                    additional_text
-                    ))
+                f'No Package "{check_pkg_name}" installed! {additional_text}Perform e.g.\n\n'
+                f"    pip install {check_repo_name}\n\n"
+                "in the console to install the missing package."
+            )
             return 4
         if check_version is not None:
             # get package version number
             try:
                 module_version = module.__version__
             except AttributeError:
-                logger.warning('Package "{0}" does not have a __version__ '
-                               'attribute. Ignoring version check!'.format(
-                                   check_pkg_name))
+                logger.warning(
+                    f'Package "{check_pkg_name}" does not have a __version__ '
+                    "attribute. Ignoring version check!"
+                )
                 return 0
             # if version number is a tuple, convert to string
             if isinstance(module_version, tuple):
-                module_version = '.'.join([str(v) for v in module_version])
+                module_version = ".".join([str(v) for v in module_version])
             # compare version number
             if parse_version(module_version) < parse_version(check_version):
                 logger.error(
-                    'Installed package "{0}" has version {1}, but version '
-                    '{2} is required. Upgrade e.g. with \n\n'
-                    '    pip install --upgrade {3}\n\n'
-                    'in the console to upgrade to newest version.'.format(
-                        check_pkg_name,
-                        module_version,
-                        check_version,
-                        check_repo_name))
+                    f'Installed package "{check_pkg_name}" has version {module_version}, but version '
+                    f"{check_version} is required. Upgrade e.g. with \n\n"
+                    f"    pip install --upgrade {check_repo_name}\n\n"
+                    "in the console to upgrade to newest version."
+                )
                 return 4
         return 0
 
@@ -193,9 +191,11 @@ def import_check():
     try:
         from qtpy.QtCore import Qt
     except ImportError:
-        logger.error('No Qt bindungs detected! Perform e.g.\n\n'
-                     '    pip install PyQt5\n\n'
-                     'in the console to install the missing package.')
+        logger.error(
+            "No Qt bindungs detected! Perform e.g.\n\n"
+            "    pip install PyQt5\n\n"
+            "in the console to install the missing package."
+        )
         err_code = err_code | 4
 
     # check optional packages
@@ -213,16 +213,18 @@ def natural_sort(iterable):
     @param str[] iterable: Iterable with str items to sort
     @return list: sorted list of strings
     """
+
     def conv(s):
         return int(s) if s.isdigit() else s
+
     try:
-        return sorted(iterable, key=lambda key: [conv(i) for i in re.split(r'(\d+)', key)])
+        return sorted(iterable, key=lambda key: [conv(i) for i in re.split(r"(\d+)", key)])
     except:
         return sorted(iterable)
 
 
 def is_number(test_value):
-    """ Check whether passed value is a number
+    """Check whether passed value is a number
 
     @return: bool, True if the passed value is a number, otherwise false.
     """
@@ -230,35 +232,44 @@ def is_number(test_value):
 
 
 def is_integer(test_value):
-    """ Check all available integer representations.
+    """Check all available integer representations.
 
     @return: bool, True if the passed value is a integer, otherwise false.
     """
 
-    return type(test_value) in [np.int, np.int8, np.int16, np.int32, np.int64,
-                                np.uint, np.uint8, np.uint16, np.uint32,
-                                np.uint64]
+    return type(test_value) in [
+        int,
+        np.int8,
+        np.int16,
+        np.int32,
+        np.int64,
+        np.uint,
+        np.uint8,
+        np.uint16,
+        np.uint32,
+        np.uint64,
+    ]
 
 
 def is_float(test_value):
-    """ Check all available float representations.
+    """Check all available float representations.
 
     @return: bool, True if the passed value is a float, otherwise false.
     """
-    return type(test_value) in [np.float, np.float16, np.float32, np.float64]
+    return type(test_value) in [float, np.float16, np.float32, np.float64]
 
 
 def is_complex(test_value):
-    """ Check all available complex representations.
+    """Check all available complex representations.
 
     @return: bool, True if the passed value is a complex value, otherwise false.
     """
 
-    return type(test_value) in [np.complex, np.complex64, np.complex128]
+    return type(test_value) in [complex, np.complex64, np.complex128]
 
 
 def in_range(value, lower_limit, upper_limit):
-    """ Check if a value is in a given range an return closest possible value in range.
+    """Check if a value is in a given range an return closest possible value in range.
     Also check the range.
 
     @param value: value to be checked
@@ -294,16 +305,16 @@ def csv_2_list(csv_string, str_2_val=None):
                   function.
     """
     if not isinstance(csv_string, str):
-        raise TypeError('string_2_list accepts only str type input.')
+        raise TypeError("string_2_list accepts only str type input.")
 
-    csv_string = csv_string.replace('[', '').replace(']', '')  # Remove square brackets
-    csv_string = csv_string.replace('(', '').replace(')', '')  # Remove round brackets
-    csv_string = csv_string.replace('{', '').replace('}', '')  # Remove curly brackets
-    csv_string = csv_string.strip().strip(',')  # Remove trailing/leading blanks and commas
+    csv_string = csv_string.replace("[", "").replace("]", "")  # Remove square brackets
+    csv_string = csv_string.replace("(", "").replace(")", "")  # Remove round brackets
+    csv_string = csv_string.replace("{", "").replace("}", "")  # Remove curly brackets
+    csv_string = csv_string.strip().strip(",")  # Remove trailing/leading blanks and commas
 
     # Cast each str value to float if no explicit cast function is given by parameter str_2_val.
     if str_2_val is None:
-        csv_list = [float(val_str) for val_str in csv_string.split(',')]
+        csv_list = [float(val_str) for val_str in csv_string.split(",")]
     else:
-        csv_list = [str_2_val(val_str.strip()) for val_str in csv_string.split(',')]
+        csv_list = [str_2_val(val_str.strip()) for val_str in csv_string.split(",")]
     return csv_list

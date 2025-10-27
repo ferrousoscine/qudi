@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains a GUI for operating the spectrometer camera logic module.
 
@@ -20,30 +19,25 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import os
-import pyqtgraph as pg
-
-from core.connector import Connector
-from gui.colordefs import QudiPalettePale as Palette
-from gui.guibase import GUIBase
-from gui.colordefs import ColorScaleInferno
-
-from qtpy import QtCore
-from qtpy import QtGui
-from qtpy import QtWidgets
-from qtpy import uic
-from gui.guiutils import ColorBar
-
-import numpy as np
-
 import time
 
+import numpy as np
+import pyqtgraph as pg
+from qtpy import QtCore, QtWidgets, uic
+
+from core.connector import Connector
+from gui.colordefs import ColorScaleInferno
+from gui.guibase import GUIBase
+from gui.guiutils import ColorBar
+
+
 class CameraSettingDialog(QtWidgets.QDialog):
-    """ Create the SettingsDialog window, based on the corresponding *.ui file."""
+    """Create the SettingsDialog window, based on the corresponding *.ui file."""
 
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_camera_settings.ui')
+        ui_file = os.path.join(this_dir, "ui_camera_settings.ui")
 
         # Load it
         super(CameraSettingDialog, self).__init__()
@@ -51,14 +45,12 @@ class CameraSettingDialog(QtWidgets.QDialog):
 
 
 class CameraWindow(QtWidgets.QMainWindow):
-    """ Class defined for the main window (not the module)
-
-    """
+    """Class defined for the main window (not the module)"""
 
     def __init__(self):
         # Get the path to the *.ui file
         this_dir = os.path.dirname(__file__)
-        ui_file = os.path.join(this_dir, 'ui_camera.ui')
+        ui_file = os.path.join(this_dir, "ui_camera.ui")
 
         # Load it
         super().__init__()
@@ -67,11 +59,10 @@ class CameraWindow(QtWidgets.QMainWindow):
 
 
 class CameraGUI(GUIBase):
-    """ Main spectrometer camera class.
-    """
+    """Main spectrometer camera class."""
 
-    camera_logic = Connector(interface='CameraLogic')
-    savelogic = Connector(interface='SaveLogic')
+    camera_logic = Connector(interface="CameraLogic")
+    savelogic = Connector(interface="SaveLogic")
 
     sigVideoStart = QtCore.Signal()
     sigVideoStop = QtCore.Signal()
@@ -84,13 +75,11 @@ class CameraGUI(GUIBase):
     _mw = None
 
     def __init__(self, config, **kwargs):
-
         # load connection
         super().__init__(config=config, **kwargs)
 
     def on_activate(self):
-        """ Initializes all needed UI files and establishes the connectors.
-        """
+        """Initializes all needed UI files and establishes the connectors."""
 
         self._logic = self.camera_logic()
         self._save_logic = self.savelogic()
@@ -124,7 +113,7 @@ class CameraGUI(GUIBase):
         self._mw.actionSave_XY_Scan.triggered.connect(self.save_xy_scan_data)
 
         raw_data_image = self._logic.get_last_image()
-        self._image = pg.ImageItem(image=raw_data_image, axisOrder='row-major')
+        self._image = pg.ImageItem(image=raw_data_image, axisOrder="row-major")
         self._mw.image_PlotWidget.addItem(self._image)
         self._mw.image_PlotWidget.setAspectLocked(True)
 
@@ -139,31 +128,33 @@ class CameraGUI(GUIBase):
 
         self._mw.xy_cb_min_DoubleSpinBox.valueChanged.connect(self.shortcut_to_xy_cb_manual)
         self._mw.xy_cb_max_DoubleSpinBox.valueChanged.connect(self.shortcut_to_xy_cb_manual)
-        self._mw.xy_cb_low_percentile_DoubleSpinBox.valueChanged.connect(self.shortcut_to_xy_cb_centiles)
-        self._mw.xy_cb_high_percentile_DoubleSpinBox.valueChanged.connect(self.shortcut_to_xy_cb_centiles)
+        self._mw.xy_cb_low_percentile_DoubleSpinBox.valueChanged.connect(
+            self.shortcut_to_xy_cb_centiles
+        )
+        self._mw.xy_cb_high_percentile_DoubleSpinBox.valueChanged.connect(
+            self.shortcut_to_xy_cb_centiles
+        )
 
         # create color bar
         self.xy_cb = ColorBar(self.my_colors.cmap_normed, width=100, cb_min=0, cb_max=100)
         self.depth_cb = ColorBar(self.my_colors.cmap_normed, width=100, cb_min=0, cb_max=100)
         self._mw.xy_cb_ViewWidget.addItem(self.xy_cb)
-        self._mw.xy_cb_ViewWidget.hideAxis('bottom')
-        self._mw.xy_cb_ViewWidget.setLabel('left', 'Fluorescence', units='c')
+        self._mw.xy_cb_ViewWidget.hideAxis("bottom")
+        self._mw.xy_cb_ViewWidget.setLabel("left", "Fluorescence", units="c")
         self._mw.xy_cb_ViewWidget.setMouseEnabled(x=False, y=False)
 
     def on_deactivate(self):
-        """ Deinitialisation performed during deactivation of the module.
-        """
+        """Deinitialisation performed during deactivation of the module."""
         self._mw.close()
 
     def show(self):
-        """Make window visible and put it above all other windows.
-        """
+        """Make window visible and put it above all other windows."""
         QtWidgets.QMainWindow.show(self._mw)
         self._mw.activateWindow()
         self._mw.raise_()
 
     def initSettingsUI(self):
-        """ Definition, configuration and initialisation of the settings GUI.
+        """Definition, configuration and initialisation of the settings GUI.
 
         This init connects all the graphic modules, which were created in the
         *.ui file and configures the event handling between the modules.
@@ -174,23 +165,25 @@ class CameraGUI(GUIBase):
         # Connect the action of the settings window with the code:
         self._sd.accepted.connect(self.update_settings)
         self._sd.rejected.connect(self.keep_former_settings)
-        self._sd.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.update_settings)
+        self._sd.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(
+            self.update_settings
+        )
 
         # write the configuration to the settings window of the GUI.
         self.keep_former_settings()
 
     def update_settings(self):
-        """ Write new settings from the gui to the file. """
+        """Write new settings from the gui to the file."""
         self._logic.set_exposure(self._sd.exposureDSpinBox.value())
         self._logic.set_gain(self._sd.gainSpinBox.value())
 
     def keep_former_settings(self):
-        """ Keep the old settings and restores them in the gui. """
+        """Keep the old settings and restores them in the gui."""
         self._sd.exposureDSpinBox.setValue(self._logic._exposure)
         self._sd.gainSpinBox.setValue(self._logic._gain)
 
     def menu_settings(self):
-        """ This method opens the settings menu. """
+        """This method opens the settings menu."""
         self._sd.exec_()
 
     def start_image_clicked(self):
@@ -204,14 +197,13 @@ class CameraGUI(GUIBase):
         self._mw.start_video_Action.setDisabled(False)
 
     def start_video_clicked(self):
-        """ Handling the Start button to stop and restart the counter.
-        """
+        """Handling the Start button to stop and restart the counter."""
         self._mw.start_image_Action.setDisabled(True)
         if self._logic.enabled:
-            self._mw.start_video_Action.setText('Start Video')
+            self._mw.start_video_Action.setText("Start Video")
             self.sigVideoStop.emit()
         else:
-            self._mw.start_video_Action.setText('Stop Video')
+            self._mw.start_video_Action.setText("Stop Video")
             self.sigVideoStart.emit()
 
     def enable_start_image_action(self):
@@ -222,7 +214,7 @@ class CameraGUI(GUIBase):
         Get the image data from the logic and print it on the window
         """
         raw_data_image = self._logic.get_last_image()
-        levels = (0., 1.)
+        levels = (0.0, 1.0)
         self._image.setImage(image=raw_data_image)
         self.update_xy_cb_range()
         # self._image.setImage(image=raw_data_image, levels=levels)
@@ -233,10 +225,9 @@ class CameraGUI(GUIBase):
         """
         pass
 
-# color bar functions
+    # color bar functions
     def get_xy_cb_range(self):
-        """ Determines the cb_min and cb_max values for the xy scan image
-        """
+        """Determines the cb_min and cb_max values for the xy scan image"""
         # If "Manual" is checked, or the image data is empty (all zeros), then take manual cb range.
         if self._mw.xy_cb_manual_RadioButton.isChecked() or np.max(self._image.image) == 0.0:
             cb_min = self._mw.xy_cb_min_DoubleSpinBox.value()
@@ -258,7 +249,7 @@ class CameraGUI(GUIBase):
         return cb_range
 
     def refresh_xy_colorbar(self):
-        """ Adjust the xy colorbar.
+        """Adjust the xy colorbar.
 
         Calls the refresh method from colorbar, which takes either the lowest
         and higherst value in the image or predefined ranges. Note that you can
@@ -268,7 +259,7 @@ class CameraGUI(GUIBase):
         self.xy_cb.refresh_colorbar(cb_range[0], cb_range[1])
 
     def refresh_xy_image(self):
-        """ Update the current XY image from the logic.
+        """Update the current XY image from the logic.
 
         Everytime the scanner is scanning a line in xy the
         image is rebuild and updated in the GUI.
@@ -298,10 +289,10 @@ class CameraGUI(GUIBase):
         self.refresh_xy_colorbar()
         self.refresh_xy_image()
 
-# save functions
+    # save functions
 
     def save_xy_scan_data(self):
-        """ Run the save routine from the logic to save the xy confocal data."""
+        """Run the save routine from the logic to save the xy confocal data."""
         cb_range = self.get_xy_cb_range()
 
         # Percentile range is None, unless the percentile scaling is selected in GUI.
@@ -314,8 +305,9 @@ class CameraGUI(GUIBase):
         self._logic.save_xy_data(colorscale_range=cb_range, percentile_range=pcile_range)
 
         # TODO: find a way to produce raw image in savelogic.  For now it is saved here.
-        filepath = self._save_logic.get_path_for_module(module_name='Confocal')
-        filename = filepath + os.sep + time.strftime('%Y%m%d-%H%M-%S_confocal_xy_scan_raw_pixel_image')
+        filepath = self._save_logic.get_path_for_module(module_name="Confocal")
+        filename = (
+            filepath + os.sep + time.strftime("%Y%m%d-%H%M-%S_confocal_xy_scan_raw_pixel_image")
+        )
 
-        self._image.save(filename + '_raw.png')
-
+        self._image.save(filename + "_raw.png")

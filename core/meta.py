@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Definition of various metaclasses
 
@@ -22,12 +21,13 @@ top-level directory of this distribution and at
 
 import copy
 from abc import ABCMeta
-from qtpy.QtCore import QObject
 from collections import OrderedDict
+
+from qtpy.QtCore import QObject
+
+from .configoption import ConfigOption
 from .connector import Connector
 from .statusvariable import StatusVar
-from .configoption import ConfigOption
-
 
 QObjectMeta = type(QObject)
 
@@ -56,11 +56,11 @@ class ModuleMeta(QObjectMeta):
 
         # Accumulate Connector, ConfigOption and StatusVar info from parent classes
         for base in reversed(bases):
-            if hasattr(base, '_connectors'):
+            if hasattr(base, "_connectors"):
                 connectors.update(copy.deepcopy(base._connectors))
-            if hasattr(base, '_config_options'):
+            if hasattr(base, "_config_options"):
                 config_options.update(copy.deepcopy(base._config_options))
-            if hasattr(base, '_stat_var'):
+            if hasattr(base, "_stat_var"):
                 status_vars.update(copy.deepcopy(base._stat_var))
 
         # Collect this classes Connector and ConfigOption and StatusVar into dictionaries
@@ -89,6 +89,7 @@ class TaskMetaclass(QObjectMeta, ABCMeta):
     """
     Metaclass for interfaces.
     """
+
     pass
 
 
@@ -96,4 +97,5 @@ class InterfaceMetaclass(ModuleMeta, ABCMeta):
     """
     Metaclass for interfaces.
     """
+
     pass

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Mutex.py -  Stand-in extension of Qt's QMutex class
 
@@ -23,9 +22,11 @@ Copyright 2010  Luke Campagnola
 Originally distributed under MIT/X11 license. See documentation/MITLicense.txt for more infomation.
 """
 
-from qtpy import QtCore
-import traceback
 import logging
+import traceback
+
+from qtpy import QtCore
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,20 +41,20 @@ class Mutex(QtCore.QMutex):
     """
 
     def __init__(self, *args, **kargs):
-        if kargs.get('recursive', False):
+        if kargs.get("recursive", False):
             args = (QtCore.QMutex.Recursive,)
         QtCore.QMutex.__init__(self, *args)
         self.mutex = QtCore.QMutex()  # for serializing access to self.tb
         self.tb = []
-        self.debug = kargs.pop('debug', False)  # True to enable debugging functions
+        self.debug = kargs.pop("debug", False)  # True to enable debugging functions
 
     def tryLock(self, timeout=None, id=None):
-        """ Try to lock  the mutex.
+        """Try to lock  the mutex.
 
-            @param int timeout: give up after this many milliseconds
-            @param id: debug id
+        @param int timeout: give up after this many milliseconds
+        @param id: debug id
 
-            @return bool: whether locking succeeded
+        @return bool: whether locking succeeded
         """
         if timeout is None:
             locked = QtCore.QMutex.tryLock(self)
@@ -64,7 +65,7 @@ class Mutex(QtCore.QMutex):
             self.mutex.lock()
             try:
                 if id is None:
-                    self.tb.append(''.join(traceback.format_stack()[:-1]))
+                    self.tb.append("".join(traceback.format_stack()[:-1]))
                 else:
                     self.tb.append("  " + str(id))
             finally:
@@ -72,9 +73,9 @@ class Mutex(QtCore.QMutex):
         return locked
 
     def lock(self, id=None):
-        """ Lock mutex. Will try again every 5 seconds.
+        """Lock mutex. Will try again every 5 seconds.
 
-            @param id: debug id
+        @param id: debug id
         """
         c = 0
         wait_time = 5000  # in ms
@@ -85,19 +86,19 @@ class Mutex(QtCore.QMutex):
             if self.debug:
                 self.mutex.lock()
                 try:
-                    logger.debug('Waiting for mutex lock ({:.1} sec).'
-                                 'Traceback follows:'.format(c*wait_time/1000.))
-                    logger.debug(''.join(traceback.format_stack()))
+                    logger.debug(
+                        f"Waiting for mutex lock ({c * wait_time / 1000.0:.1} sec).Traceback follows:"
+                    )
+                    logger.debug("".join(traceback.format_stack()))
                     if len(self.tb) > 0:
-                        logger.debug('Mutex is currently locked from: {0}\n'.format(self.tb[-1]))
+                        logger.debug(f"Mutex is currently locked from: {self.tb[-1]}\n")
                     else:
-                        logger.debug('Mutex is currently locked from [???]')
+                        logger.debug("Mutex is currently locked from [???]")
                 finally:
                     self.mutex.unlock()
 
     def unlock(self):
-        """ Unlock mutex.
-        """
+        """Unlock mutex."""
         QtCore.QMutex.unlock(self)
         if self.debug:
             self.mutex.lock()
@@ -110,19 +111,17 @@ class Mutex(QtCore.QMutex):
                 self.mutex.unlock()
 
     def acquire(self, blocking=True):
-        """Mimics threading.Lock.acquire() to allow this class as a drop-in replacement.
-        """
+        """Mimics threading.Lock.acquire() to allow this class as a drop-in replacement."""
         return self.tryLock()
 
     def release(self):
-        """Mimics threading.Lock.release() to allow this class as a drop-in replacement.
-        """
+        """Mimics threading.Lock.release() to allow this class as a drop-in replacement."""
         self.unlock()
 
     def depth(self):
-        """ Depth of traceback.
+        """Depth of traceback.
 
-            @return int: depth of traceback
+        @return int: depth of traceback
         """
         self.mutex.lock()
         n = len(self.tb)
@@ -130,9 +129,9 @@ class Mutex(QtCore.QMutex):
         return n
 
     def traceback(self):
-        """ Get traceback.
+        """Get traceback.
 
-            @return list: traceback
+        @return list: traceback
         """
         self.mutex.lock()
         try:
@@ -142,26 +141,26 @@ class Mutex(QtCore.QMutex):
         return ret
 
     def __exit__(self, *args):
-        """ Exit context.
-        
-            @param args: context arguments
+        """Exit context.
+
+        @param args: context arguments
         """
         self.unlock()
 
     def __enter__(self):
-        """ Enter context.
-        
-            @param args: context arguments
+        """Enter context.
 
-            @return QMutex: this mutex
+        @param args: context arguments
+
+        @return QMutex: this mutex
         """
         self.lock()
         return self
 
 
 class RecursiveMutex(Mutex):
-    """ Mutex that can be taken recursively.
-    """
+    """Mutex that can be taken recursively."""
+
     def __init__(self, **kwds):
-        kwds['recursive'] = True
+        kwds["recursive"] = True
         Mutex.__init__(self, **kwds)

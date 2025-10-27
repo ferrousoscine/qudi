@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interface file for control wavemeter hardware.
 
@@ -25,14 +23,14 @@ from core.meta import InterfaceMetaclass
 
 
 class WavemeterInterface(metaclass=InterfaceMetaclass):
-    """ Define the controls for a wavemeter hardware.
+    """Define the controls for a wavemeter hardware.
 
     Note: This interface is very similar in feature with slow counter
     """
 
     @abstract_interface_method
     def start_acqusition(self):
-        """ Method to start the wavemeter software.
+        """Method to start the wavemeter software.
 
         @return (int): error code (0:OK, -1:error)
 
@@ -43,7 +41,7 @@ class WavemeterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def stop_acqusition(self):
-        """ Stops the Wavemeter from measuring and kills the thread that queries the data.
+        """Stops the Wavemeter from measuring and kills the thread that queries the data.
 
         @return (int): error code (0:OK, -1:error)
         """
@@ -51,7 +49,7 @@ class WavemeterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_current_wavelength(self, kind="air"):
-        """ This method returns the current wavelength.
+        """This method returns the current wavelength.
 
         @param (str) kind: can either be "air" or "vac" for the wavelength in air or vacuum, respectively.
 
@@ -61,7 +59,7 @@ class WavemeterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_current_wavelength2(self, kind="air"):
-        """ This method returns the current wavelength of the second input channel.
+        """This method returns the current wavelength of the second input channel.
 
         @param (str) kind: can either be "air" or "vac" for the wavelength in air or vacuum, respectively.
 
@@ -71,7 +69,7 @@ class WavemeterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_timing(self):
-        """ Get the timing of the internal measurement thread.
+        """Get the timing of the internal measurement thread.
 
         @return (float): clock length in second
         """
@@ -79,7 +77,7 @@ class WavemeterInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_timing(self, timing):
-        """ Set the timing of the internal measurement thread.
+        """Set the timing of the internal measurement thread.
 
         @param (float) timing: clock length in second
 

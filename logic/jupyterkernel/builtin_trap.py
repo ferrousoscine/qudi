@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-""" A context manager for managing things injected into __builtin__.
+"""A context manager for managing things injected into __builtin__.
 
 Qudi is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,14 +37,14 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import builtins as builtin_mod
 
-
 # -----------------------------------------------------------------------------
 # Classes and functions
 # -----------------------------------------------------------------------------
 
+
 class __BuiltinUndefined:
-    """ Empty class.
-    """
+    """Empty class."""
+
     pass
 
 
@@ -53,8 +52,8 @@ BuiltinUndefined = __BuiltinUndefined()
 
 
 class __HideBuiltin:
-    """ Empty class.
-    """
+    """Empty class."""
+
     pass
 
 
@@ -62,7 +61,7 @@ HideBuiltin = __HideBuiltin()
 
 
 class BuiltinTrap:
-    """ Protect builtins from code in some environment. """
+    """Protect builtins from code in some environment."""
 
     def __init__(self):
         self._orig_builtins = {}
@@ -71,12 +70,13 @@ class BuiltinTrap:
         self._nested_level = 0
         # builtins we always add - if set to HideBuiltin, they will just
         # be removed instead of being replaced by something else
-        self.auto_builtins = {'exit': HideBuiltin,
-                              'quit': HideBuiltin,
-                              }
+        self.auto_builtins = {
+            "exit": HideBuiltin,
+            "quit": HideBuiltin,
+        }
 
     def __enter__(self):
-        """ Enter a code segment that should not chane builtins """
+        """Enter a code segment that should not chane builtins"""
         if self._nested_level == 0:
             self.activate()
         self._nested_level += 1
@@ -84,11 +84,11 @@ class BuiltinTrap:
         return self
 
     def __exit__(self, type, value, traceback):
-        """ Leave a code segment that should not change builtins
-        
-          @param type:
-          @prarm value:
-          @param traceback:
+        """Leave a code segment that should not change builtins
+
+        @param type:
+        @prarm value:
+        @param traceback:
         """
         if self._nested_level == 1:
             self.deactivate()

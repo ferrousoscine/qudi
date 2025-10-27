@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains the Qudi Interface file to control microwave devices.
 
@@ -20,27 +18,32 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+from enum import Enum
+
 from core.interface import abstract_interface_method
 from core.meta import InterfaceMetaclass
 from core.util.helpers import in_range
-from enum import Enum
+
 
 class TriggerEdge(Enum):
-    """ On which electrical signal edge does a trigger occur?
-      So edgy!
+    """On which electrical signal edge does a trigger occur?
+    So edgy!
     """
+
     RISING = 0
     FALLING = 1
     NONE = 3
     UNKNOWN = 4
 
+
 class MicrowaveMode(Enum):
-    """ Modes for microwave generators:
-        CW: continuous wave
-        LIST: ouptut list of arbitrary frequencies, each step triggered by electrical input
-        SWEEP: frequency sweep from f1 to f2, each step triggered by electrical input
-        ASWEEP: frequency sweep from f1 to f2, triggered only on the start of the sweep
+    """Modes for microwave generators:
+    CW: continuous wave
+    LIST: ouptut list of arbitrary frequencies, each step triggered by electrical input
+    SWEEP: frequency sweep from f1 to f2, each step triggered by electrical input
+    ASWEEP: frequency sweep from f1 to f2, triggered only on the start of the sweep
     """
+
     CW = 0
     LIST = 1
     SWEEP = 3
@@ -57,7 +60,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def off(self):
-        """ Switches off any microwave output.
+        """Switches off any microwave output.
 
         @return int: error code (0:OK, -1:error)
 
@@ -67,7 +70,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_status(self):
-        """ Gets the current status of the MW source, i.e. the mode (cw, list or sweep) and
+        """Gets the current status of the MW source, i.e. the mode (cw, list or sweep) and
             the output state (stopped, running)
 
         @return str, bool: mode ['cw', 'list', 'sweep'], is_running [True, False]
@@ -76,7 +79,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_power(self):
-        """ Gets the microwave output power for the currently active mode.
+        """Gets the microwave output power for the currently active mode.
 
         @return float: the output power in dBm
         """
@@ -84,7 +87,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_frequency(self):
-        """ Gets the frequency of the microwave output.
+        """Gets the frequency of the microwave output.
 
         @return [float, list]: frequency(s) currently set for this device in Hz
 
@@ -96,7 +99,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def cw_on(self):
-        """ Switches on cw microwave output.
+        """Switches on cw microwave output.
 
         @return int: error code (0:OK, -1:error)
 
@@ -106,7 +109,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_cw(self, frequency=None, power=None):
-        """ Configures the device for cw-mode and optionally sets frequency and/or power
+        """Configures the device for cw-mode and optionally sets frequency and/or power
 
         @param (float) frequency: frequency to set in Hz
         @param (float) power: power to set in dBm
@@ -120,7 +123,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def list_on(self):
-        """  Switches on the list mode microwave output.
+        """Switches on the list mode microwave output.
 
         @return int: error code (0:OK, -1:error)
 
@@ -130,7 +133,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_list(self, frequency=None, power=None):
-        """ Configures the device for list-mode and optionally sets frequencies and/or power
+        """Configures the device for list-mode and optionally sets frequencies and/or power
 
         @param (list(float)) frequency: list of frequencies in Hz
         @param (float) power: MW power of the frequency list in dBm
@@ -141,7 +144,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def reset_listpos(self):
-        """ Reset of MW list mode position to start (first frequency step)
+        """Reset of MW list mode position to start (first frequency step)
 
         @return int: error code (0:OK, -1:error)
         """
@@ -149,7 +152,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def sweep_on(self):
-        """ Switches on the sweep mode.
+        """Switches on the sweep mode.
 
         @return int: error code (0:OK, -1:error)
         """
@@ -157,7 +160,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_sweep(self, start=None, stop=None, step=None, power=None):
-        """  Configures the device for sweep-mode and optionally sets frequency start/stop/step and/or power
+        """Configures the device for sweep-mode and optionally sets frequency start/stop/step and/or power
 
         @return float, float, float, float, str: current start frequency in Hz,
                                                  current stop frequency in Hz,
@@ -169,7 +172,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def reset_sweeppos(self):
-        """ Reset of MW sweep mode position to start (start frequency)
+        """Reset of MW sweep mode position to start (start frequency)
 
         @return int: error code (0:OK, -1:error)
         """
@@ -177,7 +180,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def set_ext_trigger(self, pol, timing):
-        """ Set the external trigger for this device with proper polarization.
+        """Set the external trigger for this device with proper polarization.
 
         @param TriggerEdge pol: polarisation of the trigger (basically rising edge or falling edge)
         @param timing: estimated time between triggers
@@ -188,7 +191,7 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
         pass
 
     def trigger(self):
-        """ Trigger the next element in the list or sweep mode programmatically.
+        """Trigger the next element in the list or sweep mode programmatically.
 
         @return int: error code (0:OK, -1:error)
 
@@ -200,16 +203,16 @@ class MicrowaveInterface(metaclass=InterfaceMetaclass):
 
     @abstract_interface_method
     def get_limits(self):
-        """ Return the device-specific limits in a nested dictionary.
+        """Return the device-specific limits in a nested dictionary.
 
-          @return MicrowaveLimits: Microwave limits object
+        @return MicrowaveLimits: Microwave limits object
         """
         pass
 
 
 class MicrowaveLimits:
-    """ A container to hold all limits for microwave sources.
-    """
+    """A container to hold all limits for microwave sources."""
+
     def __init__(self):
         """Create an instance containing all parameters with default values."""
 

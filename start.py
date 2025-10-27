@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -24,28 +23,37 @@ See documentation/BSDLicense_IPython.md for details.
 Copyright (c) 2015, IPython Development Team
 """
 
+import os
 import subprocess
 import sys
-import os
 
 myenv = os.environ.copy()
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     from core.util.win_interrupt import create_interrupt_event
+
     # Create a Win32 event for interrupting the kernel and store it in an environment variable.
     interrupt_event = create_interrupt_event()
     myenv["QUDI_INTERRUPT_EVENT"] = str(interrupt_event)
     try:
-        from _winapi import DuplicateHandle, GetCurrentProcess, DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
+        from _winapi import (
+            DUPLICATE_SAME_ACCESS,
+            DuplicateHandle,
+            GetCurrentProcess,
+        )
     except:
-        from _subprocess import DuplicateHandle, GetCurrentProcess, DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
+        from _subprocess import (
+            DUPLICATE_SAME_ACCESS,
+            DuplicateHandle,
+            GetCurrentProcess,
+        )
     pid = GetCurrentProcess()
     handle = DuplicateHandle(pid, pid, pid, 0, True, DUPLICATE_SAME_ACCESS)
-    myenv['QUDI_PARENT_PID'] = str(int(handle))
+    myenv["QUDI_PARENT_PID"] = str(int(handle))
 else:
-    myenv['QUDI_PARENT_PID'] = str(os.getpid())
+    myenv["QUDI_PARENT_PID"] = str(os.getpid())
 
-argv = [sys.executable, '-m', 'core'] + sys.argv[1:]
+argv = [sys.executable, "-m", "core"] + sys.argv[1:]
 
 while True:
     process = subprocess.Popen(
@@ -55,8 +63,9 @@ while True:
         stdin=sys.stdin,
         stdout=sys.stdout,
         stderr=sys.stderr,
-        shell=False)
-    if sys.platform == 'win32':
+        shell=False,
+    )
+    if sys.platform == "win32":
         # Attach the interrupt event to the Popen objet so it can be used later.
         process.win32_interrupt_event = interrupt_event
     try:
@@ -64,7 +73,7 @@ while True:
         if retval == 0:
             break
         elif retval == 42:
-            print('Restarting...')
+            print("Restarting...")
             continue
         elif retval == 2:
             # invalid commandline argument
@@ -73,13 +82,13 @@ while True:
             # called if QFatal occurs
             break
         elif retval == 4:
-            print('Import Error: Qudi could not be started due to missing packages.')
+            print("Import Error: Qudi could not be started due to missing packages.")
             sys.exit(retval)
         else:
-            print('Unexpected return value {0}. Exiting.'.format(retval))
+            print(f"Unexpected return value {retval}. Exiting.")
             sys.exit(retval)
     except KeyboardInterrupt:
-        print('Keyboard Interrupt, quitting!')
+        print("Keyboard Interrupt, quitting!")
         break
     except:
         process.kill()
