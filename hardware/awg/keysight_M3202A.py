@@ -22,7 +22,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 import ctypes
 import datetime
 import sys
-from collections import OrderedDict
 
 import numpy as np
 
@@ -136,7 +135,7 @@ class M3202A(Base, PulserInterface):
         constraints.sequence_steps.step = 1
         constraints.sequence_steps.default = 1
 
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["all"] = frozenset({"a_ch1", "a_ch2", "a_ch3", "a_ch4"})
         activation_config["one"] = frozenset({"a_ch1"})
         activation_config["two"] = frozenset({"a_ch1", "a_ch2"})
@@ -258,7 +257,7 @@ class M3202A(Base, PulserInterface):
 
         # Get all active channels
         chnl_activation = self.get_active_channels()
-        analog_channels = natural_sort(
+        natural_sort(
             chnl for chnl in chnl_activation if chnl.startswith("a") and chnl_activation[chnl]
         )
 
@@ -558,7 +557,7 @@ class M3202A(Base, PulserInterface):
 
         # Check if all waveforms are present on device memory
         avail_waveforms = set(self.get_waveform_names())
-        for waveform_tuple, param_dict in sequence_parameter_list:
+        for waveform_tuple, _param_dict in sequence_parameter_list:
             if not avail_waveforms.issuperset(waveform_tuple):
                 self.log.error(
                     f'Failed to create sequence "{name}" due to waveforms "{waveform_tuple}" not '
@@ -759,7 +758,7 @@ class M3202A(Base, PulserInterface):
         """
         for ch in active_channels:
             if self.chcfg[ch].enable_trigger:
-                trig_err = self.awg.AWGtriggerExternalConfig(
+                self.awg.AWGtriggerExternalConfig(
                     self.__ch_map[ch],
                     self.chcfg[ch].trig_source,
                     self.chcfg[ch].trig_behaviour,

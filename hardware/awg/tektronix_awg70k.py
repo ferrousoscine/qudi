@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 import time
-from collections import OrderedDict
 from ftplib import FTP
 
 import numpy as np
@@ -126,7 +125,7 @@ class AWG70K(Base, PulserInterface):
         # Closes the connection to the AWG
         try:
             self.awg.close()
-        except:
+        except Exception:
             self.log.debug("Closing AWG connection using pyvisa failed.")
         self.log.info("Closed connection to AWG")
         return
@@ -233,7 +232,7 @@ class AWG70K(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         if self.awg_model == "AWG70002A":
             activation_config["all"] = frozenset(
                 {"a_ch1", "d_ch1", "d_ch2", "a_ch2", "d_ch3", "d_ch4"}
@@ -418,7 +417,7 @@ class AWG70K(Base, PulserInterface):
 
             start = time.time()
             self.write(
-                'MMEM:OPEN "{0}"'.format(
+                'MMEM:OPEN "{}"'.format(
                     os.path.join(self._ftp_dir, self.ftp_working_dir, wfm_name + ".wfmx")
                 )
             )
@@ -428,7 +427,7 @@ class AWG70K(Base, PulserInterface):
             # which might take some minutes
             self.awg.timeout = 5e6
             # the answer of the *opc-query is received as soon as the loading is finished
-            opc = int(self.query("*OPC?"))
+            int(self.query("*OPC?"))
             # Just to make sure
             while wfm_name not in self.get_waveform_names():
                 time.sleep(0.25)
@@ -460,7 +459,7 @@ class AWG70K(Base, PulserInterface):
 
         # Check if all waveforms are present on device memory
         avail_waveforms = set(self.get_waveform_names())
-        for waveform_tuple, param_dict in sequence_parameter_list:
+        for waveform_tuple, _param_dict in sequence_parameter_list:
             if not avail_waveforms.issuperset(waveform_tuple):
                 self.log.error(
                     f'Failed to create sequence "{name}" due to waveforms "{waveform_tuple}" not '
@@ -791,7 +790,7 @@ class AWG70K(Base, PulserInterface):
         # Check if AWG is in function generator mode
         # self._activate_awg_mode()
 
-        self.write("CLOCK:SRATE %.4G" % sample_rate)
+        self.write(f"CLOCK:SRATE {sample_rate:.4G}")
         while int(self.query("*OPC?")) != 1:
             time.sleep(0.25)
         time.sleep(1)

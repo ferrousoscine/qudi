@@ -74,7 +74,7 @@ class LaserLogic(GenericLogic):
     def on_deactivate(self):
         """Deactivate modeule."""
         self.stop_query_loop()
-        for i in range(5):
+        for _i in range(5):
             time.sleep(self.queryInterval / 1000)
             QtCore.QCoreApplication.processEvents()
 
@@ -106,7 +106,7 @@ class LaserLogic(GenericLogic):
 
             for k, v in self.laser_temps.items():
                 self.data[k][-1] = v
-        except:
+        except Exception:
             qi = 3000
             self.log.exception("Exception in laser status loop, throttling refresh rate.")
 
@@ -123,7 +123,7 @@ class LaserLogic(GenericLogic):
     def stop_query_loop(self):
         """Stop the readout loop."""
         self.stopRequest = True
-        for i in range(10):
+        for _i in range(10):
             if not self.stopRequest:
                 return
             QtCore.QCoreApplication.processEvents()

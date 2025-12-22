@@ -228,7 +228,7 @@ class PoiManagerMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_poimangui.ui")
 
         # Load it
-        super(PoiManagerMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -755,10 +755,7 @@ class PoiManagerGui(GUIBase):
             self._mw.active_poi_ComboBox.setCurrentText(name)
         self._mw.active_poi_ComboBox.blockSignals(False)
 
-        if name:
-            active_poi_pos = self.poimanagerlogic().get_poi_position(name)
-        else:
-            active_poi_pos = np.zeros(3)
+        active_poi_pos = self.poimanagerlogic().get_poi_position(name) if name else np.zeros(3)
         self._mw.poi_coords_label.setText(
             f"({ScaledFloat(active_poi_pos[0]):.2r}m, {ScaledFloat(active_poi_pos[1]):.2r}m, {ScaledFloat(active_poi_pos[2]):.2r}m)"
         )

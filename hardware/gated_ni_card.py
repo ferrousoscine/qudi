@@ -18,6 +18,7 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+from core.configoption import ConfigOption
 from interface.slow_counter_interface import CountingMode, SlowCounterConstraints
 
 from .national_instruments_x_series import NationalInstrumentsXSeries

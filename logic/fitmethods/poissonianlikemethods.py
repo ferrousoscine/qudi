@@ -19,8 +19,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 from lmfit.models import Model
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -45,10 +43,7 @@ def poisson(self, x, mu):
     Author:  Travis Oliphant  2002-2011 with contributions from
              SciPy Developers 2004-2011
     """
-    if len(np.atleast_1d(x)) == 1:
-        check_val = x
-    else:
-        check_val = x[0]
+    check_val = x if len(np.atleast_1d(x)) == 1 else x[0]
 
     if check_val > 1e18:
         self.log.warning(
@@ -181,7 +176,7 @@ def make_poissonian_fit(self, x_axis, data, estimator, units=None, add_params=No
 
     try:
         result = poissonian_model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             "The poissonian fit did not work. Check if a poisson "
             "distribution is needed or a normal approximation can be"
@@ -194,7 +189,7 @@ def make_poissonian_fit(self, x_axis, data, estimator, units=None, add_params=No
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui   oder OrderedDict()
+    result_str_dict = dict()  # create result string for gui   oder {}
 
     result_str_dict["Amplitude"] = {
         "value": result.params["amplitude"].value,
@@ -269,7 +264,7 @@ def make_poissoniandouble_fit(self, x_axis, data, estimator, units=None, add_par
 
     try:
         result = double_poissonian_model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             "The double poissonian fit did not work. Check if a "
             "poisson distribution is needed or a normal "
@@ -280,7 +275,7 @@ def make_poissoniandouble_fit(self, x_axis, data, estimator, units=None, add_par
         result = double_poissonian_model.fit(data, x=x_axis, params=params, **kwargs)
 
     # Write the parameters to allow human-readable output to be generated
-    result_str_dict = OrderedDict()
+    result_str_dict = {}
     if units is None:
         units = ["arb. units", "arb. unit"]
 
@@ -365,10 +360,7 @@ def estimate_poissoniandouble(
         len_x = 10
         interpol_factor = 1
     else:
-        if len(x_axis) < 60:
-            interpol_factor = 4
-        else:
-            interpol_factor = 2
+        interpol_factor = 4 if len(x_axis) < 60 else 2
         len_x = int(len(x_axis) / 10.0) + 1
 
     # Create the interpolation function, based on the data:

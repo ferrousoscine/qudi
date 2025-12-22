@@ -163,10 +163,7 @@ class SlowCounterDummy(Base, SlowCounterInterface):
         @return float: the photon counts per second
         """
 
-        if samples is None:
-            samples = int(self._samples_number)
-        else:
-            samples = int(samples)
+        samples = int(self._samples_number) if samples is None else int(samples)
 
         timestep = 1 / self._clock_frequency * samples
 

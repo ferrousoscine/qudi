@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 from qtpy import QtCore
 
 from .mutex import Mutex
@@ -32,7 +30,7 @@ class DictTableModel(QtCore.QAbstractTableModel):
         super().__init__()
         self.lock = Mutex()
         self.headers = ["Name"]
-        self.storage = OrderedDict()
+        self.storage = {}
 
     def getKeyByNumber(self, n):
         """Get a dict key by index number

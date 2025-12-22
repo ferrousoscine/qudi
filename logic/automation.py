@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import os
-from collections import OrderedDict
 
 import pyqtgraph.configfile as configfile
 from qtpy import QtCore
@@ -109,7 +108,7 @@ class TreeModel(QtCore.QAbstractItemModel):
 
         @param parent TreeModel: parent model
         """
-        super(TreeModel, self).__init__(parent)
+        super().__init__(parent)
         self.rootItem = TreeItem(("Title", "Summary"))
 
     def columnCount(self, parent):
@@ -174,10 +173,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QtCore.QModelIndex()
 
-        if not parent.isValid():
-            parentItem = self.rootItem
-        else:
-            parentItem = parent.internalPointer()
+        parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
 
         childItem = parentItem.child(row)
         if childItem:
@@ -211,10 +207,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         if parent.column() > 0:
             return 0
 
-        if not parent.isValid():
-            parentItem = self.rootItem
-        else:
-            parentItem = parent.internalPointer()
+        parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
 
         return parentItem.childCount()
 
@@ -237,7 +230,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         @param parent TreeItem: root item for loaded (sub)tree
         """
         for key, value in tree.items():
-            if isinstance(value, OrderedDict):
+            if isinstance(value, dict):
                 newchild = TreeItem([key, "branch"], parent)
                 parent.appendChild(newchild)
                 self.recursiveLoad(value, newchild)
@@ -253,7 +246,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         @return dict: dictionary containing tree
         """
         if parent.childCount() > 0:
-            retdict = OrderedDict()
+            retdict = {}
             for i in range(parent.childCount()):
                 key = parent.child(i).itemData[0]
                 retdict[key] = self.recursiveSave(parent.child(i))

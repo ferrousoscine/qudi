@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 import visa
 
@@ -227,7 +226,7 @@ class MotorStageMicos(Base, MotorInterface):
         If you are not sure about the meaning, look in other hardware files
         to get an impression.
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         axis0 = {
             "label": self._first_axis_label,
@@ -319,12 +318,12 @@ class MotorStageMicos(Base, MotorInterface):
         # changed at the same time
 
         # There are sometimes connections problems therefore up to 3 attempts are started
-        for attempt in range(3):
+        for _attempt in range(3):
             try:
                 for axis_label in param_dict:
                     step = param_dict[axis_label]
                     self._do_move_rel(axis_label, step * self.unit_factor)
-            except:
+            except Exception:
                 self.log.warning("Motor connection problem! Try again...")
             else:  # try worked
                 break
@@ -349,7 +348,7 @@ class MotorStageMicos(Base, MotorInterface):
 
         curr_pos = None
         # There are sometimes connections problems therefore up to 3 attempts are started
-        for attept in range(3):
+        for _attept in range(3):
             try:
                 # x and y are connencted through one com port therefore it is faster if both commands are sent at the
                 # same time therefore there is the check if x and y or only one axis is changed
@@ -407,7 +406,7 @@ class MotorStageMicos(Base, MotorInterface):
                         )
                 while not self._motor_stopped():
                     time.sleep(0.05)
-            except:
+            except Exception:
                 self.log.warning("Motor connection problem! Try again...")
             else:
                 break
@@ -453,7 +452,7 @@ class MotorStageMicos(Base, MotorInterface):
     #             self._micos_a.write('0.0 0.0 0.0 r')    # This should block further commands until the movement is finished
     #         try:
     #             statusA = int(self._micos_a.ask('st'))
-    #         except:
+    #         except Exception:
     #             statusA = 0
     #
     #
@@ -473,7 +472,7 @@ class MotorStageMicos(Base, MotorInterface):
     #             self._micos_a.write('0.0 0.0 0.0 r')    # This should block further commands until the movement is finished
     #         try:
     #             statusA = int(self._micos_a.ask('st'))
-    #         except:
+    #         except Exception:
     #             statusA = 0
     #
     #     if param_dict.get(self._micos_b.label_z) is not None:
@@ -492,7 +491,7 @@ class MotorStageMicos(Base, MotorInterface):
     #             self._micos_b.write('0.0 0.0 0.0 r')    # This should block further commands until the movement is finished
     #         try:
     #             statusB = int(self._micos_b.ask('st'))
-    #         except:
+    #         except Exception:
     #             statusB = 0
     #
     #     if param_dict.get(self._micos_b.label_phi) is not None:
@@ -511,7 +510,7 @@ class MotorStageMicos(Base, MotorInterface):
     #             self._micos_b.write('0.0 0.0 0.0 r')    # This should block further commands until the movement is finished
     #         try:
     #             statusB = int(self._micos_b.ask('st'))
-    #         except:
+    #         except Exception:
     #             statusB = 0
     #
     #
@@ -526,7 +525,7 @@ class MotorStageMicos(Base, MotorInterface):
     #     #     try:
     #     #         statusA = int(self._micos_a.ask('st'))
     #     #         statusB = int(self._micos_b.ask('st'))
-    #     #     except:
+    #     #     except Exception:
     #     #         statusA = 0
     #     #         statusA = 0
     #     #
@@ -553,7 +552,7 @@ class MotorStageMicos(Base, MotorInterface):
             self.log.warning("MOTOR MOVEMENT STOPPED!!!")
 
             return 0
-        except:
+        except Exception:
             self.log.error("MOTOR MOVEMENT NOT STOPPED!!!")
             return -1
 
@@ -583,7 +582,7 @@ class MotorStageMicos(Base, MotorInterface):
         for axis_label in param_list:
             # unfortunately, probably due to connection problems this specific command sometimes failing
             # although it should run.... therefore some retries are added
-            for attempt in range(25):
+            for _attempt in range(25):
                 if (
                     constraints[axis_label]["label"] == "x"
                     or constraints[axis_label]["label"] == "y"
@@ -669,7 +668,7 @@ class MotorStageMicos(Base, MotorInterface):
                     else:
                         self.log.error("Asking question to not defined axis:", axis_label)
             return param_dict
-        except:
+        except Exception:
             self.log.error("Status request unsuccessful")
             return -1
 
@@ -766,8 +765,8 @@ class MotorStageMicos(Base, MotorInterface):
             if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot set velocity of the axis "
-                    '"{0}" to {1}, since it exceeds the limts '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to {}, since it exceeds the limts '
+                    "[{},{}] ! Command is ignored!".format(
                         axis_label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -792,14 +791,14 @@ class MotorStageMicos(Base, MotorInterface):
         try:
             if constraints[axis]["label"] == "x" or constraints[axis]["label"] == "y":
                 self._serial_connection_xy.write(command + "\n")
-                trash = self._read_answer(axis)  # deletes possible answers
+                self._read_answer(axis)  # deletes possible answers
             elif constraints[axis]["label"] == "z" or constraints[axis]["label"] == "phi":
                 self._serial_connection_zphi.write(command + "\n")
-                trash = self._read_answer(axis)  # deletes possible answers
+                self._read_answer(axis)  # deletes possible answers
             else:
                 self.log.error("Asking question to not defined axis:", axis)
             return 0
-        except:
+        except Exception:
             self.log.error("Command was not accepted")
             return -1
 
@@ -819,7 +818,7 @@ class MotorStageMicos(Base, MotorInterface):
                     answer = answer + self._serial_connection_zphi.read()[:-2]
                 else:
                     self.log.error("Asking question to not defined axis:", axis)
-            except:
+            except Exception:
                 still_reading = False
         return answer
 

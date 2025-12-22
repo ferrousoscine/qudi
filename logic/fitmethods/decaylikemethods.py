@@ -222,7 +222,7 @@ def make_decayexponential_fit(self, x_axis, data, estimator, units=None, add_par
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = exponentialdecay.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = exponentialdecay.fit(data, x=x_axis, params=params, **kwargs)
         self.log.warning(
             f"The exponentialdecay with offset fit did not work. Message: {str(result.message)}"
@@ -278,10 +278,7 @@ def estimate_decayexponential(self, x_axis, data, params):
     offset = data[-max(1, int(len(x_axis) / 10)) :].mean()
 
     # substraction of offset, check whether
-    if data[0] < data[-1]:
-        data_level = offset - data
-    else:
-        data_level = data - offset
+    data_level = offset - data if data[0] < data[-1] else data - offset
 
     # check if the data level contain still negative values and correct
     # the data level therefore. Otherwise problems in the logarithm appear.
@@ -313,7 +310,7 @@ def estimate_decayexponential(self, x_axis, data, params):
             params["amplitude"].set(value=-np.exp(linear_result.params["offset"].value), max=-ampl)
         else:
             params["amplitude"].set(value=np.exp(linear_result.params["offset"].value), min=ampl)
-    except:
+    except Exception:
         self.log.warning("Lifetime too small in estimate_exponentialdecay, beyond resolution!")
 
         params["lifetime"].set(value=x_axis[i] - x_axis[0], min=min_lifetime)
@@ -354,7 +351,7 @@ def make_decayexponentialstretched_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = stret_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = stret_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
         self.log.warning(
             f"The double exponentialdecay with offset fit did not work. Message: {str(result.message)}"
@@ -491,7 +488,7 @@ def make_biexponential_fit(self, x_axis, data, estimator, units=None, add_params
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
         self.log.warning(f"The double gaussian dip fit did not work: {result.message}")
 
@@ -566,10 +563,7 @@ def estimate_biexponential(self, x_axis, data, params):
     offset = data[-max(1, int(len(x_axis) / 10)) :].mean()
 
     # substraction of offset, check whether
-    if data[0] < data[-1]:
-        data_level = offset - data
-    else:
-        data_level = data - offset
+    data_level = offset - data if data[0] < data[-1] else data - offset
 
     # check if the data level contain still negative values and correct
     # the data level therefore. Otherwise problems in the logarithm appear.
@@ -608,7 +602,7 @@ def estimate_biexponential(self, x_axis, data, params):
         else:
             params["e0_amplitude"].set(value=np.exp(linear_result.params["offset"].value), min=ampl)
             params["e1_amplitude"].set(value=np.exp(linear_result.params["offset"].value), min=ampl)
-    except:
+    except Exception:
         self.log.warning("Lifetime too small in estimate_exponential, beyond resolution!")
 
         params["e0_lifetime"].set(value=x_axis[i] - x_axis[0], min=min_lifetime)

@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 import time
-from collections import OrderedDict
 from ftplib import FTP
 
 import numpy as np
@@ -94,7 +93,7 @@ class AWG7k(Base, PulserInterface):
             )
             # set timeout by default to 30 sec
             self.awg.timeout = self._visa_timeout * 1000
-        except:
+        except Exception:
             self.awg = None
             self.log.error(
                 f'VISA address "{self._visa_address}" not found by the pyVISA resource manager.\nCheck '
@@ -131,7 +130,7 @@ class AWG7k(Base, PulserInterface):
         # Closes the connection to the AWG
         try:
             self.awg.close()
-        except:
+        except Exception:
             self.log.debug("Closing AWG connection using pyvisa failed.")
         self.log.info("Closed connection to AWG")
         return
@@ -289,7 +288,7 @@ class AWG7k(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["all"] = frozenset({"a_ch1", "d_ch1", "d_ch2", "a_ch2", "d_ch3", "d_ch4"})
         # Usage of channel 1 only:
         activation_config["A1_M1_M2"] = frozenset({"a_ch1", "d_ch1", "d_ch2"})
@@ -911,10 +910,7 @@ class AWG7k(Base, PulserInterface):
         for a_ch in analog_channels:
             ach_num = int(a_ch.rsplit("_ch", 1)[1])
             # determine number of markers for current a_ch
-            if new_channels_state[f"d_ch{2 * ach_num:d}"]:
-                marker_num = 2
-            else:
-                marker_num = 0
+            marker_num = 2 if new_channels_state[f"d_ch{2 * ach_num:d}"] else 0
             # set DAC resolution for this channel
             dac_res = 10 - marker_num
             self.write(f"SOUR{ach_num:d}:DAC:RES {dac_res:d}")
@@ -1040,7 +1036,7 @@ class AWG7k(Base, PulserInterface):
             self.log.debug(f"Send WFM file: {time.time() - start}")
 
             start = time.time()
-            self.write('MMEM:IMP "{0}","{1}",WFM'.format(wfm_name, wfm_name + ".wfm"))
+            self.write('MMEM:IMP "{}","{}",WFM'.format(wfm_name, wfm_name + ".wfm"))
             # Wait for everything to complete
             while int(self.query("*OPC?")) != 1:
                 time.sleep(0.2)
@@ -1072,7 +1068,7 @@ class AWG7k(Base, PulserInterface):
 
         # Check if all waveforms are present on device memory
         avail_waveforms = set(self.get_waveform_names())
-        for waveform_tuple, param_dict in sequence_parameter_list:
+        for waveform_tuple, _param_dict in sequence_parameter_list:
             if not avail_waveforms.issuperset(waveform_tuple):
                 self.log.error(
                     f'Failed to create sequence "{name}" due to waveforms "{waveform_tuple}" not '

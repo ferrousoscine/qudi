@@ -19,8 +19,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 from lmfit.models import Model
 from scipy.ndimage import filters
@@ -333,7 +331,7 @@ def make_gaussian_fit(self, x_axis, data, estimator, units=None, add_params=None
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = mod_final.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The 1D gaussian peak fit did not work. Error message: {result.message}\n"
         )
@@ -341,7 +339,7 @@ def make_gaussian_fit(self, x_axis, data, estimator, units=None, add_params=None
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = OrderedDict()  # create result string for gui
+    result_str_dict = {}  # create result string for gui
 
     # result_str_dict['Amplitude'] = {'value': result.params['amplitude'].value,
     #                                    'error': result.params['amplitude'].stderr,
@@ -507,14 +505,14 @@ def make_gaussianlinearoffset_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = mod_final.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The 1D gaussian peak fit did not work. Error message: {result.message}\n"
         )
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = OrderedDict()  # create result string for gui
+    result_str_dict = {}  # create result string for gui
 
     # result_str_dict['Amplitude'] = {'value': result.params['amplitude'].value,
     #                                    'error': result.params['amplitude'].stderr,
@@ -643,12 +641,12 @@ def make_gaussiandouble_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
         self.log.warning(f"The double gaussian dip fit did not work: {result.message}")
 
     # Write the parameters to allow human-readable output to be generated
-    result_str_dict = OrderedDict()
+    result_str_dict = {}
 
     result_str_dict["Position 0"] = {
         "value": result.params["g0_center"].value,
@@ -834,7 +832,7 @@ def make_twoDgaussian_fit(self, xy_axes, data, estimator, units=None, add_params
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = gaussian_2d_model.fit(data, x=xy_axes, params=params, **kwargs)
-    except:
+    except Exception:
         result = gaussian_2d_model.fit(data, x=xy_axes, params=params, **kwargs)
         self.log.warning(f"The 2D gaussian fit did not work: {result.message}")
 

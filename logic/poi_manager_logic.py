@@ -20,9 +20,9 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import contextlib
 import os
 import time
-from collections import OrderedDict
 from datetime import datetime
 
 import numpy as np
@@ -279,10 +279,8 @@ class RegionOfInterest:
 
         @param int|slice history_index: List index of history entry to delete
         """
-        try:
+        with contextlib.suppress(IndexError):
             del self._pos_history[history_index]
-        except IndexError:
-            pass
         if len(self._pos_history) == 0:
             self._pos_history.append(np.zeros(4, dtype=float))
         return
@@ -1013,10 +1011,7 @@ class PoiManagerLogic(GenericLogic):
             else:
                 name = self.active_poi
 
-        if update_roi_position:
-            tag = f"poimanagermoveroi_{name}"
-        else:
-            tag = f"poimanager_{name}"
+        tag = f"poimanagermoveroi_{name}" if update_roi_position else f"poimanager_{name}"
 
         if self.optimiserlogic().module_state() == "idle":
             self.optimiserlogic().start_refocus(
@@ -1071,28 +1066,28 @@ class PoiManagerLogic(GenericLogic):
         roi_name_no_blanks = self.roi_name.replace(" ", "_")
         timestamp = datetime.now()
         pois_filename = f"{roi_name_no_blanks}_poi_list"
-        roi_history_filename = "{0}_{1}_history.npy".format(
+        roi_history_filename = "{}_{}_history.npy".format(
             timestamp.strftime("%Y%m%d-%H%M-%S"), roi_name_no_blanks
         )
-        roi_image_filename = "{0}_{1}_scan_image.npy".format(
+        roi_image_filename = "{}_{}_scan_image.npy".format(
             timestamp.strftime("%Y%m%d-%H%M-%S"), roi_name_no_blanks
         )
 
         # Metadata to save in both file headers
         x_extent, y_extent = self.roi_scan_image_extent
-        parameters = OrderedDict()
+        parameters = {}
         parameters["roi_name"] = self.roi_name
         parameters["poi_nametag"] = "" if self.poi_nametag is None else self.poi_nametag
         parameters["roi_creation_time"] = self.roi_creation_time_as_str
-        parameters["scan_image_x_extent"] = "{0:.9e},{1:.9e}".format(*x_extent)
-        parameters["scan_image_y_extent"] = "{0:.9e},{1:.9e}".format(*y_extent)
+        parameters["scan_image_x_extent"] = "{:.9e},{:.9e}".format(*x_extent)
+        parameters["scan_image_y_extent"] = "{:.9e},{:.9e}".format(*y_extent)
 
         ##################################
         # Save POI positions to first file
         ##################################
         poi_dict = self.poi_positions
         poi_positions = np.array(tuple(poi_dict.values()), dtype=float)
-        data = OrderedDict()
+        data = {}
         # Save POI names in the first column
         data["name"] = np.array(tuple(poi_dict), dtype=str)
         # Save x,y,z coordinates in the following 3 columns
@@ -1185,7 +1180,7 @@ class PoiManagerLogic(GenericLogic):
                 (float(scan_x_extent[0]), float(scan_x_extent[1])),
                 (float(scan_y_extent[0]), float(scan_y_extent[1])),
             )
-            poi_nametag = None if not poi_nametag else poi_nametag
+            poi_nametag = poi_nametag if poi_nametag else None
 
         # Read ROI position history from binary file
         history_filename = os.path.join(filepath, f"{filetag}_history.npy")
@@ -1266,10 +1261,7 @@ class PoiManagerLogic(GenericLogic):
                 unspot_e += 1
             if vm_local_arr > hm_local_arr * 1.2:
                 unspot_e += 1
-        if ensem_e > 4 or unspot_e > 1:
-            return False
-        else:
-            return True
+        return not (ensem_e > 4 or unspot_e > 1)
 
     def _local_max(self, scan):
         scan = np.asarray(scan, order="C")  # scan has to be a 2-D array

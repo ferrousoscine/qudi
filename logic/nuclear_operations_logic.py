@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import datetime
 import time
-from collections import OrderedDict
 
 import numpy as np
 from qtpy import QtCore
@@ -138,7 +137,7 @@ class NuclearOperationsLogic(GenericLogic):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
         self.threadlock = Mutex()
@@ -212,7 +211,7 @@ class NuclearOperationsLogic(GenericLogic):
         """Initialize the measurement param containter."""
         # here all measurement parameters will be included for any kind of
         # nuclear measurement.
-        self._meas_param = OrderedDict()
+        self._meas_param = {}
 
     def start_nuclear_meas(self, continue_meas=False):
         """Start the nuclear operation measurement."""
@@ -864,15 +863,14 @@ class NuclearOperationsLogic(GenericLogic):
         if name_tag is not None and len(name_tag) > 0:
             filelabel1 = name_tag + "_nuclear_ops_xy_data"
             filelabel2 = name_tag + "_nuclear_ops_data_y_matrix"
-            filelabel3 = name_tag + "_nuclear_ops_add_data_matrix"
+            name_tag + "_nuclear_ops_add_data_matrix"
             filelabel4 = name_tag + "_nuclear_ops_odmr_data"
         else:
             filelabel1 = "_nuclear_ops_data"
             filelabel2 = "_nuclear_ops_data_matrix"
-            filelabel3 = "_nuclear_ops_add_data_matrix"
             filelabel4 = "_nuclear_ops_odmr_data"
 
-        param = OrderedDict()
+        param = {}
         param["Electron Rabi Period (ns)"] = self.electron_rabi_periode * 1e9
         param["Pulser Microwave Frequency (MHz)"] = self.pulser_mw_freq / 1e6
         param["Pulser MW amp (V)"] = self.pulser_mw_amp
@@ -891,10 +889,10 @@ class NuclearOperationsLogic(GenericLogic):
         param["Pulser idle Time (ns)"] = self.pulser_idle_time * 1e9
         param["Pulser Detect channel"] = self.pulser_detect_ch
 
-        data1 = OrderedDict()
-        data2 = OrderedDict()
-        data3 = OrderedDict()
-        data4 = OrderedDict()
+        data1 = {}
+        data2 = {}
+        data3 = {}
+        data4 = {}
 
         # Measurement Parameter:
         param[""] = self.current_meas_asset_name

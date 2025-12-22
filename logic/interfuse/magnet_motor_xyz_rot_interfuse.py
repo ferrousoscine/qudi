@@ -18,19 +18,17 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-"""
-An interfuse file is indented to fuse/combine a logic with a hardware, which
-was not indented to be used with the logic. The interfuse file extend the
-ability of a hardware file by converting the logic calls (from a different
-interface) to the interface commands, which suits the hardware.
-In order to be addressed by the (magnet) logic it should inherit the (magnet)
-interface, and given the fact that it will convert a magnet logic call to a
-motor hardware call, that 'interfuse' file has to stick to the interfaces
-methods of the motor interface.
-
-Reimplement each call from the magnet interface and use only the motor interface
-command to talk to a xyz motor hardware and a rotational motor hardware.
-"""
+# An interfuse file is indented to fuse/combine a logic with a hardware, which
+# was not indented to be used with the logic. The interfuse file extend the
+# ability of a hardware file by converting the logic calls (from a different
+# interface) to the interface commands, which suits the hardware.
+# In order to be addressed by the (magnet) logic it should inherit the (magnet)
+# interface, and given the fact that it will convert a magnet logic call to a
+# motor hardware call, that 'interfuse' file has to stick to the interfaces
+# methods of the motor interface.
+#
+# Reimplement each call from the magnet interface and use only the motor interface
+# command to talk to a xyz motor hardware and a rotational motor hardware.
 
 from core.connector import Connector
 from interface.magnet_interface import MagnetInterface
@@ -155,14 +153,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             pos_rot = self._motor_device_rot.get_pos()
         else:
             list_xyz, list_rot = self._split_list(param_list)
-            if list_xyz:
-                pos_xyz = self._motor_device_xyz.get_pos(list_xyz)
-            else:
-                pos_xyz = {}
-            if list_rot:
-                pos_rot = self._motor_device_rot.get_pos(list_rot)
-            else:
-                pos_rot = {}
+            pos_xyz = self._motor_device_xyz.get_pos(list_xyz) if list_xyz else {}
+            pos_rot = self._motor_device_rot.get_pos(list_rot) if list_rot else {}
         pos_xyz.update(pos_rot)
         return pos_xyz
 
@@ -183,14 +175,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             # self.log.debug(status_rot)
         else:
             list_xyz, list_rot = self._split_list(param_list)
-            if list_xyz:
-                status_xyz = self._motor_device_xyz.get_status(list_xyz)
-            else:
-                status_xyz = {}
-            if list_rot:
-                status_rot = self._motor_device_rot.get_status(list_rot)
-            else:
-                status_rot = {}
+            status_xyz = self._motor_device_xyz.get_status(list_xyz) if list_xyz else {}
+            status_rot = self._motor_device_rot.get_status(list_rot) if list_rot else {}
         status_xyz.update(status_rot)
         return status_xyz
 
@@ -215,14 +201,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
                 pos_rot = self._motor_device_rot.calibrate()
             else:
                 list_xyz, list_rot = self._split_list(param_list)
-                if list_xyz:
-                    pos_xyz = self._motor_device_xyz.calibrate(list_xyz)
-                else:
-                    pos_xyz = {}
-                if list_rot:
-                    pos_rot = self._motor_device_rot.calibrate(list_rot)
-                else:
-                    pos_rot = {}
+                pos_xyz = self._motor_device_xyz.calibrate(list_xyz) if list_xyz else {}
+                pos_rot = self._motor_device_rot.calibrate(list_rot) if list_rot else {}
             pos_xyz.update(pos_rot)
             return pos_xyz
         else:
@@ -251,14 +231,8 @@ class MagnetMotorXYZROTInterfuse(GenericLogic, MagnetInterface):
             vel_rot = self._motor_device_rot.get_velocity()
         else:
             list_xyz, list_rot = self._split_list(param_list)
-            if list_xyz:
-                vel_xyz = self._motor_device_xyz.get_velocity(list_xyz)
-            else:
-                vel_xyz = {}
-            if list_rot:
-                vel_rot = self._motor_device_rot.get_velocity(list_rot)
-            else:
-                vel_rot = {}
+            vel_xyz = self._motor_device_xyz.get_velocity(list_xyz) if list_xyz else {}
+            vel_rot = self._motor_device_rot.get_velocity(list_rot) if list_rot else {}
 
         vel_xyz.update(vel_rot)
         return vel_xyz

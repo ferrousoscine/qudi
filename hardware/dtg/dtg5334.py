@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 import numpy as np
 import visa
@@ -97,7 +96,7 @@ class DTG5334(Base, PulserInterface):
         # Closes the connection to the DTG
         try:
             self.dtg.close()
-        except:
+        except Exception:
             self.log.debug("Closing DTG connection using pyvisa failed.")
         self.log.info("Closed connection to DTG")
         self.connected = False
@@ -196,7 +195,7 @@ class DTG5334(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_conf = OrderedDict()
+        activation_conf = {}
         activation_conf["A"] = frozenset({"d_ch1", "d_ch2"})
         activation_conf["B"] = frozenset({"d_ch3", "d_ch4"})
         activation_conf["C"] = frozenset({"d_ch5", "d_ch6"})
@@ -350,12 +349,12 @@ class DTG5334(Base, PulserInterface):
             high = self.get_constraints().activation_config["all"]
 
         ch_low = {
-            chan: float(self.dtg.query("PGEN{0}:CH{1}:LOW?".format(*(self.ch_map[chan]))))
+            chan: float(self.dtg.query("PGEN{}:CH{}:LOW?".format(*(self.ch_map[chan]))))
             for chan in low
         }
 
         ch_high = {
-            chan: float(self.dtg.query("PGEN{0}:CH{1}:HIGH?".format(*(self.ch_map[chan]))))
+            chan: float(self.dtg.query("PGEN{}:CH{}:HIGH?".format(*(self.ch_map[chan]))))
             for chan in high
         }
 
@@ -536,7 +535,7 @@ class DTG5334(Base, PulserInterface):
         # if sequence_name in self._get_sequence_names_memory():
         #    self.dtg.write('BLOC:DEL "{0}"'.format(sequence_name))
         self._set_sequence_length(num_steps)
-        for line_nr, (wfms, params) in enumerate(sequence_parameters):
+        for line_nr, (_wfms, params) in enumerate(sequence_parameters):
             print(line_nr, params)
             go_to = "" if params["go_to"] <= 0 else params["go_to"]
             jump_to = "" if params["event_jump_to"] <= 0 else params["event_jump_to"]

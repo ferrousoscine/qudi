@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import ctypes
 import os
-from collections import OrderedDict
 
 import numpy as np
 import PyDAQmx as daq
@@ -48,7 +47,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
     def on_activate(self):
         """Activate module"""
         config = self.getConfiguration()
-        if "pulsed_file_dir" in config.keys():
+        if "pulsed_file_dir" in config:
             self.pulsed_file_dir = config["pulsed_file_dir"]
 
             if not os.path.exists(self.pulsed_file_dir):
@@ -98,7 +97,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         """Build a pulser constraints dictionary with information from the NI card."""
         device = self.device
         constraints = {}
-        ch_map = OrderedDict()
+        ch_map = {}
 
         n = 2048
         ao_max_freq = daq.float64()
@@ -191,12 +190,12 @@ class NationalInstrumentsPulser(Base, PulserInterface):
 
         # If sequencer mode is enable than sequence_param should be not just an
         # empty dictionary.
-        sequence_param = OrderedDict()
+        sequence_param = {}
         constraints["sequence_param"] = sequence_param
 
-        activation_config = OrderedDict()
-        activation_config["analog_only"] = [k for k in ch_map.keys() if k.startswith("a")]
-        activation_config["digital_only"] = [k for k in ch_map.keys() if k.startswith("d")]
+        activation_config = {}
+        activation_config["analog_only"] = [k for k in ch_map if k.startswith("a")]
+        activation_config["digital_only"] = [k for k in ch_map if k.startswith("d")]
         activation_config["stuff"] = ["a_ch4", "d_ch1", "d_ch2", "d_ch3", "d_ch4"]
         constraints["activation_config"] = activation_config
 
@@ -254,13 +253,13 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         try:
             # stop the task
             daq.DAQmxStopTask(self.pulser_task)
-        except:
+        except Exception:
             self.log.exception("Error while closing NI pulser.")
             retval = -1
         try:
             # clear the task
             daq.DAQmxClearTask(self.pulser_task)
-        except:
+        except Exception:
             self.log.exception("Error while clearing NI pulser.")
             retval = -1
         return retval
@@ -279,7 +278,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         """
         try:
             daq.DAQmxStartTask(self.pulser_task)
-        except:
+        except Exception:
             self.log.exception("Error starting NI pulser.")
             return -1
         return 0
@@ -291,7 +290,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         """
         try:
             daq.DAQmxStopTask(self.pulser_task)
-        except:
+        except Exception:
             self.log.exception("Error stopping NI pulser.")
             return -1
         return 0
@@ -382,7 +381,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         try:
             daq.DAQmxIsTaskDone(self.pulser_task, daq.byref(task_done))
             current_status = 0 if task_done.value else 1
-        except:
+        except Exception:
             self.log.exception("Error while getting pulser state.")
             current_status = -1
         return current_status, status_dict
@@ -738,7 +737,7 @@ class NationalInstrumentsPulser(Base, PulserInterface):
         """
         try:
             daq.DAQmxResetDevice(self.device)
-        except:
+        except Exception:
             self.log.exception(f"Could not reset NI device {self.device}")
             return -1
         return 0

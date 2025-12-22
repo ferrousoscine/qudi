@@ -2,14 +2,9 @@
 This file contains the Qudi configuration file module.
 
 A configuration file is saved in YAML format. This module provides a loader
-and a dumper using an OrderedDict instead of the regular dict used by PyYAML.
-Additionally, it fixes a bug in PyYAML with scientific notation and allows
-to dump numpy dtypes and numpy ndarrays.
+and a dumper with support for numpy dtypes and numpy ndarrays.
 
-The fix of the scientific notation is applied globally at module import.
-
-The idea of the implementation of the OrderedDict was taken from
-http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+Python 3.7+ dicts preserve insertion order, so OrderedDict is no longer needed.
 
 
 
@@ -31,7 +26,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import os
-from collections import OrderedDict
 from io import BytesIO
 
 import numpy
@@ -40,28 +34,27 @@ import yaml  # Use PyYAML for custom loaders
 
 def ordered_load(stream, Loader=yaml.Loader):
     """
-    Loads a YAML formatted data from stream and puts it into an OrderedDict
+    Loads a YAML formatted data from stream and puts it into a dict.
 
     @param Stream stream: stream the data is read from
     @param Loader Loader: Loader base class
 
-    Returns OrderedDict with data. If stream is empty then an empty
-    OrderedDict is returned.
+    Returns dict with data. If stream is empty then an empty dict is returned.
     """
 
     class OrderedLoader(Loader):
         """
-        Loader using an OrderedDict
+        Custom loader with dict mapping support.
         """
 
         pass
 
     def construct_mapping(loader, node):
         """
-        The OrderedDict constructor.
+        The dict constructor.
         """
         loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
+        return dict(loader.construct_pairs(node))
 
     def construct_ndarray(loader, node):
         """
@@ -134,7 +127,7 @@ def ordered_load(stream, Loader=yaml.Loader):
     if config is not None:
         return config
     else:
-        return OrderedDict()
+        return {}
 
 
 def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
@@ -158,14 +151,6 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
             ignore aliases and anchors
             """
             return True
-
-    def represent_ordereddict(dumper, dict_data):
-        """
-        Representer for OrderedDict
-        """
-        return dumper.represent_mapping(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_data.items()
-        )
 
     def represent_int(dumper, int_data):
         """
@@ -201,7 +186,7 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
             node = dumper.represent_str(newpath)
             node.tag = "!extndarray"
             dumper.external_ndarray_counter += 1
-        except:
+        except (AttributeError, OSError):
             with BytesIO() as f:
                 numpy.savez_compressed(f, array=array_data)
                 compressed_string = f.getvalue()
@@ -210,7 +195,6 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
         return node
 
     # add representers
-    OrderedDumper.add_representer(OrderedDict, represent_ordereddict)
     OrderedDumper.add_representer(numpy.uint8, represent_int)
     OrderedDumper.add_representer(numpy.uint16, represent_int)
     OrderedDumper.add_representer(numpy.uint32, represent_int)

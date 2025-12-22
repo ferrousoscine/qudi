@@ -28,7 +28,7 @@ class Task(PrePostTask):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print(f"PrePost init task {name}")
+        print(f"PrePost init task {self.name}")
         print(self.config)
 
     def preExecute(self):

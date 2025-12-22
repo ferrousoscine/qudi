@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import ctypes
 import platform
-from collections import OrderedDict
 
 import numpy as np
 
@@ -1054,7 +1053,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
                 corrected_sequence.remove(pulse)
                 self.log.info(
                     "Delay correction of the pulse blaster has created a pulse too short."
-                    "The pulse is {0} ns with a minimum of {1} ns in th state {2}."
+                    "The pulse is {} ns with a minimum of {} ns in th state {}."
                     "Pulses shorter than half the minimum are dropped.".format(
                         pulse["length"] * 1e9, self.LEN_MIN * 1e9, pulse["active_channels"]
                     )
@@ -1327,7 +1326,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
         # are stated, where only the generic names should be used. The names for
         # the different configurations can be customary chosen.
 
-        activation_conf = OrderedDict()
+        activation_conf = {}
         activation_conf['yourconf'] = frozenset(
             {'a_ch1', 'd_ch1', 'd_ch2', 'a_ch2', 'd_ch3', 'd_ch4'})
         activation_conf['different_conf'] = frozenset({'a_ch1', 'd_ch1', 'd_ch2'})
@@ -1360,7 +1359,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
         constraints.waveform_length.step = 1
         constraints.waveform_length.default = 128
 
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["4_ch"] = frozenset({"d_ch1", "d_ch2", "d_ch3", "d_ch4"})
         activation_config["all"] = frozenset(
             {
@@ -1515,7 +1514,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
         asset_type = "waveform" if self._currently_loaded_waveform else None
 
         asset_dict = {}
-        for index, entry in enumerate(self._current_activation_config):
+        for index, _entry in enumerate(self._current_activation_config):
             # asset_dict[index+1] = '{0}_'.format(self._current_pb_waveform_name, entry.replace('d_',''))
             asset_dict[index + 1] = self._current_pb_waveform_name
         return asset_dict, asset_type
@@ -1541,10 +1540,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
                              of the pulse generator hardware.
         """
         num = self.get_status_bit()
-        if num in [0, 1, 2]:
-            state = 0
-        else:
-            state = 1
+        state = 0 if num in [0, 1, 2] else 1
 
         status_dict = {0: "Idle", 1: "Running"}
 
@@ -1930,7 +1926,7 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
 
         ch_list = list(digital_samples)
         ch_list.sort()
-        num_ch = len(ch_list)
+        len(ch_list)
 
         # take on of the channel and obtain the channel length
         num_entries = len(digital_samples[ch_list[0]])
@@ -1968,9 +1964,9 @@ class PulseBlasterESRPRO(Base, SwitchInterface, PulserInterface):
                     if last_sequence_dict["length"] * 1.01 < self.LEN_MIN:
                         self.log.warning(
                             "Current waveform contains a pulse of "
-                            "length {0:.2f}ns, which is smaller "
+                            "length {:.2f}ns, which is smaller "
                             "than the minimal allowed length of "
-                            "{1:.2f}ns! Pulse sequence might "
+                            "{:.2f}ns! Pulse sequence might "
                             "most probably look unexpected. "
                             "Increase the length of the smallest "
                             "pulse!"

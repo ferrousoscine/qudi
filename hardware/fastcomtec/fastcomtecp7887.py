@@ -184,7 +184,7 @@ class FastComtec(Base, FastCounterInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
         # this variable has to be added because there is no difference
         # in the fastcomtec it can be on "stopped" or "halt"
@@ -311,8 +311,7 @@ class FastComtec(Base, FastCounterInterface):
                 return -1
         else:
             self.log.error(
-                "There is an unknown status from FastComtec. The status message was %s"
-                % (str(status.started))
+                f"There is an unknown status from FastComtec. The status message was {str(status.started)}"
             )
             return -1
 
@@ -502,7 +501,7 @@ class FastComtec(Base, FastCounterInterface):
             return self.get_length()
         else:
             self.log.error(
-                "Length of sequence is too high: %s" % (str(length_bins * self.get_binwidth()))
+                f"Length of sequence is too high: {str(length_bins * self.get_binwidth())}"
             )
             return -1
 
@@ -527,7 +526,7 @@ class FastComtec(Base, FastCounterInterface):
 
     def _change_filename(self, name):
         """Changed the name in FCT"""
-        cmd = "datname=%s" % name
+        cmd = f"datname={name}"
         self.dll.RunCmd(0, bytes(cmd, "ascii"))
         return name
 

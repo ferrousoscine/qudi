@@ -40,7 +40,7 @@ class CameraSettingDialog(QtWidgets.QDialog):
         ui_file = os.path.join(this_dir, "ui_camera_settings.ui")
 
         # Load it
-        super(CameraSettingDialog, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
 
 
@@ -214,7 +214,6 @@ class CameraGUI(GUIBase):
         Get the image data from the logic and print it on the window
         """
         raw_data_image = self._logic.get_last_image()
-        levels = (0.0, 1.0)
         self._image.setImage(image=raw_data_image)
         self.update_xy_cb_range()
         # self._image.setImage(image=raw_data_image, levels=levels)

@@ -197,7 +197,7 @@ class FastComtec(Base, FastCounterInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
         # this variable has to be added because there is no difference
@@ -323,14 +323,12 @@ class FastComtec(Base, FastCounterInterface):
                 return 3
             else:
                 self.log.error(
-                    "There is an unknown status from FastComtec. The status message was %s"
-                    % (str(status.started))
+                    f"There is an unknown status from FastComtec. The status message was {str(status.started)}"
                 )
                 return -1
         else:
             self.log.error(
-                "There is an unknown status from FastComtec. The status message was %s"
-                % (str(status.started))
+                f"There is an unknown status from FastComtec. The status message was {str(status.started)}"
             )
             return -1
 
@@ -552,10 +550,7 @@ class FastComtec(Base, FastCounterInterface):
         """
         # First check if no constraint is
         constraints = self.get_constraints()
-        if self.is_gated():
-            cycles = self.get_cycles()
-        else:
-            cycles = 1
+        cycles = self.get_cycles() if self.is_gated() else 1
         if length_bins * cycles < constraints["max_bins"]:
             # Smallest increment is 64 bins. Since it is better if the range is too short than too long, round down
             length_bins = int(64 * int(length_bins / 64))
@@ -725,10 +720,7 @@ class FastComtec(Base, FastCounterInterface):
         self.set_cycles(1)
 
         # Turn on or off sequential cycle mode
-        if mode:
-            cmd = f"sweepmode={hex(1978500)}"
-        else:
-            cmd = f"sweepmode={hex(1978496)}"
+        cmd = f"sweepmode={hex(1978500)}" if mode else f"sweepmode={hex(1978496)}"
         self.dll.RunCmd(0, bytes(cmd, "ascii"))
 
         self.set_cycles(cycles_old)
@@ -840,7 +832,7 @@ class FastComtec(Base, FastCounterInterface):
 
         @param str name: Location and name of the file
         """
-        cmd = "mpaname=%s" % name
+        cmd = f"mpaname={name}"
         self.dll.RunCmd(0, bytes(cmd, "ascii"))
         return name
 

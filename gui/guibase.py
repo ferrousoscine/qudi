@@ -29,7 +29,7 @@ class GUIBaseMixin(BaseMixin):
     """This is the GUI base class. It provides functions that every GUI module should have."""
 
     def show(self):
-        warnings.warn("Every GUI module needs to reimplement the show() function!")
+        warnings.warn("Every GUI module needs to reimplement the show() function!", stacklevel=2)
 
     def saveWindowPos(self, window):
         self._statusVariables["pos_x"] = window.pos().x()

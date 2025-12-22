@@ -854,10 +854,7 @@ class ScienDSpinBox(QtWidgets.QAbstractSpinBox):
                 round_indicator = int(fractional_str[self.__decimals])
                 fractional_str = fractional_str[: self.__decimals]
                 if round_indicator >= 5:
-                    if not fractional_str:
-                        fractional_str = "1"
-                    else:
-                        fractional_str = str(int(fractional_str) + 1)
+                    fractional_str = "1" if not fractional_str else str(int(fractional_str) + 1)
             elif self.__decimals == len(fractional_str):
                 if fractional >= 0.5:
                     if fractional_str:
@@ -950,7 +947,7 @@ class ScienDSpinBox(QtWidgets.QAbstractSpinBox):
         s = [D(-1), D(1)][n >= 0]  # determine sign of step
         value = self.__value  # working copy of current value
         if self.dynamic_stepping:
-            for i in range(int(abs(n))):
+            for _i in range(int(abs(n))):
                 if value == 0:
                     step = self.__minimalStep
                 else:
@@ -987,7 +984,7 @@ class ScienDSpinBox(QtWidgets.QAbstractSpinBox):
         @param value: Decimal|float, value to be checked for NaN
         @return: (bool) is NaN (True), is no NaN (False)
         """
-        return not value == value
+        return value != value
 
     # Property added as a temporary fix so that Qudi mapper works with this Class.
     # When moving to PySide2, it won't be necessary any longer
@@ -1481,7 +1478,7 @@ class ScienSpinBox(QtWidgets.QAbstractSpinBox):
         value = self.__value  # working copy of current value
         sign = -1 if steps < 0 else 1  # determine sign of step
         if self.dynamic_stepping:
-            for i in range(abs(steps)):
+            for _i in range(abs(steps)):
                 if value == 0:
                     step = max(1, self.__minimalStep)
                 else:

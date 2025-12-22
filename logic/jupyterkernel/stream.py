@@ -83,7 +83,7 @@ class QZMQStream(QtCore.QObject):
                     else:
                         logging.debug(f"MSG: {self.readnotifier.socket()!s} {msg!s}")
                         self.sigMsgRecvd.emit(msg)
-        except:
+        except Exception:
             logging.debug("Exception in QZMQStream::checkForMessages")
             pass
         else:
@@ -155,7 +155,7 @@ class NetworkStream(QZMQStream):
         if port <= 0:
             return socket.bind_to_random_port(connection)
         else:
-            socket.bind("%s:%s" % (connection, port))
+            socket.bind(f"{connection}:{port}")
         return port
 
     @staticmethod

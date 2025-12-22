@@ -22,7 +22,6 @@ import os
 import re
 import time
 from abc import abstractmethod
-from collections import OrderedDict
 from fnmatch import fnmatch
 
 import numpy as np
@@ -106,7 +105,7 @@ class AWGM819X(Base, PulserInterface):
             self.awg = self._rm.open_resource(self._visa_address)
             # set timeout by default to 30 sec
             self.awg.timeout = self._awg_timeout * 1000
-        except:
+        except Exception:
             self.awg = None
             self.log.error(
                 f'VISA address "{self._visa_address}" not found by the pyVISA resource manager.\nCheck '
@@ -135,7 +134,7 @@ class AWGM819X(Base, PulserInterface):
         try:
             self.awg.close()
             self.connected = False
-        except:
+        except Exception:
             self.log.warning("Closing AWG connection using pyvisa failed.")
         self.log.info("Closed connection to AWG")
 
@@ -901,7 +900,7 @@ class AWGM819X(Base, PulserInterface):
 
         # Check if all waveforms are present on device memory
         avail_waveforms = set(self.get_waveform_names())
-        for waveform_tuple, param_dict in sequence_parameters:
+        for waveform_tuple, _param_dict in sequence_parameters:
             if not avail_waveforms.issuperset(waveform_tuple):
                 self.log.error(
                     f'Failed to create sequence "{name}" due to waveforms "{waveform_tuple}" not '
@@ -920,7 +919,7 @@ class AWGM819X(Base, PulserInterface):
 
             waves_loaded_here = []
             # transfer waveforms in sequence from local pc to segments in awg mem
-            for waveform_tuple, param_dict in sequence_parameters:
+            for waveform_tuple, _param_dict in sequence_parameters:
                 # todo: need to handle other than 2 channels?
                 waveform_list = []
                 waveform_list.append(waveform_tuple[0])
@@ -950,8 +949,8 @@ class AWGM819X(Base, PulserInterface):
             raise ValueError(f"Unknown memory mode: {self._wave_mem_mode}")
 
         """
-        8190a manual: When using dynamic sequencing, the arm mode must be set to self-armed 
-        and all advancement modes must be set to Auto. 
+        8190a manual: When using dynamic sequencing, the arm mode must be set to self-armed
+        and all advancement modes must be set to Auto.
         Additionally, the trigger mode Gated is not allowed.
         """
         self.write_all_ch(
@@ -1315,7 +1314,7 @@ class AWGM819X(Base, PulserInterface):
 
             for waveform in load_dict:
                 pattern = ".*_ch[0-9]+?"
-                has_ch_ext = True if re.match(pattern, waveform) is not None else False
+                has_ch_ext = re.match(pattern, waveform) is not None
                 if has_ch_ext:
                     channel = int(waveform.rsplit("_ch", 1)[1][0])
                     new_dict[channel] = waveform
@@ -1422,7 +1421,7 @@ class AWGM819X(Base, PulserInterface):
     def check_dev_error(self):
         has_error_occured = False
 
-        for i in range(30):  # error buffer of device is 30
+        for _i in range(30):  # error buffer of device is 30
             raw_str = self.query(":SYST:ERR?", force_no_check=True)
             is_error = "0" not in raw_str[0]
             if is_error:
@@ -1676,9 +1675,8 @@ class AWGM819X(Base, PulserInterface):
         """
         bytes_written, enum_status_code = self.awg.write(command)
 
-        if self._debug_check_all_commands:
-            if self.check_dev_error() != 0:
-                self.log.warn(f"Check failed after command: {command}")
+        if self._debug_check_all_commands and self.check_dev_error() != 0:
+            self.log.warn(f"Check failed after command: {command}")
 
         return int(enum_status_code)
 
@@ -1794,10 +1792,7 @@ class AWGM819X(Base, PulserInterface):
 
         run_state = self.query(":STAT:OPER:RUN:COND?")
 
-        if int(run_state) == 0:
-            return False
-        else:
-            return True
+        return int(run_state) != 0
 
     def _is_output_on(self):
         """
@@ -1810,10 +1805,7 @@ class AWGM819X(Base, PulserInterface):
         state += int(self.query(":OUTP1?"))
         state += int(self.query(":OUTP2?"))
 
-        if int(state) == 0:
-            return False
-        else:
-            return True
+        return int(state) != 0
 
     def _get_all_channels(self):
         """
@@ -1880,7 +1872,7 @@ class AWGM819X(Base, PulserInterface):
                 high = self._d_ch_level_low_high[i][1]
                 ch_str = f"d_ch{ch_idx:d}"
 
-                if ch_str in d_ampl_low.keys() and ch_str in d_ampl_high.keys():
+                if ch_str in d_ampl_low and ch_str in d_ampl_high:
                     d_ampl_low[f"d_ch{ch_idx:d}"] = low
                     d_ampl_high[f"d_ch{ch_idx:d}"] = high
         else:
@@ -2083,10 +2075,7 @@ class AWGM819X(Base, PulserInterface):
 
         bin_str = "{:b}".format(int(self.query(f"STAB{ch_num:d}:SEQ:STAT?")))
         state = int(bin_str[0:2], 2)
-        if state != 0:
-            seq_table_id = int(bin_str[2:], 2)
-        else:
-            seq_table_id = 0
+        seq_table_id = int(bin_str[2:], 2) if state != 0 else 0
 
         return state, seq_table_id
 
@@ -2207,9 +2196,7 @@ class AWGM8195A(AWGM819X):
 
     @property
     def marker_on(self):
-        if self.awg_mode == "MARK" or self.awg_mode == "DCM":
-            return True
-        return False
+        return bool(self.awg_mode == "MARK" or self.awg_mode == "DCM")
 
     @property
     def interleaved_wavefile(self):
@@ -2319,7 +2306,7 @@ class AWGM8195A(AWGM819X):
         # UNAMBIGUOUSLY the channels. Here all possible channel configurations
         # are stated, where only the generic names should be used. The names
         # for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         if self._MODEL == "M8195A":
             awg_mode = self.awg_mode
             if awg_mode == "MARK":
@@ -2707,7 +2694,7 @@ class AWGM8190A(AWGM819X):
         # are stated, where only the generic names should be used. The names
         # for the different configurations can be customary chosen.
 
-        activation_config = OrderedDict()
+        activation_config = {}
 
         if self._MODEL == "M8190A":
             # all allowed configs
@@ -2778,10 +2765,7 @@ class AWGM8190A(AWGM819X):
         marker_sample = digital_samples[self._analogue_ch_corresponding_digital_chs(ch_num)[0]]
         marker_sync = digital_samples[self._analogue_ch_corresponding_digital_chs(ch_num)[1]]
         d_samples = self.bool_to_sample(marker_sample, marker_sync, int_type_str="int16")
-        if marker:
-            comb_samples = a_samples + d_samples
-        else:
-            comb_samples = a_samples
+        comb_samples = a_samples + d_samples if marker else a_samples
 
         return comb_samples
 
@@ -2837,7 +2821,7 @@ class AWGM8190A(AWGM819X):
     def _set_active_ch(self, new_channels_state):
         # get lists of all analog channels
         analog_channels = self._get_all_analog_channels()
-        digital_channels = self._get_all_digital_channels()
+        self._get_all_digital_channels()
         current_channel_state = self.get_active_channels()
 
         # awg 8190: no own channels, digital channels belong to analogue ones
@@ -2909,9 +2893,8 @@ class AWGM8190A(AWGM819X):
         # defines a "sequence" (as defined in Keysight manual)
         if "pattern_jump_address" in seq_step:
             control = 0x1 << 28
-        if next_step:
-            if "pattern_jump_address" in next_step:
-                control = 0x1 << 30
+        if next_step and "pattern_jump_address" in next_step:
+            control = 0x1 << 30
 
         control += 0x1 << 24  # always enable markers
 

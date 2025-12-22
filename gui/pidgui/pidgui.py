@@ -58,7 +58,7 @@ class PIDGui(GUIBase):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
     def on_activate(self):
@@ -193,11 +193,11 @@ class PIDGui(GUIBase):
             )
             extra = self._pid_logic._controller.get_extra()
             if "P" in extra:
-                self._mw.labelkP.setText("{0:,.6f}".format(extra["P"]))
+                self._mw.labelkP.setText("{:,.6f}".format(extra["P"]))
             if "I" in extra:
-                self._mw.labelkI.setText("{0:,.6f}".format(extra["I"]))
+                self._mw.labelkI.setText("{:,.6f}".format(extra["I"]))
             if "D" in extra:
-                self._mw.labelkD.setText("{0:,.6f}".format(extra["D"]))
+                self._mw.labelkD.setText("{:,.6f}".format(extra["D"]))
             self._curve1.setData(
                 y=self._pid_logic.history[0],
                 x=np.arange(0, self._pid_logic.getBufferLength()) * self._pid_logic.timestep,

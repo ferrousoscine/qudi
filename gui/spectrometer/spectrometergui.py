@@ -165,7 +165,7 @@ class SpectrometerGui(GUIBase):
             self._mw.spectrum_fit_results_DisplayWidget.clear()
             try:
                 formated_results = units.create_formatted_output(result_str_dict)
-            except:
+            except Exception:
                 formated_results = "this fit does not return formatted results"
             self._mw.spectrum_fit_results_DisplayWidget.setPlainText(formated_results)
 

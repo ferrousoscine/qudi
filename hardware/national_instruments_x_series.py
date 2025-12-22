@@ -182,7 +182,7 @@ class NationalInstrumentsXSeries(
         try:
             daq.DAQmxClearTask(self._scanner_ao_task)
             self._scanner_ao_task = None
-        except:
+        except Exception:
             self.log.exception("Could not clear AO Out Task.")
 
         self.reset_hardware()
@@ -259,10 +259,7 @@ class NationalInstrumentsXSeries(
                 self._scanner_clock_channel = clock_channel
 
         # use the correct clock channel in this method
-        if scanner:
-            my_clock_channel = self._scanner_clock_channel
-        else:
-            my_clock_channel = self._clock_channel
+        my_clock_channel = self._scanner_clock_channel if scanner else self._clock_channel
 
         # check whether only one clock pair is available, since some NI cards
         # only one clock channel pair.
@@ -323,7 +320,7 @@ class NationalInstrumentsXSeries(
                 # actually start the preconfigured clock task
                 daq.DAQmxStartTask(my_clock_daq_task)
                 self._clock_daq_task = my_clock_daq_task
-        except:
+        except Exception:
             self.log.exception("Error while setting up clock.")
             return -1
         return 0
@@ -479,7 +476,7 @@ class NationalInstrumentsXSeries(
                         int(self._clock_frequency * 5),
                     )
                     self._counter_analog_daq_task = atask
-        except:
+        except Exception:
             self.log.exception("Error while setting up counting task.")
             return -1
 
@@ -489,11 +486,11 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxStartTask(task)
             if len(self._counter_ai_channels) > 0:
                 daq.DAQmxStartTask(self._counter_analog_daq_task)
-        except:
+        except Exception:
             self.log.exception("Error while starting Counter")
             try:
                 self.close_counter()
-            except:
+            except Exception:
                 self.log.exception("Could not close counter after error")
             return -1
         return 0
@@ -531,10 +528,7 @@ class NationalInstrumentsXSeries(
             # in case of error return a lot of -1
             return np.ones((len(self.get_counter_channels()), samples), dtype=np.uint32) * -1
 
-        if samples is None:
-            samples = int(self._samples_number)
-        else:
-            samples = int(samples)
+        samples = int(self._samples_number) if samples is None else int(samples)
         try:
             # count data will be written here in the NumPy array of length samples
             count_data = np.empty((len(self._counter_daq_tasks), 2 * samples), dtype=np.uint32)
@@ -579,7 +573,7 @@ class NationalInstrumentsXSeries(
                     daq.byref(analog_read_samples),
                     None,
                 )
-        except:
+        except Exception:
             self.log.exception("Getting samples from counter failed.")
             # in case of error return a lot of -1
             return np.ones((len(self.get_counter_channels()), samples), dtype=np.uint32) * -1
@@ -612,25 +606,25 @@ class NationalInstrumentsXSeries(
         """
         error = 0
         if scanner:
-            for i, task in enumerate(self._scanner_counter_daq_tasks):
+            for _i, task in enumerate(self._scanner_counter_daq_tasks):
                 try:
                     # stop the counter task
                     daq.DAQmxStopTask(task)
                     # after stopping delete all the configuration of the counter
                     daq.DAQmxClearTask(task)
-                except:
+                except Exception:
                     self.log.exception("Could not close scanner counter.")
                     error = -1
             self._scanner_counter_daq_tasks = []
         else:
-            for i, task in enumerate(self._counter_daq_tasks):
+            for _i, task in enumerate(self._counter_daq_tasks):
                 try:
                     # stop the counter task
                     daq.DAQmxStopTask(task)
                     # after stopping delete all the configuration of the counter
                     daq.DAQmxClearTask(task)
                     # set the task handle to None as a safety
-                except:
+                except Exception:
                     self.log.exception("Could not close counter.")
                     error = -1
             self._counter_daq_tasks = []
@@ -642,7 +636,7 @@ class NationalInstrumentsXSeries(
                     # after stopping delete all the configuration of the counter
                     daq.DAQmxClearTask(self._counter_analog_daq_task)
                     # set the task handle to None as a safety
-                except:
+                except Exception:
                     self.log.exception("Could not close counter analog channels.")
                     error = -1
                 self._counter_analog_daq_task = None
@@ -658,10 +652,7 @@ class NationalInstrumentsXSeries(
 
         @return int: error code (0:OK, -1:error)
         """
-        if scanner:
-            my_task = self._scanner_clock_daq_task
-        else:
-            my_task = self._clock_daq_task
+        my_task = self._scanner_clock_daq_task if scanner else self._clock_daq_task
         try:
             # Stop the clock task:
             daq.DAQmxStopTask(my_task)
@@ -674,7 +665,7 @@ class NationalInstrumentsXSeries(
                 self._scanner_clock_daq_task = None
             else:
                 self._clock_daq_task = None
-        except:
+        except Exception:
             self.log.exception("Could not close clock.")
             return -1
         return 0
@@ -715,7 +706,7 @@ class NationalInstrumentsXSeries(
             self.log.info(f"Reset device {device}.")
             try:
                 daq.DAQmxResetDevice(device)
-            except:
+            except Exception:
                 self.log.exception(f"Could not reset NI device {device}")
                 retval = -1
         return retval
@@ -862,7 +853,7 @@ class NationalInstrumentsXSeries(
                     # empty for future use
                     "",
                 )
-        except:
+        except Exception:
             self.log.exception("Error starting analog output task.")
             return -1
         return 0
@@ -878,12 +869,12 @@ class NationalInstrumentsXSeries(
         try:
             # stop the analog output task
             daq.DAQmxStopTask(self._scanner_ao_task)
-        except:
+        except Exception:
             self.log.exception("Error stopping analog output.")
             retval = -1
         try:
             daq.DAQmxSetSampTimingType(self._scanner_ao_task, daq.DAQmx_Val_OnDemand)
-        except:
+        except Exception:
             self.log.exception("Error changing analog output mode.")
             retval = -1
         return retval
@@ -1026,7 +1017,7 @@ class NationalInstrumentsXSeries(
                     "",
                 )
                 self._scanner_analog_daq_task = atask
-        except:
+        except Exception:
             self.log.exception("Error while setting up scanner.")
             retval = -1
 
@@ -1085,7 +1076,7 @@ class NationalInstrumentsXSeries(
         # then directly write the position to the hardware
         try:
             self._write_scanner_ao(voltages=self._scanner_position_to_volt(my_position), start=True)
-        except:
+        except Exception:
             return -1
         return 0
 
@@ -1233,7 +1224,7 @@ class NationalInstrumentsXSeries(
                 self._line_length + 1,
             )
 
-            for i, task in enumerate(self._scanner_counter_daq_tasks):
+            for _i, task in enumerate(self._scanner_counter_daq_tasks):
                 # Configure Implicit Timing for the scanner counting task.
                 # Set timing for scanner count task to the number of pixel.
                 daq.DAQmxCfgImplicitTiming(
@@ -1283,7 +1274,7 @@ class NationalInstrumentsXSeries(
                     daq.DAQmx_Val_ContSamps,
                     self._line_length + 1,
                 )
-        except:
+        except Exception:
             self.log.exception("Error while setting up scanner to scan a line.")
             return -1
         return 0
@@ -1331,9 +1322,7 @@ class NationalInstrumentsXSeries(
             self._set_up_line(np.shape(line_path)[1])
             line_volts = self._scanner_position_to_volt(line_path)
             # write the positions to the analog output
-            written_voltages = self._write_scanner_ao(
-                voltages=line_volts, length=self._line_length, start=False
-            )
+            self._write_scanner_ao(voltages=line_volts, length=self._line_length, start=False)
 
             # start the timed analog output task
             daq.DAQmxStartTask(self._scanner_ao_task)
@@ -1460,7 +1449,7 @@ class NationalInstrumentsXSeries(
 
             # update the scanner position instance variable
             self._current_position = np.array(line_path[:, -1])
-        except:
+        except Exception:
             self.log.exception("Error while scanning line.")
             return np.array([[-1.0]])
         # return values is a rate of counts/s
@@ -1482,7 +1471,7 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxClearTask(self._scanner_analog_daq_task)
                 # set the task handle to None as a safety
                 self._scanner_analog_daq_task = None
-            except:
+            except Exception:
                 self.log.exception("Could not close analog.")
                 b = -1
 
@@ -1589,7 +1578,7 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxSetCICtrTimebaseSrc(task, my_counter_channel, my_photon_source)
 
                 self._scanner_counter_daq_tasks.append(task)
-            except:
+            except Exception:
                 self.log.exception("Error while setting up the digital counter of ODMR scan.")
                 return -1
 
@@ -1635,7 +1624,7 @@ class NationalInstrumentsXSeries(
                 self._odmr_trigger_channel,
                 daq.DAQmx_Val_DoNotInvertPolarity,
             )
-        except:
+        except Exception:
             self.log.exception("Error while setting up ODMR scan.")
             return -1
         return 0
@@ -1716,7 +1705,7 @@ class NationalInstrumentsXSeries(
                     daq.DAQmx_Val_ContSamps,
                     self._odmr_length + 1,
                 )
-        except:
+        except Exception:
             self.log.exception("Error while setting up ODMR counter.")
             return -1
         return 0
@@ -1781,7 +1770,7 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxStartTask(self._scanner_counter_daq_tasks[0])
             if self._scanner_ai_channels:
                 daq.DAQmxStartTask(self._scanner_analog_daq_task)
-        except:
+        except Exception:
             self.log.exception("Cannot start ODMR counter.")
             return True, np.array([-1.0])
 
@@ -1806,7 +1795,7 @@ class NationalInstrumentsXSeries(
                 )
 
                 daq.DAQmxStartTask(self._odmr_pulser_daq_task)
-            except:
+            except Exception:
                 self.log.exception("Cannot start ODMR pulser.")
                 return True, np.array([-1.0])
 
@@ -1932,7 +1921,7 @@ class NationalInstrumentsXSeries(
                     all_data[start_index:] = odmr_analog_data[:, :-1]
 
             return False, all_data
-        except:
+        except Exception:
             self.log.exception("Error while counting for ODMR.")
             return True, np.full((len(self.get_odmr_channels()), 1), [-1.0])
 
@@ -1948,7 +1937,7 @@ class NationalInstrumentsXSeries(
                 self._scanner_clock_channel + "InternalOutput", self._odmr_trigger_channel
             )
 
-        except:
+        except Exception:
             self.log.exception("Error while disconnecting ODMR clock channel.")
             retval = -1
 
@@ -1960,7 +1949,7 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxClearTask(self._scanner_analog_daq_task)
                 # set the task handle to None as a safety
                 self._scanner_analog_daq_task = None
-            except:
+            except Exception:
                 self.log.exception("Could not close analog.")
                 retval = -1
 
@@ -1972,7 +1961,7 @@ class NationalInstrumentsXSeries(
                 daq.DAQmxClearTask(self._odmr_pulser_daq_task)
                 # set the task handle to None as a safety
                 self._odmr_pulser_daq_task = None
-            except:
+            except Exception:
                 self.log.exception("Could not close pulser.")
                 retval = -1
 
@@ -2117,7 +2106,7 @@ class NationalInstrumentsXSeries(
             daq.DAQmxSetReadOverWrite(
                 self._gated_counter_daq_task, daq.DAQmx_Val_DoNotOverwriteUnreadSamps
             )
-        except:
+        except Exception:
             self.log.exception("Error while setting up gated counting.")
             return -1
         return 0
@@ -2136,7 +2125,7 @@ class NationalInstrumentsXSeries(
 
         try:
             daq.DAQmxStartTask(self._gated_counter_daq_task)
-        except:
+        except Exception:
             self.log.exception("Error while starting up gated counting.")
             return -1
         return 0
@@ -2157,10 +2146,7 @@ class NationalInstrumentsXSeries(
                                              what is in buffer until 'samples'
                                              is full.
         """
-        if samples is None:
-            samples = int(self._samples_number)
-        else:
-            samples = int(samples)
+        samples = int(self._samples_number) if samples is None else int(samples)
 
         if timeout is None:
             timeout = self._RWTimeout
@@ -2203,7 +2189,7 @@ class NationalInstrumentsXSeries(
                 return _gated_count_data[0][: n_read_samples.value], n_read_samples.value
             else:
                 return _gated_count_data
-        except:
+        except Exception:
             self.log.exception("Error while reading gated count data.")
             return np.array([-1])
 
@@ -2220,7 +2206,7 @@ class NationalInstrumentsXSeries(
             return -1
         try:
             daq.DAQmxStopTask(self._gated_counter_daq_task)
-        except:
+        except Exception:
             self.log.exception("Error while stopping gated counting.")
             return -1
         return 0
@@ -2234,14 +2220,14 @@ class NationalInstrumentsXSeries(
         try:
             # stop the task
             daq.DAQmxStopTask(self._gated_counter_daq_task)
-        except:
+        except Exception:
             self.log.exception("Error while closing gated counter.")
             retval = -1
         try:
             # clear the task
             daq.DAQmxClearTask(self._gated_counter_daq_task)
             self._gated_counter_daq_task = None
-        except:
+        except Exception:
             self.log.exception("Error while clearing gated counter.")
             retval = -1
         return retval

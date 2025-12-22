@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import datetime
 import time
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -170,13 +169,13 @@ class ODMRLogic(GenericLogic):
         if isinstance(val, dict) and len(val) > 0:
             fc.load_from_dict(val)
         else:
-            d1 = OrderedDict()
+            d1 = {}
             d1["Lorentzian dip"] = {"fit_function": "lorentzian", "estimator": "dip"}
             d1["Two Lorentzian dips"] = {"fit_function": "lorentziandouble", "estimator": "dip"}
             d1["N14"] = {"fit_function": "lorentziantriple", "estimator": "N14"}
             d1["N15"] = {"fit_function": "lorentziandouble", "estimator": "N15"}
             d1["Two Gaussian dips"] = {"fit_function": "gaussiandouble", "estimator": "dip"}
-            default_fits = OrderedDict()
+            default_fits = {}
             default_fits["1d"] = d1
             fc.load_from_dict(default_fits)
         return fc
@@ -199,7 +198,7 @@ class ODMRLogic(GenericLogic):
             final_freq_list.extend(freqs)
             self.frequency_lists.append(freqs)
 
-        if type(self.final_freq_list) == list:
+        if isinstance(self.final_freq_list, list):
             self.final_freq_list = np.array(final_freq_list)
 
         self.odmr_plot_x = np.array(self.final_freq_list)
@@ -893,10 +892,7 @@ class ODMRLogic(GenericLogic):
             if key in self.fits_performed:
                 self.fits_performed.pop(key)
 
-        if result is None:
-            result_str_dict = {}
-        else:
-            result_str_dict = result.result_str_dict
+        result_str_dict = {} if result is None else result.result_str_dict
         self.sigOdmrFitUpdated.emit(
             self.odmr_fit_x, self.odmr_fit_y, result_str_dict, self.fc.current_fit
         )
@@ -917,9 +913,9 @@ class ODMRLogic(GenericLogic):
             else:
                 filelabel_raw = f"ODMR_data_ch{nch}_raw"
 
-            data_raw = OrderedDict()
+            data_raw = {}
             data_raw["count data (counts/s)"] = self.odmr_raw_data[: self.elapsed_sweeps, nch, :]
-            parameters = OrderedDict()
+            parameters = {}
             parameters["Microwave CW Power (dBm)"] = self.cw_mw_power
             parameters["Microwave Sweep Power (dBm)"] = self.sweep_mw_power
             parameters["Run Time (s)"] = self.run_time
@@ -947,8 +943,8 @@ class ODMRLogic(GenericLogic):
                 else:
                     filelabel = f"ODMR_data_ch{nch}_range{ii}"
 
-                # prepare the data in a dict or in an OrderedDict:
-                data = OrderedDict()
+                # prepare the data in a dict:
+                data = {}
                 data["frequency (Hz)"] = frequency_arr
 
                 num_points = len(frequency_arr)
@@ -956,7 +952,7 @@ class ODMRLogic(GenericLogic):
                 data["count data (counts/s)"] = self.odmr_plot_y[nch][data_start_ind:data_end_ind]
                 data_start_ind += num_points
 
-                parameters = OrderedDict()
+                parameters = {}
                 parameters["Microwave CW Power (dBm)"] = self.cw_mw_power
                 parameters["Microwave Sweep Power (dBm)"] = self.sweep_mw_power
                 parameters["Run Time (s)"] = self.run_time
@@ -969,7 +965,7 @@ class ODMRLogic(GenericLogic):
                 parameters["frequency range"] = str(ii)
 
                 key = f"channel: {nch}, range: {ii}"
-                if key in self.fits_performed.keys():
+                if key in self.fits_performed:
                     parameters["Fit function"] = self.fits_performed[key][3]
                     for name, param in self.fits_performed[key][2].params.items():
                         parameters[name] = str(param)
@@ -1018,10 +1014,7 @@ class ODMRLogic(GenericLogic):
         ind_end = cumulative_sum[freq_range + 1]
         count_data = self.odmr_plot_y[channel_number][ind_start:ind_end]
         fit_freq_vals = self.frequency_lists[freq_range]
-        if key in self.fits_performed:
-            fit_count_vals = self.fits_performed[key][2].eval()
-        else:
-            fit_count_vals = 0.0
+        fit_count_vals = self.fits_performed[key][2].eval() if key in self.fits_performed else 0.0
         matrix_data = self.select_odmr_matrix_data(self.odmr_plot_xy, channel_number, freq_range)
 
         # If no colorbar range was given, take full range of data

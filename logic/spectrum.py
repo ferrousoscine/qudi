@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import matplotlib.pyplot as plt
 import numpy as np
 from qtpy import QtCore
@@ -107,9 +105,9 @@ class SpectrumLogic(GenericLogic):
         if isinstance(val, dict) and len(val) > 0:
             fc.load_from_dict(val)
         else:
-            d1 = OrderedDict()
+            d1 = {}
             d1["Gaussian peak"] = {"fit_function": "gaussian", "estimator": "peak"}
-            default_fits = OrderedDict()
+            default_fits = {}
             default_fits["1d"] = d1
             fc.load_from_dict(default_fits)
         return fc
@@ -279,7 +277,7 @@ class SpectrumLogic(GenericLogic):
             filelabel = filelabel + "_" + name_tag
 
         # write experimental parameters
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Spectrometer acquisition repetitions"] = self.repetition_count
 
         # add all fit parameter to the saved data:
@@ -295,7 +293,7 @@ class SpectrumLogic(GenericLogic):
                 parameters[key] = custom_header[key]
 
         # prepare the data in an OrderedDict:
-        data = OrderedDict()
+        data = {}
 
         data["wavelength"] = spectrum_data[0, :]
 
@@ -402,10 +400,7 @@ class SpectrumLogic(GenericLogic):
 
         self.spectrum_fit = np.array([spectrum_fit_x, spectrum_fit_y])
 
-        if result is None:
-            result_str_dict = {}
-        else:
-            result_str_dict = result.result_str_dict
+        result_str_dict = {} if result is None else result.result_str_dict
         self.spectrum_fit_updated_Signal.emit(
             self.spectrum_fit, result_str_dict, self.fc.current_fit
         )

@@ -23,7 +23,6 @@ import importlib
 import inspect
 import os
 import sys
-from collections import OrderedDict
 
 import numpy as np
 
@@ -73,11 +72,11 @@ class PulseBlockElement:
         self.increment_s = increment_s
         self.laser_on = laser_on
         if pulse_function is None:
-            self.pulse_function = OrderedDict()
+            self.pulse_function = {}
         else:
             self.pulse_function = pulse_function
         if digital_high is None:
-            self.digital_high = OrderedDict()
+            self.digital_high = {}
         else:
             self.digital_high = digital_high
 
@@ -90,7 +89,7 @@ class PulseBlockElement:
         repr_str = f"PulseBlockElement(init_length_s={self.init_length_s}, increment_s={self.increment_s}, laser_on={self.laser_on}, pulse_function="
         repr_str += "{"
         for ind, (channel, sampling_func) in enumerate(self.pulse_function.items()):
-            repr_str += "'{0}': {1}".format(channel, "SamplingFunctions." + repr(sampling_func))
+            repr_str += "'{}': {}".format(channel, "SamplingFunctions." + repr(sampling_func))
             if ind < len(self.pulse_function) - 1:
                 repr_str += ", "
         repr_str += "}, "
@@ -120,10 +119,7 @@ class PulseBlockElement:
             return False
         if set(self.digital_high.items()) != set(other.digital_high.items()):
             return False
-        for chnl, func in self.pulse_function:
-            if func != other.pulse_function[chnl]:
-                return False
-        return True
+        return all(func == other.pulse_function[chnl] for chnl, func in self.pulse_function)
 
     def get_dict_representation(self):
         dict_repr = dict()
@@ -275,10 +271,7 @@ class PulseBlock:
             return False
         if len(self) != len(other):
             return False
-        for i, element in enumerate(self.element_list):
-            if element != other[i]:
-                return False
-        return True
+        return all(element == other[i] for i, element in enumerate(self.element_list))
 
     def refresh_parameters(self):
         """Initialize the parameters which describe this Pulse_Block object.
@@ -463,9 +456,7 @@ class PulseBlockEnsemble:
             return False
         if self.block_list != other.block_list:
             return False
-        if self.measurement_information != other.measurement_information:
-            return False
-        return True
+        return self.measurement_information == other.measurement_information
 
     def __len__(self):
         return len(self.block_list)
@@ -648,10 +639,7 @@ class SequenceStep(dict):
         for i, pos_arg in enumerate(args):
             if isinstance(pos_arg, str):
                 kwargs["ensemble"] = pos_arg
-                if len(args) == 2:
-                    args = (args[0],) if i == 1 else (args[1],)
-                else:
-                    args = tuple()
+                args = ((args[0],) if i == 1 else (args[1],)) if len(args) == 2 else tuple()
                 break
 
         # Initialize the dict.
@@ -815,9 +803,7 @@ class PulseSequence:
             return False
         if self.ensemble_list != other.ensemble_list:
             return False
-        if self.measurement_information != other.measurement_information:
-            return False
-        return True
+        return self.measurement_information == other.measurement_information
 
     def __len__(self):
         return len(self.ensemble_list)
@@ -1138,7 +1124,7 @@ class PredefinedGeneratorBase:
     #                                   Helper methods                                          ####
     ################################################################################################
 
-    def tau_2_pulse_spacing(self, t, inverse=False, custom_func=[None, None], **custom_kwwargs):
+    def tau_2_pulse_spacing(self, t, inverse=False, custom_func=None, **custom_kwwargs):
         """
         Converts tau to the physical pulse spacing between (microwave) pulses.
         By definition, tau = 1/f where f is the filter frequency of a dynamical decoupling
@@ -1152,6 +1138,9 @@ class PredefinedGeneratorBase:
         :param custom_kwwargs: kwargs to the custom transformation functions
         :return:
         """
+
+        if custom_func is None:
+            custom_func = [None, None]
 
         def subtract_pi(t, **kwargs):
             return t - np.asarray(self.rabi_period) / 2

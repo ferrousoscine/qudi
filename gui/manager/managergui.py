@@ -18,9 +18,10 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import builtins
+import contextlib
 import logging
 import os
-from collections import OrderedDict
 
 import numpy as np
 from qtpy import QtCore, QtWidgets, uic
@@ -39,16 +40,14 @@ try:
 except ImportError:
     from IPython.qt.inprocess import QtInProcessKernelManager
 
-try:
+with contextlib.suppress(builtins.BaseException):
     from git import Repo
-except:
-    pass
 
 try:
     import pyqtgraph as pg
 
     _has_pyqtgraph = True
-except:
+except ImportError:
     _has_pyqtgraph = False
 
 # Rather than import the ui*.py file here, the ui*.ui file itself is
@@ -398,23 +397,20 @@ Go, play.
         @param (dict, list, etc) value: value to fill in
         """
         item.setExpanded(True)
-        if type(value) is OrderedDict or type(value) is dict:
+        if isinstance(value, dict):
             for key in value:
                 child = QtWidgets.QTreeWidgetItem()
                 child.setText(0, key)
                 item.addChild(child)
                 self.fillTreeItem(child, value[key])
-        elif type(value) is list:
+        elif isinstance(value, list):
             for val in value:
                 child = QtWidgets.QTreeWidgetItem()
                 item.addChild(child)
-                if type(val) is dict:
+                if isinstance(val, dict):
                     child.setText(0, "[dict]")
                     self.fillTreeItem(child, val)
-                elif type(val) is OrderedDict:
-                    child.setText(0, "[odict]")
-                    self.fillTreeItem(child, val)
-                elif type(val) is list:
+                elif isinstance(val, list):
                     child.setText(0, "[list]")
                     self.fillTreeItem(child, val)
                 else:
@@ -443,7 +439,7 @@ Go, play.
         """Fill a QTreeWidget with the content of a dictionary
 
         @param QTreeWidget widget: the tree widget to fill
-        @param dict,OrderedDict value: the dictionary to fill in
+        @param dict value: the dictionary to fill in
         """
         widget.clear()
         self.fillTreeItem(widget.invisibleRootItem(), value)
@@ -504,7 +500,7 @@ class ManagerMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_manager_window.ui")
 
         # Load it
-        super(ManagerMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -645,7 +641,7 @@ class ModuleListItem(QtWidgets.QFrame):
                     self.reloadButton.setEnabled(False)
                     self.deactivateButton.setEnabled(False)
                     self.cleanupButton.setEnabled(True)
-            except:
+            except Exception:
                 state = "exception, cannot get state"
                 self.reloadButton.setEnabled(True)
                 self.deactivateButton.setEnabled(True)

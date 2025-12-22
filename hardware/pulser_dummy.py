@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 from core.configoption import ConfigOption
 from core.module import Base
@@ -233,7 +232,7 @@ class PulserDummy(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["config0"] = frozenset(
             {"a_ch1", "d_ch1", "d_ch2", "a_ch2", "d_ch3", "d_ch4"}
         )
@@ -377,7 +376,7 @@ class PulserDummy(Base, PulserInterface):
         @return: int, number of sequence steps written (-1 indicates failed process)
         """
         # Check if all waveforms are present on virtual device memory
-        for waveform_tuple, param_dict in sequence_parameter_list:
+        for waveform_tuple, _param_dict in sequence_parameter_list:
             for waveform in waveform_tuple:
                 if waveform not in self.waveform_set:
                     self.log.error(
@@ -584,10 +583,7 @@ class PulserDummy(Base, PulserInterface):
         # Determine if it's a waveform or a sequence
         asset_type = None
         for asset_name in self.current_loaded_assets.values():
-            if "ch" in asset_name.rsplit("_", 1)[1]:
-                current_type = "waveform"
-            else:
-                current_type = "sequence"
+            current_type = "waveform" if "ch" in asset_name.rsplit("_", 1)[1] else "sequence"
 
             if asset_type is None or asset_type == current_type:
                 asset_type = current_type

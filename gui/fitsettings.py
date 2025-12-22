@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import logging
 import math
-from collections import OrderedDict
 
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
@@ -53,9 +52,9 @@ class FitSettingsDialog(QtWidgets.QDialog):
         self.tabs = {}
         self.parameters = {}
         self.parameterUse = {}
-        self.currentFits = OrderedDict()
-        self.fitWidgets = OrderedDict()
-        self.currentFitWidgets = OrderedDict()
+        self.currentFits = {}
+        self.fitWidgets = {}
+        self.currentFitWidgets = {}
 
         # widgets and layouts
         self._dialogLayout = QtWidgets.QVBoxLayout()
@@ -197,7 +196,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
 
     def removeAllFits(self):
         """Remove all configured fits from dialog."""
-        for name in self.currentFits.keys():
+        for name in self.currentFits:
             self.removeFit(name)
 
     def getFits(self):
@@ -219,12 +218,11 @@ class FitSettingsDialog(QtWidgets.QDialog):
                     self._tabWidget.removeTab(index)
                 self._scrLayout.removeWidget(widget)
 
-        self.fitWidgets = OrderedDict()
+        self.fitWidgets = {}
 
         # add tabs for new fits, replace tabs for changed fits
         for name, widget in self.currentFitWidgets.items():
             oldfit = widget.fit
-            oldest = widget.estimator
             widget.applySettings()
 
             if name in self.tabs and widget.fit != oldfit:
@@ -262,7 +260,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
     def buildCurrentFits(self):
         """Update dictionary of the configured fits for FitContainer or other componenrs."""
         # arrange all of this information in a convenient form
-        self.currentFits = OrderedDict()
+        self.currentFits = {}
         for name, widget in self.fitWidgets.items():
             try:
                 self.currentFits[name] = {
@@ -283,7 +281,7 @@ class FitSettingsDialog(QtWidgets.QDialog):
             if name not in self.fitWidgets:
                 self._scrLayout.removeWidget(widget)
 
-        self.currentFitWidgets = OrderedDict()
+        self.currentFitWidgets = {}
         for name, widget in self.fitWidgets.items():
             widget.resetSettings()
             widget.show()
@@ -328,7 +326,7 @@ class FitSettingsComboBox(QtWidgets.QComboBox):
         @param kwargs dict(): keyword arguments passed to QComboBox
         """
         super().__init__(*args, **kwargs)
-        self.fit_functions = OrderedDict()
+        self.fit_functions = {}
         self.fit_functions["No Fit"] = None
         self.addItem("No Fit")
         self.setCurrentIndex(self.findText("No Fit"))
@@ -340,7 +338,7 @@ class FitSettingsComboBox(QtWidgets.QComboBox):
         """
         current = self.getCurrentFit()
         self.clear()
-        self.fit_functions = OrderedDict()
+        self.fit_functions = {}
         self.fit_functions["No Fit"] = None
         self.addItem("No Fit")
 
@@ -438,7 +436,7 @@ class FitConfigWidget(QtWidgets.QWidget):
     @QtCore.Slot(int)
     def estimatorChanged(self, index):
         """Estimator changed. Nothing really needs to happen."""
-        name = self.estComboBox.itemText(index)
+        self.estComboBox.itemText(index)
         # FIXME: remove this maybe?
 
     def applySettings(self):

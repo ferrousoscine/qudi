@@ -26,6 +26,7 @@ distributed as part of this software.
 """
 
 import builtins
+import contextlib
 import sys
 import threading
 from base64 import encodebytes
@@ -114,10 +115,8 @@ def softspace(f, newvalue):
     """
 
     oldvalue = 0
-    try:
+    with contextlib.suppress(AttributeError):
         oldvalue = f.softspace
-    except AttributeError:
-        pass
     try:
         f.softspace = newvalue
     except (AttributeError, TypeError):
@@ -141,10 +140,8 @@ def encode_images(format_dict):
 
     """
     # constants for identifying png/jpeg data
-    PNG = b"\x89PNG\r\n\x1a\n"
     # front of PNG base64-encoded
     PNG64 = b"iVBORw0KG"
-    JPEG = b"\xff\xd8"
     # front of JPEG base64-encoded
     JPEG64 = b"/9"
     # front of PDF base64-encoded

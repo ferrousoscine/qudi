@@ -19,6 +19,7 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import atexit
+import errno
 import json
 import logging
 import os
@@ -113,11 +114,11 @@ class Qudi:
                         return configFile
                     # try absolute filename or relative to pwd
                     if os.path.isfile(confDict["configfile"]):
-                        logging.info("Config file found at {0}".format(confDict["configfile"]))
+                        logging.info("Config file found at {}".format(confDict["configfile"]))
                         return confDict["configfile"]
                     else:
                         logging.critical(
-                            "Couldn't find config file specified in load.cfg: {0}".format(
+                            "Couldn't find config file specified in load.cfg: {}".format(
                                 confDict["configfile"]
                             )
                         )

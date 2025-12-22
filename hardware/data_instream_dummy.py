@@ -566,7 +566,7 @@ class InStreamDummy(Base, DataInStreamInterface):
         analog_x *= 2 * np.pi
         analog_x += 2 * np.pi * (self._last_read - self._start_time)
         self._last_read = time.perf_counter()
-        for i, chnl in enumerate(self.__active_channels):
+        for _i, chnl in enumerate(self.__active_channels):
             if chnl in self._digital_channels:
                 ch_index = self._digital_channels.index(chnl)
                 events_per_bin = self._digital_event_rates[ch_index] / self.__sample_rate

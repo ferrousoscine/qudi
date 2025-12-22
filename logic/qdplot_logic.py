@@ -20,8 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 Completely reworked by Kay Jahnke, May 2020
 """
 
-from collections import OrderedDict
-
 import matplotlib.pyplot as plt
 import numpy as np
 from qtpy import QtCore
@@ -386,7 +384,7 @@ class QDPlotLogic(GenericLogic):
                         formatted_fitresult = units.create_formatted_output(
                             result_set.result_str_dict
                         )
-                    except:
+                    except Exception:
                         formatted_fitresult = "This fit does not return formatted results"
                 tabbed_result = "\n  ".join(formatted_fitresult.split("\n")[:-1])
                 result += f"data_set {data_set}:\n  {tabbed_result}\n"
@@ -423,7 +421,7 @@ class QDPlotLogic(GenericLogic):
                 raise IndexError(f"Plot index {plot_index:d} out of bounds. Unable to save data.")
 
             # Set the parameters:
-            parameters = OrderedDict()
+            parameters = {}
             parameters["user-selected x-limits"] = self._x_limits[plot_index]
             parameters["user-selected y-limits"] = self._y_limits[plot_index]
             parameters["user-selected x-label"] = self._x_label[plot_index]
@@ -432,10 +430,7 @@ class QDPlotLogic(GenericLogic):
             parameters["user-selected y-unit"] = self._y_unit[plot_index]
 
             # If there is a postfix then add separating underscore
-            if postfix == "":
-                file_label = "qdplot"
-            else:
-                file_label = postfix
+            file_label = "qdplot" if postfix == "" else postfix
 
             file_label += f"_plot_{int(plot_index) + 1:d}"
 
@@ -443,8 +438,8 @@ class QDPlotLogic(GenericLogic):
             x_label = self._x_label[plot_index] + " (" + self._x_unit[plot_index] + ")"
             y_label = self._y_label[plot_index] + " (" + self._y_unit[plot_index] + ")"
 
-            # prepare the data in a dict or in an OrderedDict:
-            data = OrderedDict()
+            # prepare the data in a dict:
+            data = {}
             for data_set in range(len(self._x_data[plot_index])):
                 data[f"{x_label} set {data_set + 1:d}"] = self._x_data[plot_index][data_set]
                 data[f"{y_label} set {data_set + 1:d}"] = self._y_data[plot_index][data_set]

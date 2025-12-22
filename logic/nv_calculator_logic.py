@@ -153,7 +153,7 @@ class NVCalculatorLogic(GenericLogic):
 
     def manual_dips(self):
         b_field, angle = self.cal_alignment(self.freq1 / 1e6, self.freq2 / 1e6)
-        self.sigFieldmCalUpdated.emit("%.3f" % b_field, "%.3f" % angle)
+        self.sigFieldmCalUpdated.emit(f"{b_field:.3f}", f"{angle:.3f}")
         self.auto_field = b_field
         return
 
@@ -171,9 +171,9 @@ class NVCalculatorLogic(GenericLogic):
                 freq1 = self.fit.fc.current_fit_param["l0_center"].value / 1e6
                 freq2 = self.fit.fc.current_fit_param["l1_center"].value / 1e6
             b_field, angle = self.cal_alignment(freq1, freq2)
-            self.sigFieldaCalUpdated.emit("%.3f" % b_field, "%.3f" % angle)
+            self.sigFieldaCalUpdated.emit(f"{b_field:.3f}", f"{angle:.3f}")
             self.auto_field = b_field
-        except:
+        except Exception:
             self.log.error(
                 "The NV calculator seems unable to get ODMR dips!"
                 " Only double dip Lorentzian or double dip Gaussian fitting can be recognized by the "
@@ -195,10 +195,7 @@ class NVCalculatorLogic(GenericLogic):
         """
         NMR frequency in Hz, XY8 in s
         """
-        if self.manual_nmr:
-            field = self.manual_field
-        else:
-            field = self.auto_field
+        field = self.manual_field if self.manual_nmr else self.auto_field
 
         h1_freq = 42.58 * field * 1e2
         c13_freq = 10.705 * field * 1e2

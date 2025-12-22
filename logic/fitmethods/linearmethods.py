@@ -271,7 +271,7 @@ def estimate_linear(self, x_axis, data, params):
         intercept = data_mean - slope * x_mean
         params["offset"].value = intercept
         params["slope"].value = slope
-    except:
+    except Exception:
         self.log.warning("The estimation for linear fit did not work.")
         params["slope"].value = 0
         params["offset"].value = 0

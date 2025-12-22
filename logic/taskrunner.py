@@ -159,7 +159,7 @@ class TaskRunner(GenericLogic):
                             raise Exception(f"Loading module {mod} failed.")
                     ref[moddef] = self._manager.tree["loaded"]["logic"][mod]
                 # print('Attempting to import: logic.tasks.{}'.format(t['module']))
-                mod = importlib.__import__("logic.tasks.{0}".format(t["module"]), fromlist=["*"])
+                mod = importlib.__import__("logic.tasks.{}".format(t["module"]), fromlist=["*"])
                 # print('loaded:', mod)
                 # print('dir:', dir(mod))
                 t["object"] = mod.Task(
@@ -171,7 +171,7 @@ class TaskRunner(GenericLogic):
                     self.model.append(t)
                 else:
                     self.log.error(f"Not a subclass of allowd task classes {task}")
-            except:
+            except Exception:
                 self.log.exception("Error while importing module for task {}".format(t["name"]))
         self.sigCheckTasks.emit()
 
@@ -200,7 +200,7 @@ class TaskRunner(GenericLogic):
             task["module"] = None
             task["needsmodules"] = {}
             task["config"] = {}
-        except:
+        except Exception:
             self.log.error("Cannot register task, not a writeable dict.")
             return False
 
@@ -208,8 +208,10 @@ class TaskRunner(GenericLogic):
         for entry in checklist:
             if entry not in task:
                 return False
-        if isinstance(t["object"], gt.InterruptableTask) or isinstance(t["object"], gt.PrePostTask):
-            self.model.append(t)
+        if isinstance(task["object"], gt.InterruptableTask) or isinstance(
+            task["object"], gt.PrePostTask
+        ):
+            self.model.append(task)
         else:
             self.log.error(f"Not a subclass of allowd task classes {task}")
             return False
@@ -242,7 +244,7 @@ class TaskRunner(GenericLogic):
             # check if all required moduls are present
             if len(task["needsmodules"]) == 0:
                 modok = True
-            for moddef, mod in task["needsmodules"].items():
+            for _moddef, mod in task["needsmodules"].items():
                 if (
                     mod in self._manager.tree["defined"]["logic"]
                     and mod not in self._manager.tree["loaded"]["logic"]
@@ -325,7 +327,7 @@ class TaskRunner(GenericLogic):
         if task["object"].can("pause"):
             task["object"].pause()
         else:
-            self.log.error("Task cannot be paused:  {0}".format(task["name"]))
+            self.log.error("Task cannot be paused:  {}".format(task["name"]))
 
     def stopTaskByIndex(self, index):
         """Try stopping a task identified by its list index.
@@ -348,7 +350,7 @@ class TaskRunner(GenericLogic):
         if task["object"].can("finish"):
             task["object"].finish()
         else:
-            self.log.error("Task cannot be stopped: {0}".format(task["name"]))
+            self.log.error("Task cannot be stopped: {}".format(task["name"]))
 
     def getTaskByName(self, taskname):
         """Get task dictionary for a given task name.
@@ -419,7 +421,7 @@ class TaskRunner(GenericLogic):
                                 )
                             )
                             return False
-            except:
+            except Exception:
                 self.log.exception(
                     "This pausetask {} failed while preparing: {}".format(ptask, task["name"])
                 )
@@ -456,7 +458,7 @@ class TaskRunner(GenericLogic):
                                 )
                             )
                             return False
-            except:
+            except Exception:
                 self.log.exception(
                     "This preposttask {} failed while postrunning in: {}".format(
                         pptask, task["name"]
@@ -497,7 +499,7 @@ class TaskRunner(GenericLogic):
                                 )
                             )
                             return False
-            except:
+            except Exception:
                 self.log.exception(
                     "This preposttask {} failed while preparing: {}".format(pptask, task["name"])
                 )
@@ -535,7 +537,7 @@ class TaskRunner(GenericLogic):
                                 )
                             )
                             return False
-            except:
+            except Exception:
                 self.log.exception(
                     "This pausetask {} failed while preparing: {}".format(ptask, task["name"])
                 )

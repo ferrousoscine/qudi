@@ -336,7 +336,7 @@ class Mapper:
         args*: List list of event parameters
         """
         widget, widget_property_name = key
-        mapping = self._mappings[key]
+        self._mappings[key]
         # get value from model
         value = self._mappings[key]["model_property_getter"]()
 
@@ -437,7 +437,7 @@ class Mapper:
         Submits the current values stored in the widgets to the models.
         """
         # make sure it is called from main thread
-        if not QThread.currentThread() == QCoreApplication.instance().thread():
+        if QThread.currentThread() != QCoreApplication.instance().thread():
             QTimer.singleShot(0, self.submit)
             return
 
@@ -454,7 +454,7 @@ class Mapper:
         Takes the data stored in the models and displays them in the widgets.
         """
         # make sure it is called from main thread
-        if not QThread.currentThread() == QCoreApplication.instance().thread():
+        if QThread.currentThread() != QCoreApplication.instance().thread():
             QTimer.singleShot(0, self.revert)
             return
 

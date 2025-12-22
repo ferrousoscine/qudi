@@ -27,10 +27,7 @@ class BenchmarkTool:
     def sanity(self):
         a, t0, da = self._get_speed_fit()
 
-        if a + da < 0 or t0 < 0:
-            return False
-
-        return True
+        return not (a + da < 0 or t0 < 0)
 
     def reset(self):
         """
@@ -95,7 +92,7 @@ class BenchmarkTool:
         return save_dict
 
     def load_from_dict(self, obj=None, saved_dict=None):
-        if saved_dict != None:
+        if saved_dict is not None:
             saved_dict["_datapoints"] = deque(
                 saved_dict["_datapoints"], maxlen=self._n_save_datapoints
             )

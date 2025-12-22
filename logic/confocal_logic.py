@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import datetime
-from collections import OrderedDict
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -324,13 +323,13 @@ class ConfocalLogic(GenericLogic):
                 pass
             except OldConfigFileError:
                 self.log.warning(f"Old style config file detected. History {i} ignored.")
-            except:
+            except Exception:
                 self.log.warning(f"Restoring history {i} failed.")
         try:
             new_state = ConfocalHistoryEntry(self)
             new_state.deserialize(self._statusVariables["history_0"])
             new_state.restore(self)
-        except:
+        except Exception:
             new_state = ConfocalHistoryEntry(self)
             new_state.restore(self)
         finally:
@@ -695,7 +694,7 @@ class ConfocalLogic(GenericLogic):
         pos_array = [self._current_x, self._current_y, self._current_z, self._current_a]
         pos_dict = {}
 
-        for i, ch in enumerate(self.get_scanner_axes()):
+        for i, _ch in enumerate(self.get_scanner_axes()):
             pos_dict[ch_array[i]] = pos_array[i]
 
         self._scanning_device.scanner_set_position(**pos_dict)
@@ -860,7 +859,7 @@ class ConfocalLogic(GenericLogic):
                     self._scan_counter = 0
 
             self.signal_scan_lines_next.emit()
-        except:
+        except Exception:
             self.log.exception("The scan went wrong, killing the scanner.")
             self.stop_scanning()
             self.signal_scan_lines_next.emit()
@@ -893,7 +892,7 @@ class ConfocalLogic(GenericLogic):
         filepath = self._save_logic.get_path_for_module("Confocal")
         timestamp = datetime.datetime.now()
         # Prepare the metadata parameters (common to both saved files):
-        parameters = OrderedDict()
+        parameters = {}
 
         parameters["X image min (m)"] = self.image_x_range[0]
         parameters["X image max (m)"] = self.image_x_range[1]
@@ -910,7 +909,7 @@ class ConfocalLogic(GenericLogic):
         parameters["Return Slowness (Steps during retrace line)"] = self.return_slowness
 
         # Prepare a figure to be saved
-        figure_data = self.xy_image[:, :, 3]
+        self.xy_image[:, :, 3]
         image_extent = [
             self.image_x_range[0],
             self.image_x_range[1],
@@ -935,7 +934,7 @@ class ConfocalLogic(GenericLogic):
         # Save the image data and figure
         for n, ch in enumerate(self.get_scanner_count_channels()):
             # data for the text-array "image":
-            image_data = OrderedDict()
+            image_data = {}
             image_data[
                 "Confocal pure XY scan image data without axis.\n"
                 "The upper left entry represents the signal at the upper left pixel position.\n"
@@ -943,7 +942,7 @@ class ConfocalLogic(GenericLogic):
                 "of entries where the Signal is in counts/s:"
             ] = self.xy_image[:, :, 3 + n]
 
-            filelabel = "confocal_xy_image_{0}".format(ch.replace("/", ""))
+            filelabel = "confocal_xy_image_{}".format(ch.replace("/", ""))
             self._save_logic.save_data(
                 image_data,
                 filepath=filepath,
@@ -956,7 +955,7 @@ class ConfocalLogic(GenericLogic):
             )
 
         # prepare the full raw data in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["x position (m)"] = self.xy_image[:, :, 0].flatten()
         data["y position (m)"] = self.xy_image[:, :, 1].flatten()
         data["z position (m)"] = self.xy_image[:, :, 2].flatten()
@@ -1007,7 +1006,7 @@ class ConfocalLogic(GenericLogic):
         filepath = self._save_logic.get_path_for_module("Confocal")
         timestamp = datetime.datetime.now()
         # Prepare the metadata parameters (common to both saved files):
-        parameters = OrderedDict()
+        parameters = {}
 
         # TODO: This needs to check whether the scan was XZ or YZ direction
         parameters["X image min (m)"] = self.image_x_range[0]
@@ -1056,7 +1055,7 @@ class ConfocalLogic(GenericLogic):
         # Save the image data and figure
         for n, ch in enumerate(self.get_scanner_count_channels()):
             # data for the text-array "image":
-            image_data = OrderedDict()
+            image_data = {}
             image_data[
                 "Confocal pure depth scan image data without axis.\n"
                 "The upper left entry represents the signal at the upper left pixel position.\n"
@@ -1064,7 +1063,7 @@ class ConfocalLogic(GenericLogic):
                 "of entries where the Signal is in counts/s:"
             ] = self.depth_image[:, :, 3 + n]
 
-            filelabel = "confocal_depth_image_{0}".format(ch.replace("/", ""))
+            filelabel = "confocal_depth_image_{}".format(ch.replace("/", ""))
             self._save_logic.save_data(
                 image_data,
                 filepath=filepath,
@@ -1077,7 +1076,7 @@ class ConfocalLogic(GenericLogic):
             )
 
         # prepare the full raw data in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["x position (m)"] = self.depth_image[:, :, 0].flatten()
         data["y position (m)"] = self.depth_image[:, :, 1].flatten()
         data["z position (m)"] = self.depth_image[:, :, 2].flatten()

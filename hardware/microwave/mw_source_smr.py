@@ -82,7 +82,7 @@ class MicrowaveSMR(Base, MicrowaveInterface):
             self._gpib_connection.read_termination = None
 
             self.log.info("MicrowaveSMR: initialised and connected to hardware.")
-        except:
+        except Exception:
             self.log.error(
                 f'MicrowaveSMR: could not connect to the GPIB address "{self._gpib_address}".'
             )
@@ -471,7 +471,7 @@ class MicrowaveSMR(Base, MicrowaveInterface):
             self._write("SOUR:FREQ:MODE SWE")
 
         self._write(":SOUR:SWE:FREQ:SPAC LIN")
-        self._write(":SOUR:SWE:FREQ:STEP {0}".format())
+        self._write(f":SOUR:SWE:FREQ:STEP {step}")
 
         if (start is not None) and (stop is not None) and (step is not None):
             self._write(f":FREQ:START {start - step}")

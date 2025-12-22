@@ -58,11 +58,11 @@ class BasicPulseExtractor(PulseExtractorBase):
         # apply gaussian filter to remove noise and compute the gradient of the timetrace sum
         try:
             conv = ndimage.filters.gaussian_filter1d(timetrace_sum.astype(float), conv_std_dev)
-        except:
+        except Exception:
             conv = np.zeros(timetrace_sum.size)
         try:
             conv_deriv = np.gradient(conv)
-        except:
+        except Exception:
             conv_deriv = np.zeros(conv.size)
 
         # get indices of rising and falling flank
@@ -141,11 +141,11 @@ class BasicPulseExtractor(PulseExtractorBase):
         # apply gaussian filter to remove noise and compute the gradient of the timetrace sum
         try:
             conv = ndimage.filters.gaussian_filter1d(count_data.astype(float), conv_std_dev)
-        except:
+        except Exception:
             conv = np.zeros(count_data.size)
         try:
             conv_deriv = np.gradient(conv)
-        except:
+        except Exception:
             conv_deriv = np.zeros(conv.size)
 
         # if gaussian smoothing or derivative failed, the returned array only contains zeros.
@@ -159,11 +159,11 @@ class BasicPulseExtractor(PulseExtractorBase):
         # a large conv_std_dev value.
         try:
             conv = ndimage.filters.gaussian_filter1d(count_data.astype(float), 10)
-        except:
+        except Exception:
             conv = np.zeros(count_data.size)
         try:
             conv_deriv_ref = np.gradient(conv)
-        except:
+        except Exception:
             conv_deriv_ref = np.zeros(conv.size)
 
         # initialize arrays to contain indices for all rising and falling

@@ -70,7 +70,7 @@ class ParentPollerUnix(Thread):
         while True:
             try:
                 if os.getppid() == 1:
-                    if hasattr(self.quitfunction, "__call__"):
+                    if callable(self.quitfunction):
                         self.quitfunction()
                     waitForClose()
                     os._exit(1)
@@ -142,7 +142,7 @@ class ParentPollerWindows(Thread):
                         interrupt_main()
 
                 elif handle == self.parent_handle:
-                    if hasattr(self.quitfunction, "__call__"):
+                    if callable(self.quitfunction):
                         self.quitfunction()
                     waitForClose()
                     os._exit(1)

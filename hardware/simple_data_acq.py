@@ -58,7 +58,7 @@ class SimpleAcq(Base, SimpleDataInterface):
         """
         try:
             return int(self.my_instrument.read_raw().decode("utf-8").rstrip().split()[1])
-        except:
+        except Exception:
             return 0
 
     def getChannels(self):

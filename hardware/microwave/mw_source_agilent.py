@@ -69,7 +69,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
             self._FREQ_SWITCH_SPEED = 0.09  # Frequency switching speed in s (acc. to specs)
             # set trigger of Sweep and Point to be FALLING
             self.set_ext_trigger()
-        except:
+        except Exception:
             self.log.error(
                 f"This is MWagilent: could not connect to the GPIB address >>{self._usb_address}<<."
             )
@@ -111,10 +111,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
         is_running = bool(int(float(self._usb_connection.ask(":RFOutput:STATe?"))))
 
         if bool(int(float(self._usb_connection.ask(":SWEep:RF:STATe?")))):
-            if self._usb_connection.ask(":SWEep:TYPE?") == "STEP":
-                mode = "sweep"
-            else:
-                mode = "list"
+            mode = "sweep" if self._usb_connection.ask(":SWEep:TYPE?") == "STEP" else "list"
         else:
             mode = "cw"
         return mode, is_running
@@ -226,7 +223,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
                 time.sleep(0.2)
                 dummy, is_running = self.get_status()
             return 0
-        except:
+        except Exception:
             self.log.warning("Turning on of List mode does not work")
             return -1
 
@@ -248,12 +245,12 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
             # adapt the length of the list
             while current_rows != num_of_freq:
                 if current_rows > num_of_freq:
-                    for kk in range(int(current_rows - num_of_freq)):
+                    for _kk in range(int(current_rows - num_of_freq)):
                         # always delete the second row (first might not work)
                         self._usb_connection.write(f":LIST:ROW:DELete {2:e}")
                         time.sleep(0.05)
                 elif current_rows < num_of_freq:
-                    for kk in range(int(num_of_freq - current_rows)):
+                    for _kk in range(int(num_of_freq - current_rows)):
                         self._usb_connection.write(f":LIST:ROW:INsert {2:e}")
                         time.sleep(0.05)
                 current_rows = int(self._usb_connection.ask(":LIST:RF:POINts?"))
@@ -309,7 +306,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
             self._usb_connection.write(":SWEep:RF:STATe ON")
             self._usb_connection.write(":RFO:STAT ON")
             return 0
-        except:
+        except Exception:
             self.log.error("Reset of list position did not work")
             return -1
 
@@ -336,7 +333,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
                 dummy, is_running = self.get_status()
             # self._usb_connection.write('*WAI')
             return 0
-        except:
+        except Exception:
             self.log.error("Turning on of sweep mode did not work!")
             return -1
 
@@ -454,7 +451,7 @@ class MicrowaveAgilent(Base, MicrowaveInterface):
             self._usb_connection.write(f":SWE:PTRG:SLOP {edge}")
             time.sleep(0.5)
             self._usb_connection.write(f":SWE:STRG:SLOP {edge}")
-        except:
+        except Exception:
             self.log.error("Setting of trigger did not work!")
             return pol, timing
         return pol, timing

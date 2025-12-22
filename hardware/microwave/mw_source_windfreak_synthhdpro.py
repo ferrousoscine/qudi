@@ -266,7 +266,7 @@ class MicrowaveSynthHDPro(Base, MicrowaveInterface):
         # enable sweep mode and set to start frequency
         self._conn.write("g1")
         # query sweep mode
-        mode = int(self._conn.query("g?"))
+        int(self._conn.query("g?"))
         return 0
 
     def set_sweep(self, start=None, stop=None, step=None, power=None):
@@ -320,7 +320,7 @@ class MicrowaveSynthHDPro(Base, MicrowaveInterface):
         # query sweep lower end power
         mw_sweep_power_start = float(self._conn.query("[?"))
         # query sweep upper end power
-        mw_sweep_power_stop = float(self._conn.query("]?"))
+        float(self._conn.query("]?"))
         self.log.debug(
             f"SWEEP: {start} -> {stop} {step}, {mw_start_freq} -> {mw_stop_freq} {mw_step_freq}, {mw_power} -> {mw_sweep_power_start}"
         )

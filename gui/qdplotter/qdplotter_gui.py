@@ -126,8 +126,8 @@ class QDPlotterGui(GUIBase):
 
         if not isinstance(self._pen_color_list, (list, tuple)) or len(self._pen_color_list) < 1:
             self.log.warning(
-                'The ConfigOption pen_color_list needs to be a list of strings but was "{0}".'
-                " Will use the following pen colors as default: {1}."
+                'The ConfigOption pen_color_list needs to be a list of strings but was "{}".'
+                " Will use the following pen colors as default: {}."
                 "".format(self._pen_color_list, ["b", "y", "m", "g"])
             )
             self._pen_color_list = ["b", "y", "m", "g"]
@@ -346,7 +346,7 @@ class QDPlotterGui(GUIBase):
                 f" Will use the following old pen colors: {self._pen_color_list}."
             )
             return
-        for index, color in enumerate(self._pen_color_list):
+        for _index, color in enumerate(self._pen_color_list):
             if (isinstance(color, (list, tuple)) and len(color) == 3) or (
                 isinstance(color, str) and color in self._allowed_colors
             ):

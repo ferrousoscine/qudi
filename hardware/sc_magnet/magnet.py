@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import re
 import socket
-from collections import OrderedDict
 
 import numpy as np
 
@@ -174,7 +173,7 @@ class Magnet(Base, MagnetInterface):
         insert just None. If you are not sure about the meaning, look in other
         hardware files to get an impression.
         """
-        constraints = OrderedDict()
+        constraints = {}
         pos_dict = self.get_pos()
         coord_list = [pos_dict["rho"], pos_dict["theta"], pos_dict["phi"]]
         pos_max_dict = self.rho_pos_max({"rad": coord_list})
@@ -329,10 +328,7 @@ class Magnet(Base, MagnetInterface):
         """
         # I have chosen the numbers rather lightly and
         # an improvement is probably easily achieved.
-        if param_list is not None:
-            status_plural = self.ask_status(param_list)
-        else:
-            status_plural = self.ask_status()
+        status_plural = self.ask_status(param_list) if param_list is not None else self.ask_status()
         status_dict = {}
         for axes in status_plural:
             status = status_plural[axes]
@@ -612,7 +608,7 @@ class Magnet(Base, MagnetInterface):
             coord_list[1] = param_dict["theta"]
         if param_dict.get("phi") is not None:
             coord_list[2] = param_dict["phi"]
-        for key in param_dict.keys():
+        for key in param_dict:
             if key not in label_list:
                 self.log.warning("The key " + key + " provided is no valid key in set_coordinates.")
                 return -1
@@ -758,7 +754,7 @@ class Magnet(Base, MagnetInterface):
         if param_dict.get("phi") is not None:
             coord_list[2] += param_dict["phi"]
 
-        for key in param_dict.keys():
+        for key in param_dict:
             if key not in label_list:
                 self.log.warning("The key " + key + " provided is no valid key in set_coordinates.")
                 return -1
@@ -872,10 +868,7 @@ class Magnet(Base, MagnetInterface):
                     )
                     return [-1, -1, -1]
                 rho = np.sqrt(x_val**2 + y_val**2 + z_val**2)
-                if rho == 0:
-                    theta = 0
-                else:
-                    theta = np.arccos(z_val / rho) * 360 / (2 * np.pi)
+                theta = 0 if rho == 0 else np.arccos(z_val / rho) * 360 / (2 * np.pi)
                 if x_val == 0 and y_val == 0:
                     phi = 0
                 else:
@@ -894,15 +887,9 @@ class Magnet(Base, MagnetInterface):
                     )
                     return [-1, -1, -1]
                 rho = np.sqrt(x_val**2 + y_val**2 + z_val**2)
-                if rho == 0:
-                    theta = 0
-                else:
-                    theta = np.arccos(z_val / rho)
+                theta = 0 if rho == 0 else np.arccos(z_val / rho)
 
-                if x_val == 0 and y_val == 0:
-                    phi = 0
-                else:
-                    phi = np.arctan2(y_val, x_val)
+                phi = 0 if x_val == 0 and y_val == 0 else np.arctan2(y_val, x_val)
                 if phi < 0:
                     phi += 2 * np.pi
                 return_list = [rho, theta, phi]
@@ -1067,7 +1054,7 @@ class Magnet(Base, MagnetInterface):
         """
         status_dict = self.ask_status(param_list)
 
-        for myiter in status_dict.keys():
+        for myiter in status_dict:
             stateval = status_dict[myiter]
 
             try:
@@ -1379,7 +1366,7 @@ class Magnet(Base, MagnetInterface):
                 # are of importance and e.g. a zero in the radial component would be
                 # To set it to rho_constr is also important, as it allows a check
                 # if the sphere is the valid constraint in the current direction.
-                coord_list = param_dict["normal_mode"]["rad"]
+                param_dict["normal_mode"]["rad"]
                 coord_dict_rad = param_dict["normal_mode"]
                 coord_dict_rad["rad"][0] = self.rho_constr
                 transform_dict = {"rad": {"cart": coord_dict_rad["rad"]}}
@@ -1387,7 +1374,7 @@ class Magnet(Base, MagnetInterface):
                 coord_dict_cart = {"normal_mode": {"cart": coord_dict_cart}}
 
             elif param_dict["normal_mode"].get("deg") is not None:
-                coord_list = param_dict["normal_mode"]["deg"]
+                param_dict["normal_mode"]["deg"]
                 coord_dict_deg = param_dict["normal_mode"]
                 coord_dict_deg["deg"][0] = self.rho_constr
                 coord_dict_rad = self.transform_coordinates({"deg": {"rad": coord_dict_deg["deg"]}})
@@ -1433,7 +1420,7 @@ class Magnet(Base, MagnetInterface):
         """
         current_coord_dict = self.get_pos()
 
-        for key in current_coord_dict.keys():
+        for key in current_coord_dict:
             if param_dict.get(key) is None:
                 param_dict[key] = current_coord_dict[key]
 

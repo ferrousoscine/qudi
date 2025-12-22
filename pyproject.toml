@@ -25,11 +25,26 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "B905",  # zip strict parameter (Python 3.10+)
+    "NPY002",  # legacy numpy random (style preference)
+    "B007",  # unused loop variable - sometimes intentional for readability
+    "B008",  # mutable default - Qt QModelIndex() pattern is intentional and safe
+    "SIM102",  # nested if - sometimes intentional for clarity
+    "SIM108",  # ternary - sometimes less readable
+    "SIM101",  # multiple isinstance - sometimes clearer separated
+    "SIM105",  # contextlib.suppress - explicit try/except often clearer
+    "SIM113",  # enumerate in for loop - sometimes counter more explicit
+    "SIM115",  # open context manager - already fixed with contextlib.suppress
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
 "*.ipynb" = ["E501", "F401"]  # notebooks
+"core/__init__.py" = ["E402"]  # Qt API setup before imports
+"core/__main__.py" = ["E402"]  # argparse and logger setup before imports
+"hardware/spectrometer/winspec_spectrometer.py" = ["E402"]  # COM module generation before import
+"hardware/camera/thorlabs/thorlabs_DCx.py" = ["F405"]  # uc480_h constants
+"hardware/camera/thorlabs/uc480_h.py" = ["E501", "F841", "F811"]  # generated SDK header file
+"hardware/ni_x_series_in_streamer.py" = ["F821"]  # false positives from complex control flow with del task
 
 [tool.pytest.ini_options]
 minversion = "8.0"

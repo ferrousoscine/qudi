@@ -68,10 +68,7 @@ class OBISLaser(Base, SimpleLaserInterface):
         """
         response = self._communicate("*IDN?")[0]
 
-        if response.startswith("ERR-100"):
-            return False
-        else:
-            return True
+        return not response.startswith("ERR-100")
 
     def disconnect_laser(self):
         """Close the connection to the instrument."""

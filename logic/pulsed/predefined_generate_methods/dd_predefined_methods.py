@@ -241,7 +241,7 @@ class DDPredefinedGenerator(PredefinedGeneratorBase):
 
         # Create block and append to created_blocks list
         xy8_block = PulseBlock(name=name)
-        for ii, tau in enumerate(tau_pspacing_array):
+        for _ii, tau in enumerate(tau_pspacing_array):
             tauhalf_element = self._get_idle_element(length=tau / 2, increment=0)
             tau_element = self._get_idle_element(length=tau, increment=0)
             xy8_block.append(pihalf_element)

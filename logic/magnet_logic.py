@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import datetime
 import time
-from collections import OrderedDict
 
 import numpy as np
 from qtpy import QtCore
@@ -807,7 +806,6 @@ class MagnetLogic(GenericLogic):
             self.log.debug("Went into while loop in _move_to_curr_pathway_index")
 
         # this function will return to this function if position is reached:
-        start_pos = self._saved_pos_before_align
         end_pos = dict()
         for axis_name in self._saved_pos_before_align:
             end_pos[axis_name] = self._backmap[self._pathway_index][axis_name]
@@ -931,7 +929,7 @@ class MagnetLogic(GenericLogic):
 
         # move back to the first position before the alignment has started:
         #
-        constraints = self.get_hardware_constraints()
+        self.get_hardware_constraints()
 
         last_pos = dict()
         for axis_name in self._saved_pos_before_align:
@@ -1014,7 +1012,7 @@ class MagnetLogic(GenericLogic):
         axes = [i for i in self._magnet_device.get_constraints()]
         state = self._magnet_device.get_status()
 
-        return (state[axes[0]] or state[axes[1]] or state[axes[2]]) is (1 or -1)
+        return (state[axes[0]] or state[axes[1]] or state[axes[2]]) == (1)
 
     def _set_meas_point(self, meas_val, add_meas_val, pathway_index, back_map):
         # is it point for 1d meas or 2d meas?
@@ -1429,8 +1427,6 @@ class MagnetLogic(GenericLogic):
         contrast as a measure.
         """
 
-        store_dict = {}
-
         # optimize at first the position:
         self._do_optimize_pos()
 
@@ -1691,7 +1687,7 @@ class MagnetLogic(GenericLogic):
                 num_bins = num_bins - 1
                 self._ta_logic.set_num_bins_histogram(num_bins)
                 self.log.warning(
-                    "Fitted values {0},{1} are out of range [{2},{3}]! "
+                    "Fitted values {},{} are out of range [{},{}]! "
                     "Change the histogram a "
                     "bit.".format(
                         param2["\u03bb0"]["value"],
@@ -1707,7 +1703,7 @@ class MagnetLogic(GenericLogic):
 
         # run the lifetime calculatiion:
         #        In order to calculate the T1 time one needs the length of one SingleShot readout
-        dt = (
+        (
             self.nuclear_2d_rabi_periode / 2
             + self.nuclear_2d_laser_time
             + self.nuclear_2d_idle_time
@@ -1908,21 +1904,11 @@ class MagnetLogic(GenericLogic):
         # prepare the data in a dict or in an OrderedDict:
 
         # here is the matrix saved
-        matrix_data = OrderedDict()
-
-        # here are all the parameters, which are saved for a certain matrix
-        # entry, mainly coming from all the other logic modules except the magnet logic:
-        add_matrix_data = OrderedDict()
-
-        # here are all supplementary information about the measurement, mainly
-        # from the magnet logic
-        supplementary_data = OrderedDict()
-
-        axes_names = list(self._saved_pos_before_align)
+        matrix_data = {}
 
         matrix_data["Alignment Matrix"] = self._2D_data_matrix
 
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Measurement start time"] = self._start_measurement_time
         if self._stop_measurement_time is not None:
             parameters["Measurement stop time"] = self._stop_measurement_time
@@ -1948,7 +1934,7 @@ class MagnetLogic(GenericLogic):
         self.log.debug(f"Magnet 2D data saved to:\n{filepath}")
 
         # prepare the data in a dict or in an OrderedDict:
-        add_data = OrderedDict()
+        add_data = {}
         axis0_data = np.zeros(len(self._backmap))
         axis1_data = np.zeros(len(self._backmap))
         param_data = np.zeros(len(self._backmap), dtype="object")
@@ -1976,7 +1962,7 @@ class MagnetLogic(GenericLogic):
         count_data = self._2D_data_matrix
         x_val = self._2D_axis0_data
         y_val = self._2D_axis1_data
-        save_dict = OrderedDict()
+        save_dict = {}
         axis0_key = f"{self._axis0_name} values ({units_axis0})"
         axis1_key = f"{self._axis1_name} values ({units_axis1})"
         counts_key = "counts (c/s)"
@@ -2000,7 +1986,7 @@ class MagnetLogic(GenericLogic):
             save_dict, filepath=filepath, filelabel=filelabel3, timestamp=timestamp, fmt="%.6e"
         )
         keys = self._2d_intended_fields[0].keys()
-        intended_fields = OrderedDict()
+        intended_fields = {}
         for key in keys:
             field_values = [coord_dict[key] for coord_dict in self._2d_intended_fields]
             intended_fields[key] = field_values
@@ -2009,7 +1995,7 @@ class MagnetLogic(GenericLogic):
             intended_fields, filepath=filepath, filelabel=filelabel4, timestamp=timestamp
         )
 
-        measured_fields = OrderedDict()
+        measured_fields = {}
         for key in keys:
             field_values = [coord_dict[key] for coord_dict in self._2d_measured_fields]
             measured_fields[key] = field_values
@@ -2018,7 +2004,7 @@ class MagnetLogic(GenericLogic):
             measured_fields, filepath=filepath, filelabel=filelabel5, timestamp=timestamp
         )
 
-        error = OrderedDict()
+        error = {}
         error["quadratic error"] = self._2d_error
 
         self._save_logic.save_data(

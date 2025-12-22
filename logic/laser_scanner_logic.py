@@ -24,7 +24,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import datetime
 import time
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -159,7 +158,7 @@ class LaserScannerLogic(GenericLogic):
         """
         ramp_scan = self._generate_ramp(self.get_current_voltage(), new_voltage, self._goto_speed)
         self._initialise_scanner()
-        ignored_counts = self._scan_line(ramp_scan)
+        self._scan_line(ramp_scan)
         self._close_scanner()
         self.sigVoltageChanged.emit(new_voltage)
         return 0
@@ -169,7 +168,7 @@ class LaserScannerLogic(GenericLogic):
             return -1
 
         goto_ramp = self._generate_ramp(self.get_current_voltage(), voltage, self._goto_speed)
-        ignored_counts = self._scan_line(goto_ramp)
+        self._scan_line(goto_ramp)
 
         return 0
 
@@ -447,7 +446,7 @@ class LaserScannerLogic(GenericLogic):
         try:
             if self._scanning_device.module_state.can("unlock"):
                 self._scanning_device.module_state.unlock()
-        except:
+        except Exception:
             self.log.exception("Could not unlock scanning device.")
         return 0
 
@@ -475,19 +474,19 @@ class LaserScannerLogic(GenericLogic):
             filelabel2 = "volt_data_raw_trace"
             filelabel3 = "volt_data_raw_retrace"
 
-        # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        # prepare the data in a dict:
+        data = {}
         data["frequency (Hz)"] = self.plot_x
         data["trace count data (counts/s)"] = self.plot_y
         data["retrace count data (counts/s)"] = self.plot_y2
 
-        data2 = OrderedDict()
+        data2 = {}
         data2["count data (counts/s)"] = self.scan_matrix[: self._scan_counter_up, :]
 
-        data3 = OrderedDict()
+        data3 = {}
         data3["count data (counts/s)"] = self.scan_matrix2[: self._scan_counter_down, :]
 
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Number of frequency sweeps (#)"] = self._scan_counter_up
         parameters["Start Voltage (V)"] = self.scan_range[0]
         parameters["Stop Voltage (V)"] = self.scan_range[1]

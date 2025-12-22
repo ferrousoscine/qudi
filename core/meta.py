@@ -21,7 +21,6 @@ top-level directory of this distribution and at
 
 import copy
 from abc import ABCMeta
-from collections import OrderedDict
 
 from qtpy.QtCore import QObject
 
@@ -50,9 +49,9 @@ class ModuleMeta(QObjectMeta):
         """
 
         # collect meta info in dicts
-        connectors = OrderedDict()
-        config_options = OrderedDict()
-        status_vars = OrderedDict()
+        connectors = {}
+        config_options = {}
+        status_vars = {}
 
         # Accumulate Connector, ConfigOption and StatusVar info from parent classes
         for base in reversed(bases):

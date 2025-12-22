@@ -21,7 +21,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 import copy
 import logging
 import warnings
-from collections import OrderedDict
 
 from fysom import Fysom  # provides a final state machine
 from qtpy import QtCore
@@ -86,10 +85,7 @@ class ModuleStateMachine(QtCore.QObject, Fysom):
         """
         base_event = super()._build_event(event)
         if event in ["activate", "deactivate"]:
-            if event == "activate":
-                noun = "activation"
-            else:
-                noun = "deactivation"
+            noun = "activation" if event == "activate" else "deactivation"
 
             def wrap_event(*args, **kwargs):
                 self._parent.log.debug(
@@ -97,7 +93,7 @@ class ModuleStateMachine(QtCore.QObject, Fysom):
                 )
                 try:
                     base_event(*args, **kwargs)
-                except:
+                except Exception:
                     self._parent.log.exception(f"Error during {noun}")
                     return False
                 return True
@@ -161,18 +157,18 @@ class BaseMixin(metaclass=ModuleMeta):
         self.module_state = ModuleStateMachine(parent=self, callbacks=default_callbacks)
 
         # add connectors
-        self.connectors = OrderedDict()
-        for cname, con in self._conn.items():
+        self.connectors = {}
+        for _cname, con in self._conn.items():
             self.connectors[con.name] = con
 
         # add connection base (legacy)
         for con in self._connectors:
-            self.connectors[con] = OrderedDict()
+            self.connectors[con] = {}
             self.connectors[con]["class"] = self._connectors[con]
             self.connectors[con]["object"] = None
 
         # add config options
-        for oname, opt in self._config_options.items():
+        for _oname, opt in self._config_options.items():
             if opt.name in config:
                 cfg_val = config[opt.name]
             else:
@@ -200,7 +196,7 @@ class BaseMixin(metaclass=ModuleMeta):
         self._manager = manager
         self._name = name
         self._configuration = config
-        self._statusVariables = OrderedDict()
+        self._statusVariables = {}
 
     def __load_status_vars_activate(self, event):
         """Restore status variables before activation.
@@ -209,7 +205,7 @@ class BaseMixin(metaclass=ModuleMeta):
         """
         # add status vars
         sv = self._statusVariables
-        for vname, var in self._stat_vars.items():
+        for _vname, var in self._stat_vars.items():
             if isinstance(var.default, dict) and var.name in sv:
                 svar = copy.deepcopy(var.default)
                 svar.update(sv[var.name])
@@ -235,7 +231,7 @@ class BaseMixin(metaclass=ModuleMeta):
             raise e
         finally:
             # save status vars even if deactivation failed
-            for vname, var in self._stat_vars.items():
+            for _vname, var in self._stat_vars.items():
                 if hasattr(self, var.var_name):
                     value = getattr(self, var.var_name)
                     if not isinstance(value, StatusVar):
@@ -287,6 +283,7 @@ class BaseMixin(metaclass=ModuleMeta):
             "getStatusVariables is deprecated and will be removed in future versions. Use "
             "StatusVar instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._statusVariables
 
@@ -302,10 +299,11 @@ class BaseMixin(metaclass=ModuleMeta):
             "setStatusVariables is deprecated and will be removed in future versions. Use "
             "StatusVar instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
-        if not isinstance(variableDict, (dict, OrderedDict)):
+        if not isinstance(variableDict, dict):
             self.log.error(
-                f"Did not pass a dict or OrderedDict to setStatusVariables in {self.__class__.__name__}."
+                f"Did not pass a dict to setStatusVariables in {self.__class__.__name__}."
             )
             return
         self._statusVariables = variableDict
@@ -320,6 +318,7 @@ class BaseMixin(metaclass=ModuleMeta):
             "getConfiguration is deprecated and will be removed in future versions. Use "
             "ConfigOptions instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._configuration
 
@@ -335,6 +334,7 @@ class BaseMixin(metaclass=ModuleMeta):
             "get_connector is deprecated and will be removed in future versions. Use "
             "Connector() callable instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         if connector_name in self.connectors:
             connector = self.connectors[connector_name]

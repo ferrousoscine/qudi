@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 from core.module import Base
 from interface.magnet_interface import MagnetInterface
 
@@ -85,7 +83,7 @@ class MagnetDummy(Base, MagnetInterface):
         insert just None. If you are not sure about the meaning, look in other
         hardware files to get an impression.
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         axis0 = {
             "label": self._x_axis.label,
@@ -185,7 +183,7 @@ class MagnetDummy(Base, MagnetInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     " of the magnet was reached! Ignore "
                     "command!".format(
                         self._x_axis.label,
@@ -206,7 +204,7 @@ class MagnetDummy(Base, MagnetInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     " of the magnet was reached! Ignore "
                     "command!".format(
                         self._y_axis.label,
@@ -227,7 +225,7 @@ class MagnetDummy(Base, MagnetInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     " of the magnet was reached! Ignore "
                     "command!".format(
                         self._z_axis.label,
@@ -248,7 +246,7 @@ class MagnetDummy(Base, MagnetInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     " of the magnet was reached! Ignore "
                     "command!".format(
                         self._phi_axis.label,
@@ -279,8 +277,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] of the magnet! Command is "
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] of the magnet! Command is "
                     "ignored!".format(
                         self._x_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
@@ -295,8 +293,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] of the magnet! Command is "
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] of the magnet! Command is "
                     "ignored!".format(
                         self._y_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
@@ -311,8 +309,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] of the magnet! Command is "
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] of the magnet! Command is "
                     "ignored!".format(
                         self._z_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
@@ -327,8 +325,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] of the magnet! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] of the magnet! Command is ignored!".format(
                         self._phi_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -495,8 +493,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._x_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -510,8 +508,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._y_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -525,8 +523,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._z_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -540,8 +538,8 @@ class MagnetDummy(Base, MagnetInterface):
             if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._phi_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -623,5 +621,5 @@ class MagnetDummy(Base, MagnetInterface):
         heated it cools them, else the coils get heated.
         @return int: (0: Ok, -1:error)
         """
-        raise InterfaceImplementationError("magnet_interface>initialize")
+        raise NotImplementedError("magnet_interface>initialize")
         return -1

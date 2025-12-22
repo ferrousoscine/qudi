@@ -77,7 +77,7 @@ class CounterGui(GUIBase):
 
         self.curves = []
 
-        for i, ch in enumerate(self._counting_logic.get_channels()):
+        for i, _ch in enumerate(self._counting_logic.get_channels()):
             if i % 2 == 0:
                 # Create an empty plot curve to be filled later, set its pen
                 self.curves.append(pg.PlotDataItem(pen=pg.mkPen(palette.c1), symbol=None))
@@ -266,7 +266,7 @@ class CounterGui(GUIBase):
 
             ymax = -1
             ymin = 2000000000
-            for i, ch in enumerate(self._counting_logic.get_channels()):
+            for i, _ch in enumerate(self._counting_logic.get_channels()):
                 self.curves[2 * i].setData(y=self._counting_logic.countdata[i], x=x_vals)
                 self.curves[2 * i + 1].setData(
                     y=self._counting_logic.countdata_smoothed[i], x=x_vals
@@ -343,7 +343,7 @@ class CounterGui(GUIBase):
         else:
             self._trace_selection[3] = False
 
-        for i, ch in enumerate(self._counting_logic.get_channels()):
+        for i, _ch in enumerate(self._counting_logic.get_channels()):
             if self._trace_selection[i]:
                 self._pw.addItem(self.curves[2 * i])
                 self._pw.addItem(self.curves[2 * i + 1])

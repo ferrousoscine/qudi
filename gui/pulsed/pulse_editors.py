@@ -109,9 +109,8 @@ class BlockEditorTableModel(QtCore.QAbstractTableModel):
                 self.sigColumnWidthChanged.emit(column, width)
             return
 
-        if isinstance(column, int):
-            if 0 <= column < len(self._col_widths):
-                self.sigColumnWidthChanged.emit(column, self._col_widths[column])
+        if isinstance(column, int) and 0 <= column < len(self._col_widths):
+            self.sigColumnWidthChanged.emit(column, self._col_widths[column])
         return
 
     def _get_column_widths(self):
@@ -141,10 +140,7 @@ class BlockEditorTableModel(QtCore.QAbstractTableModel):
             if column < 2:
                 width = 90
             elif column == 2:
-                if not self._laser_channel_is_digital:
-                    width = 50
-                else:
-                    width = 0
+                width = 50 if not self._laser_channel_is_digital else 0
             elif column == 3 and has_digital:
                 width = 30 * len(self.digital_channels)
             else:
@@ -252,26 +248,17 @@ class BlockEditorTableModel(QtCore.QAbstractTableModel):
             return data
         if role == self.analogFunctionRole:
             element = self._pulse_block[index.row()]
-            if len(self.digital_channels) > 0:
-                col_offset = 4
-            else:
-                col_offset = 3
+            col_offset = 4 if len(self.digital_channels) > 0 else 3
             analog_chnl = self.analog_channels[(index.column() - col_offset) // 2]
             return element.pulse_function[analog_chnl]
         if role == self.analogShapeRole:
             element = self._pulse_block[index.row()]
-            if len(self.digital_channels) > 0:
-                col_offset = 4
-            else:
-                col_offset = 3
+            col_offset = 4 if len(self.digital_channels) > 0 else 3
             analog_chnl = self.analog_channels[(index.column() - col_offset) // 2]
             return element.pulse_function[analog_chnl].__class__.__name__
         if role == self.analogParameterRole:
             element = self._pulse_block[index.row()]
-            if len(self.digital_channels) > 0:
-                col_offset = 4
-            else:
-                col_offset = 3
+            col_offset = 4 if len(self.digital_channels) > 0 else 3
             analog_chnl = self.analog_channels[(index.column() - col_offset) // 2]
             return vars(element.pulse_function[analog_chnl])
         if role == self.blockElementRole:
@@ -373,13 +360,11 @@ class BlockEditorTableModel(QtCore.QAbstractTableModel):
         if orientation == QtCore.Qt.Horizontal:
             # if role == QtCore.Qt.BackgroundRole:
             #     return QVariant(QBrush(QColor(Qt::green), Qt::SolidPattern))
-            if role == QtCore.Qt.SizeHintRole:
-                if section < len(self._col_widths):
-                    return QtCore.QSize(self._col_widths[section], 40)
+            if role == QtCore.Qt.SizeHintRole and section < len(self._col_widths):
+                return QtCore.QSize(self._col_widths[section], 40)
 
-            if role == QtCore.Qt.DisplayRole:
-                if section < len(self._h_header_data):
-                    return self._h_header_data[section]
+            if role == QtCore.Qt.DisplayRole and section < len(self._h_header_data):
+                return self._h_header_data[section]
 
         # Vertical header
         # if orientation == QtCore.Qt.Vertical:
@@ -408,7 +393,7 @@ class BlockEditorTableModel(QtCore.QAbstractTableModel):
 
         self.beginInsertRows(parent, row, row + count - 1)
 
-        for i in range(count):
+        for _i in range(count):
             self._pulse_block.insert(position=row, element=self.__default_element)
 
         self.endInsertRows()
@@ -524,7 +509,7 @@ class BlockEditor(QtWidgets.QTableView):
         # loop through all analog channels and set two item delegates for each channel.
         # First a ComboBox delegate for the analog shape column and second a custom
         # composite widget widget for the analog parameters column.
-        for num, chnl in enumerate(self.model().analog_channels):
+        for num, _chnl in enumerate(self.model().analog_channels):
             self.setItemDelegateForColumn(
                 offset_index + 2 * num,
                 ComboBoxItemDelegate(
@@ -705,7 +690,7 @@ class EnsembleEditorTableModel(QtCore.QAbstractTableModel):
             self.__default_block = ""
 
         # Remove blocks from list that are not there anymore
-        for row, (block_name, reps) in enumerate(self._block_ensemble):
+        for row, (block_name, _reps) in enumerate(self._block_ensemble):
             if block_name not in blocks:
                 self.removeRows(row, 1)
 
@@ -766,12 +751,11 @@ class EnsembleEditorTableModel(QtCore.QAbstractTableModel):
 
     def headerData(self, section, orientation, role):
         # Horizontal header
-        if orientation == QtCore.Qt.Horizontal:
-            if role == QtCore.Qt.DisplayRole:
-                if section == 0:
-                    return "PulseBlock"
-                if section == 1:
-                    return "repetitions"
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            if section == 0:
+                return "PulseBlock"
+            if section == 1:
+                return "repetitions"
             # if role == QtCore.Qt.BackgroundRole:
             #     return QVariant(QBrush(QColor(Qt::green), Qt::SolidPattern))
             # if role == QtCore.Qt.SizeHintRole:
@@ -803,7 +787,7 @@ class EnsembleEditorTableModel(QtCore.QAbstractTableModel):
 
         self.beginInsertRows(parent, row, row + count - 1)
 
-        for i in range(count):
+        for _i in range(count):
             self._block_ensemble.insert(position=row, element=(self.__default_block, 0))
 
         self.endInsertRows()
@@ -1092,7 +1076,7 @@ class SequenceEditorTableModel(QtCore.QAbstractTableModel):
         self.available_flags = flags
 
         # Remove flags from sequence steps that are not there anymore
-        for row, seq_step in enumerate(self._pulse_sequence):
+        for _row, seq_step in enumerate(self._pulse_sequence):
             # remove old flags
             for flag in removed_flags:
                 if flag in seq_step.flag_trigger:
@@ -1208,7 +1192,7 @@ class SequenceEditorTableModel(QtCore.QAbstractTableModel):
 
         self.beginInsertRows(parent, row, row + count - 1)
 
-        for i in range(count):
+        for _i in range(count):
             self._pulse_sequence.insert(position=row, element=self.__default_ensemble)
 
         self.endInsertRows()

@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 import serial
 
@@ -105,7 +104,7 @@ class MotorRotationZaber(Base, MotorInterface):
         Each constraint is a tuple of the form
             (min_value, max_value, stepsize)
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         rot = {
             "label": self._axis_label,
@@ -149,7 +148,7 @@ class MotorRotationZaber(Base, MotorInterface):
                         f'Desired step "{angle}" is too small. Minimum is "{self._micro_step_size}"'
                     )
                     pos = self.get_pos(param_dict.keys())
-        except:
+        except Exception:
             self.log.error("relative movement of zaber rotation stage is not possible")
             pos = self.get_pos(param_dict.keys())
         return pos
@@ -170,7 +169,7 @@ class MotorRotationZaber(Base, MotorInterface):
                 pos[axis_label] = (
                     self._read_answer_rot() * self._micro_step_size
                 )  # stage sends signal after motion finished
-        except:
+        except Exception:
             self.log.error("absolute movement of zaber rotation stage is not possible")
             pos = self.get_pos(param_dict.keys())
         return pos
@@ -185,7 +184,7 @@ class MotorRotationZaber(Base, MotorInterface):
             while not self._motor_stopped():
                 time.sleep(0.2)
             return 0
-        except:
+        except Exception:
             self.log.error("ROTATIONAL MOVEMENT NOT STOPPED!!!)")
             return -1
 
@@ -210,7 +209,7 @@ class MotorRotationZaber(Base, MotorInterface):
                     time.sleep(0.2)
                     pos[axis_label] = answer * self._micro_step_size
                     return pos
-        except:
+        except Exception:
             self.log.error("Cannot find position of zaber-rotation-stage")
             return -1
 
@@ -244,7 +243,7 @@ class MotorRotationZaber(Base, MotorInterface):
                     status[axis_label] = self._ask_rot([1, 54, 0])
                     time.sleep(0.1)
                     return status
-        except:
+        except Exception:
             self.log.error("Could not get status")
             return -1
 
@@ -270,7 +269,7 @@ class MotorRotationZaber(Base, MotorInterface):
                     pos[axis_label] = (
                         self._read_answer_rot() * self._micro_step_size
                     )  # stage sends signal after motion finished
-        except:
+        except Exception:
             self.log.error("Could not calibrate zaber rotation stage!")
             pos = self.get_pos()
         return pos
@@ -294,7 +293,7 @@ class MotorRotationZaber(Base, MotorInterface):
                     data = self._ask_rot([1, 53, 42])
                     velocity[axis_label] = data * self.velocity_conversion * self._micro_step_size
             return velocity
-        except:
+        except Exception:
             self.log.error("Could not set rotational velocity")
             return -1
 
@@ -320,7 +319,7 @@ class MotorRotationZaber(Base, MotorInterface):
                         f'Desired velocity "{velocity}" is too high. Maximum is "{self._max_vel}"'
                     )
                     velocity = self.get_velocity()
-        except:
+        except Exception:
             self.log.error("Could not set rotational velocity")
             velocity = self.get_velocity()
         return velocity
@@ -372,7 +371,7 @@ class MotorRotationZaber(Base, MotorInterface):
             for ii in range(6):
                 self._serial_connection_rot.write(chr(sends[ii]).encode("latin"))
             return 0
-        except:
+        except Exception:
             self.log.error("Command was not sent to zaber rotation stage")
             return -1
 

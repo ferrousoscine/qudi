@@ -23,7 +23,7 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 import numpy as np
-from collections import OrderedDict
+
 from lxml import etree as ET
 
 
@@ -36,7 +36,7 @@ class SamplesWriteMethods:
     def __init__(self):
         # If you want to define a new file format, make a new method and add the
         # reference to this method to the _write_to_file dictionary:
-        self._write_to_file = OrderedDict()
+        self._write_to_file = {}
         self._write_to_file["wfm"] = self._write_wfm
         self._write_to_file["wfmx"] = self._write_wfmx
         self._write_to_file["seq"] = self._write_seq

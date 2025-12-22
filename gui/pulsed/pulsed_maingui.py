@@ -46,7 +46,7 @@ class PulsedMeasurementMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_pulsed_maingui.ui")
 
         # Load it
-        super(PulsedMeasurementMainWindow, self).__init__()
+        super().__init__()
 
         uic.loadUi(ui_file, self)
         self.show()
@@ -842,10 +842,10 @@ class PulsedMeasurementGui(GUIBase):
             self._pgs.gen_sample_freq_DSpinBox.setEnabled(False)
             self._pgs.gen_activation_config_ComboBox.setEnabled(False)
             self._pgs.pg_benchmark.setEnabled(False)
-            for label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
+            for _label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
                 widget1.setEnabled(False)
                 widget2.setEnabled(False)
-            for label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
+            for _label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
                 widget1.setEnabled(False)
                 widget2.setEnabled(False)
             self._pa.ext_control_mw_freq_DoubleSpinBox.setEnabled(False)
@@ -875,10 +875,10 @@ class PulsedMeasurementGui(GUIBase):
             self._pgs.gen_sample_freq_DSpinBox.setEnabled(True)
             self._pgs.gen_activation_config_ComboBox.setEnabled(True)
             self._pgs.pg_benchmark.setEnabled(True)
-            for label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
+            for _label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
                 widget1.setEnabled(True)
                 widget2.setEnabled(True)
-            for label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
+            for _label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
                 widget1.setEnabled(True)
                 widget2.setEnabled(True)
             self._pa.ext_control_use_mw_CheckBox.setEnabled(True)
@@ -1087,10 +1087,10 @@ class PulsedMeasurementGui(GUIBase):
         self._pgs.gen_sample_freq_DSpinBox.setMaximum(pg_constr.sample_rate.max)
         self._pgs.gen_activation_config_ComboBox.clear()
         self._pgs.gen_activation_config_ComboBox.addItems(list(pg_constr.activation_config.keys()))
-        for label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
+        for _label, widget1, widget2 in self._analog_chnl_setting_widgets.values():
             widget1.setRange(pg_constr.a_ch_amplitude.min, pg_constr.a_ch_amplitude.max)
             widget2.setRange(pg_constr.a_ch_offset.min, pg_constr.a_ch_offset.max)
-        for label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
+        for _label, widget1, widget2 in self._digital_chnl_setting_widgets.values():
             widget1.setRange(pg_constr.d_ch_low.min, pg_constr.d_ch_low.max)
             widget2.setRange(pg_constr.d_ch_high.min, pg_constr.d_ch_high.max)
 
@@ -1219,14 +1219,14 @@ class PulsedMeasurementGui(GUIBase):
 
         analog_ppamp = dict()
         analog_offset = dict()
-        for chnl, (label, widget1, widget2) in self._analog_chnl_setting_widgets.items():
+        for chnl, (_label, widget1, widget2) in self._analog_chnl_setting_widgets.items():
             analog_ppamp[chnl] = widget1.value()
             analog_offset[chnl] = widget2.value()
         settings_dict["analog_levels"] = (analog_ppamp, analog_offset)
 
         digital_low = dict()
         digital_high = dict()
-        for chnl, (label, widget1, widget2) in self._digital_chnl_setting_widgets.items():
+        for chnl, (_label, widget1, widget2) in self._digital_chnl_setting_widgets.items():
             digital_low[chnl] = widget1.value()
             digital_high[chnl] = widget2.value()
         settings_dict["digital_levels"] = (digital_low, digital_high)
@@ -1486,7 +1486,7 @@ class PulsedMeasurementGui(GUIBase):
                     input_obj.setMinimumSize(QtCore.QSize(80, 0))
                 else:
                     self.log.error(
-                        'The predefined method "{0}" has an argument "{1}" which '
+                        'The predefined method "{}" has an argument "{}" which '
                         "has no default argument or an invalid type (str, float, "
                         "int, bool or Enum allowed)!\nCreation of the viewbox aborted."
                         "".format("generate_" + method_name, param_name)
@@ -2638,7 +2638,7 @@ class PulsedMeasurementGui(GUIBase):
         else:
             try:
                 formatted_fitresult = units.create_formatted_output(result.result_str_dict)
-            except:
+            except Exception:
                 formatted_fitresult = "This fit does not return formatted results"
 
         # block signals.
@@ -3163,7 +3163,7 @@ class PulsedMeasurementGui(GUIBase):
         settings_dict["method"] = self._pe.extract_param_method_comboBox.currentText()
         # Check if the method has been changed
         if settings_dict["method"] == self.pulsedmasterlogic().extraction_settings["method"]:
-            for label, widget in self._extraction_param_widgets:
+            for _label, widget in self._extraction_param_widgets:
                 param_name = widget.objectName()[14:]
                 if hasattr(widget, "isChecked"):
                     settings_dict[param_name] = widget.isChecked()
@@ -3191,7 +3191,7 @@ class PulsedMeasurementGui(GUIBase):
         # If the method is unchanged, just update the widget values.
         # Otherwise delete all widgets and create new ones for the changed method.
         if settings_dict.get("method") == self._pe.extract_param_method_comboBox.currentText():
-            for label, widget in self._extraction_param_widgets:
+            for _label, widget in self._extraction_param_widgets:
                 param_name = widget.objectName()[14:]
                 widget.blockSignals(True)
                 if hasattr(widget, "setValue"):

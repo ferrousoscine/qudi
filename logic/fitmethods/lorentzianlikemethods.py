@@ -21,8 +21,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 from lmfit.models import Model
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -303,12 +301,12 @@ def make_lorentzian_fit(self, x_axis, data, estimator, units=None, add_params=No
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
         self.log.warning(f"The 1D lorentzian fit did not work. Error message: {result.message}\n")
 
     # Write the parameters to allow human-readable output to be generated
-    result_str_dict = OrderedDict()
+    result_str_dict = {}
 
     if units is None:
         units = ["arb. units"]
@@ -457,12 +455,12 @@ def make_lorentziandouble_fit(self, x_axis, data, estimator, units=None, add_par
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
         self.log.error(f"The double lorentzian fit did not work: {result.message}")
 
     # Write the parameters to allow human-readable output to be generated
-    result_str_dict = OrderedDict()
+    result_str_dict = {}
 
     if units is None:
         units = ["arb. u."]
@@ -807,12 +805,12 @@ def make_lorentziantriple_fit(self, x_axis, data, estimator, units=None, add_par
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = model.fit(data, x=x_axis, params=params, **kwargs)
         self.log.error(f"The triple lorentzian fit did not work: {result.message}")
 
     # Write the parameters to allow human-readable output to be generated
-    result_str_dict = OrderedDict()
+    result_str_dict = {}
 
     if units is None:
         units = ["arb. units"]

@@ -41,7 +41,7 @@ if sys.platform == "win32":
             DuplicateHandle,
             GetCurrentProcess,
         )
-    except:
+    except ImportError:
         from _subprocess import (
             DUPLICATE_SAME_ACCESS,
             DuplicateHandle,

@@ -64,7 +64,7 @@ class WavemeterLogGui(GUIBase):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
     def on_activate(self):
@@ -207,14 +207,13 @@ class WavemeterLogGui(GUIBase):
         """Do the configured fit and show it in the plot"""
         fit_name = self._wm_logger_logic.fc.current_fit
         fit_result = self._wm_logger_logic.fc.current_fit_result
-        fit_param = self._wm_logger_logic.fc.current_fit_param
 
         if fit_result is not None:
             # display results as formatted text
             self._mw.fit_results_DisplayWidget.clear()
             try:
                 formated_results = units.create_formatted_output(fit_result.result_str_dict)
-            except:
+            except Exception:
                 formated_results = "this fit does not return formatted results"
             self._mw.fit_results_DisplayWidget.setPlainText(formated_results)
 

@@ -31,7 +31,7 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
 
     def __init__(self, *args):
         # just pass all stuff to superclass, will fail if passing **kwargs
-        super(CustomQRadioButton, self).__init__(*args)
+        super().__init__(*args)
         self._readOnly = False
 
     def isReadOnly(self):
@@ -46,7 +46,7 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
         if self.isReadOnly():
             event.accept()
         else:
-            super(CustomQRadioButton, self).mousePressEvent(event)
+            super().mousePressEvent(event)
 
     # Comment out this method, since it is called, if QToolTip is going to be
     # displayed. You would not see any QTooltip if you catch that signal.
@@ -64,14 +64,14 @@ class CustomQRadioButton(QtWidgets.QRadioButton):
         if self.isReadOnly():
             event.accept()
         else:
-            super(CustomQRadioButton, self).mouseReleaseEvent(event)
+            super().mouseReleaseEvent(event)
 
     # Handle event in which the widget has focus and the spacebar is pressed.
     def keyPressEvent(self, event):
         if self.isReadOnly():
             event.accept()
         else:
-            super(CustomQRadioButton, self).keyPressEvent(event)
+            super().keyPressEvent(event)
 
     @QtCore.pyqtSlot(bool)
     def setReadOnly(self, state):

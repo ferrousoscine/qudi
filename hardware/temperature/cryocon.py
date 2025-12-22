@@ -72,9 +72,9 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
             self._inst = rm.open_resource(
                 address, timeout=self._timeout * 1000, write_termination="\n", read_termination="\n"
             )
-        except visa.VisaIOError:
+        except visa.VisaIOError as err:
             self.log.error("Could not connect to hardware. Please check the wires and the address.")
-            raise visa.VisaIOError
+            raise visa.VisaIOError from err
 
     def on_deactivate(self):
         """Deinitialisation performed during deactivation of the module."""
@@ -89,7 +89,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"INPUT? {channel}"
             temperature = float(self._query(text))
-        except:
+        except Exception:
             temperature = np.nan
         return temperature
 
@@ -112,7 +112,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         text = f"loop {loop}:setp {temperature}"
         try:
             self._query(text)
-        except:
+        except Exception:
             self.log.error("Cryocon temperature could not be set because of a connexion error.")
             return
         if turn_on:
@@ -125,7 +125,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"loop {loop}:setp?"
             setpoint = float(self._query(text)[:-2])
-        except:
+        except Exception:
             setpoint = np.nan
         return setpoint
 
@@ -161,7 +161,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"loop {loop}:pgain?"
             value = float(self._query(text)[:-1])
-        except:
+        except Exception:
             value = np.nan
         return value
 
@@ -182,7 +182,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"loop {loop}:igain?"
             value = float(self._query(text)[:-1])
-        except:
+        except Exception:
             value = np.nan
         return value
 
@@ -203,7 +203,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"loop {loop}:dgain?"
             value = float(self._query(text)[:-1])
-        except:
+        except Exception:
             value = np.nan
         return value
 
@@ -285,7 +285,7 @@ class Cryocon(Base, ProcessInterface, PIDControllerInterface):
         try:
             text = f"loop {loop}:htrread?"
             value = float(self._query(text)[:-2])  # '0.00%\r'
-        except:
+        except Exception:
             value = np.nan
         max_power = 50 if loop == 1 else 25  # Cryocon loop 1 max range is 50 W, loop 2 is  25 W
         return value * max_power

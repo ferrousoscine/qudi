@@ -62,7 +62,15 @@ from .builtin_trap import BuiltinTrap
 from .compilerop import CachingCompiler
 from .display_trap import DisplayTrap
 from .events import EventManager, available_events
-from .helpers import *
+from .helpers import (
+    DisplayHook,
+    ExecutionResult,
+    ThreadFixer,
+    cursor_pos_to_lc,
+    encode_images,
+    setup_matplotlib,
+    softspace,
+)
 from .redirect import RedirectedStdErr, RedirectedStdOut
 from .stream import IOStderrNetworkStream, IOStdoutNetworkStream, NetworkStream, QZMQHeartbeat
 
@@ -121,7 +129,7 @@ class QZMQKernel(QtCore.QObject):
         )
         logging.debug(f"New Kernel {self.engine_id}")
         logging.debug(
-            "python: {0}, zqm: {1}".format(
+            "python: {}, zqm: {}".format(
                 sys.version.replace("\n", " ").replace("\r", ""), zmq.pyzmq_version()
             )
         )
@@ -195,7 +203,7 @@ class QZMQKernel(QtCore.QObject):
         self._config["stdin_port"] = self.stdin_stream.port
         self._config["shell_port"] = self.shell_stream.port
 
-        logging.debug("Config: %s" % json.dumps(self._config))
+        logging.debug(f"Config: {json.dumps(self._config)}")
 
         self.heartbeat_handler = QZMQHeartbeat(self.heartbeat_stream)
         self.heartbeat_handler.moveToThread(self.hb_thread)
@@ -248,8 +256,7 @@ class QZMQKernel(QtCore.QObject):
 
     # Socket Handlers:
     def shell_handler(self, msg):
-        logging.debug("shell received: %s" % msg)
-        position = 0
+        logging.debug(f"shell received: {msg}")
         identities, msg = self.shell_stream.deserialize_wire_msg(msg)
 
         # process some of the possible requests:
@@ -266,10 +273,10 @@ class QZMQKernel(QtCore.QObject):
         elif msg["header"]["msg_type"] == "history_request":
             self.shell_history(identities, msg)
         else:
-            logging.info("unknown msg_type: %s" % msg["header"]["msg_type"])
+            logging.info("unknown msg_type: {}".format(msg["header"]["msg_type"]))
 
     def shell_execute(self, identities, msg):
-        logging.debug("simple_kernel Executing: %s" % msg["content"]["code"])
+        logging.debug("simple_kernel Executing: {}".format(msg["content"]["code"]))
         self.iopub_stream.parent_header = msg["header"]
         # tell the notebook server that we are busy
         content = {
@@ -396,7 +403,7 @@ class QZMQKernel(QtCore.QObject):
         # complete_request, complete_reply, history_request, history_reply
         # is_complete_request, is_complete_reply, connect_request, connect_reply
         # kernel_info_request, kernel_info_reply, shutdown_request, shutdown_reply
-        logging.debug("control received: %s" % wire_msg)
+        logging.debug(f"control received: {wire_msg}")
         identities, msg = self.control_stream.deserialize_wire_msg(wire_msg)
         # Control message handler:
         if msg["header"]["msg_type"] == "shutdown_request":
@@ -406,12 +413,12 @@ class QZMQKernel(QtCore.QObject):
         # handle some of these messages:
         # stream, display_data, data_pub, execute_input, execute_result
         # error, status, clear_output
-        logging.debug("iopub received: %s" % msg)
+        logging.debug(f"iopub received: {msg}")
 
     def stdin_handler(self, msg):
         # handle some of these messages:
         # input_request, input_reply
-        logging.debug("stdin received: %s" % msg)
+        logging.debug(f"stdin received: {msg}")
 
     def run_cell(self, raw_cell, store_history=False, silent=False, shell_futures=True):
         """Run a complete IPython cell.
@@ -579,7 +586,10 @@ class QZMQKernel(QtCore.QObject):
                 # don't unregister the transform.
                 raise
             except Exception:
-                warn("AST transformer %r threw an error. It will be unregistered." % transformer)
+                warn(
+                    f"AST transformer {transformer!r} threw an error. It will be unregistered.",
+                    stacklevel=2,
+                )
                 self.ast_transformers.remove(transformer)
 
         if self.ast_transformers:
@@ -618,10 +628,7 @@ class QZMQKernel(QtCore.QObject):
             return
 
         if interactivity == "last_expr":
-            if isinstance(nodelist[-1], ast.Expr):
-                interactivity = "last"
-            else:
-                interactivity = "none"
+            interactivity = "last" if isinstance(nodelist[-1], ast.Expr) else "none"
 
         if interactivity == "none":
             to_run_exec, to_run_interactive = nodelist, []
@@ -630,16 +637,16 @@ class QZMQKernel(QtCore.QObject):
         elif interactivity == "all":
             to_run_exec, to_run_interactive = [], nodelist
         else:
-            raise ValueError("Interactivity was %r" % interactivity)
+            raise ValueError(f"Interactivity was {interactivity!r}")
 
         try:
-            for i, node in enumerate(to_run_exec):
+            for _i, node in enumerate(to_run_exec):
                 mod = ast.Module([node])
                 code = compiler(mod, cell_name, "exec")
                 if self.run_code(code, result):
                     return True
 
-            for i, node in enumerate(to_run_interactive):
+            for _i, node in enumerate(to_run_interactive):
                 mod = ast.Interactive([node])
                 code = compiler(mod, cell_name, "single")
                 if self.run_code(code, result):
@@ -649,7 +656,7 @@ class QZMQKernel(QtCore.QObject):
             if softspace(sys.stdout, 0):
                 print()
 
-        except:
+        except Exception:
             # It's possible to have exceptions raised here, typically by
             # compilation of odd code (such as a naked 'return' outside a
             # function) that did parse but isn't valid. Typically the exception
@@ -701,13 +708,13 @@ class QZMQKernel(QtCore.QObject):
             if result is not None:
                 result.error_in_exec = e
             self.showtraceback(exception_only=True)
-            warn("To exit: use 'exit', 'quit', or Ctrl-D.", level=1)
+            warn("To exit: use 'exit', 'quit', or Ctrl-D.", stacklevel=2, level=1)
         # except self.custom_exceptions:
         #    etype, value, tb = sys.exc_info()
         #    if result is not None:
         #        result.error_in_exec = value
         #    self.CustomTB(etype, value, tb)
-        except:
+        except Exception:
             if result is not None:
                 result.error_in_exec = sys.exc_info()[1]
             self.showtraceback()
@@ -749,9 +756,8 @@ class QZMQKernel(QtCore.QObject):
         else:
             etype, value, tb = exc_tuple
 
-        if etype is None:
-            if hasattr(sys, "last_type"):
-                etype, value, tb = sys.last_type, sys.last_value, sys.last_traceback
+        if etype is None and hasattr(sys, "last_type"):
+            etype, value, tb = sys.last_type, sys.last_value, sys.last_traceback
 
         if etype is None:
             raise ValueError("No exception to find")
@@ -816,8 +822,8 @@ if __name__ == "__main__":
         level=logging.DEBUG,
     )
 
-    logging.info("Loading simple_kernel with args: %s" % sys.argv)
-    logging.info("Reading config file '%s'..." % sys.argv[1])
+    logging.info(f"Loading simple_kernel with args: {sys.argv}")
+    logging.info(f"Reading config file '{sys.argv[1]}'...")
 
     config = json.loads("".join(open(sys.argv[1]).readlines()))
 

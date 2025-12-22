@@ -128,10 +128,7 @@ class ScaledFloat(float):
             fmt = fmt[:-1] + "f"
         if autoscale:
             scale = self.scale
-            if scale == "u":
-                index = "micro"
-            else:
-                index = scale
+            index = "micro" if scale == "u" else scale
             value = self / get_unit_prefix_dict()[index]
             return f"{value.__format__(fmt):s} {scale:s}"
         else:
@@ -209,7 +206,7 @@ def create_formatted_output(param_dict, num_sig_digits=5):
                 # range, rather then from the value 1000 to 1, which is
                 # default.
                 sc_fact, unit_prefix = fn.siScale(error * 10)
-            output_str += "{0}: {1} \u00b1 {2} {3}{4} \n".format(
+            output_str += "{}: {} \u00b1 {} {}{} \n".format(
                 entry,
                 round(value * sc_fact, num_sig_digits - 1),
                 round(error * sc_fact, num_sig_digits - 1),
@@ -304,10 +301,7 @@ def round_value_to_error(value, error):
     # error can only be positive!
     log_val = np.log10(abs(error))
 
-    if log_val < 0:
-        round_digit = -(int(log_val) - 1)
-    else:
-        round_digit = -(int(log_val))
+    round_digit = -(int(log_val) - 1) if log_val < 0 else -int(log_val)
 
     first_err_digit = f"{error:e}"[0]
 

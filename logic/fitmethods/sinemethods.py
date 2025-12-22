@@ -231,10 +231,7 @@ def make_sinedouble_model(self, prefix=None):
                    the method make_baresine_model.
     """
 
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_model1, params = self.make_sinewithoutoffset_model(prefix="s1_" + add_text)
     sine_model2, params = self.make_sinewithoutoffset_model(prefix="s2_" + add_text)
@@ -263,10 +260,7 @@ def make_sinedoublewithexpdecay_model(self, prefix=None):
                    the method make_baresine_model.
     """
 
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_model1, params = self.make_sinewithoutoffset_model(prefix="s1_" + add_text)
     sine_model2, params = self.make_sinewithoutoffset_model(prefix="s2_" + add_text)
@@ -295,10 +289,7 @@ def make_sinedoublewithtwoexpdecay_model(self, prefix=None):
     @return tuple: (object model, object params), for more description see in
                    the method make_baresine_model.
     """
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_exp_decay_model1, params = self.make_sineexpdecaywithoutoffset_model(
         prefix="e1_" + add_text
@@ -331,10 +322,7 @@ def make_sinetriple_model(self, prefix=None):
                    the method make_baresine_model.
     """
 
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_model1, params = self.make_sinewithoutoffset_model(prefix="s1_" + add_text)
     sine_model2, params = self.make_sinewithoutoffset_model(prefix="s2_" + add_text)
@@ -364,10 +352,7 @@ def make_sinetriplewithexpdecay_model(self, prefix=None):
                    the method make_baresine_model.
     """
 
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_model1, params = self.make_sinewithoutoffset_model(prefix="s1_" + add_text)
     sine_model2, params = self.make_sinewithoutoffset_model(prefix="s2_" + add_text)
@@ -400,10 +385,7 @@ def make_sinetriplewiththreeexpdecay_model(self, prefix=None):
                    the method make_baresine_model.
     """
 
-    if prefix is None:
-        add_text = ""
-    else:
-        add_text = prefix
+    add_text = "" if prefix is None else prefix
 
     sine_exp_decay_model1, params = self.make_sineexpdecaywithoutoffset_model(
         prefix="e1_" + add_text
@@ -544,7 +526,7 @@ def estimate_sinewithoutoffset(self, x_axis, data, params):
 
     # if at least two identical values are in the array, then the difference is of course zero,
     # catch that case.
-    for tries, diff_array_step in enumerate(diff_array):
+    for _tries, _diff_array_step in enumerate(diff_array):
         if np.isclose(min_x_diff, 0.0, atol=1e-12):
             index = np.argmin(diff_array)
             diff_array = np.delete(diff_array, index)
@@ -628,7 +610,7 @@ def make_sine_fit(self, x_axis, data, estimator, units=None, add_params=None, **
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = sine.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = sine.fit(data, x=x_axis, params=params, **kwargs)
         self.log.error(f"The sine fit did not work.\nError message: {result.message}\n")
 
@@ -762,7 +744,7 @@ def make_sineexponentialdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = sine_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = sine_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
         self.log.error(
             f"The sineexponentialdecayoffset fit did not work.\nError message: {result.message}"
@@ -974,7 +956,7 @@ def make_sinestretchedexponentialdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = sine_stretched_exp_decay.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         result = sine_stretched_exp_decay.fit(data, x=x_axis, params=params, **kwargs)
         self.log.error(
             f"The sineexponentialdecay fit did not work.\nError message: {result.message}"
@@ -1112,7 +1094,7 @@ def make_sinedouble_fit(self, x_axis, data, estimator, units=None, add_params=No
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = two_sine_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The twosineexpdecayoffset fit did not work. Error message: {str(result.message)}"
         )
@@ -1121,7 +1103,7 @@ def make_sinedouble_fit(self, x_axis, data, estimator, units=None, add_params=No
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["s1_frequency"].value
     try:
@@ -1316,7 +1298,7 @@ def make_sinedoublewithexpdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = two_sine_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The sinedoublewithexpdecay fit did not work. Error message: {str(result.message)}"
         )
@@ -1325,7 +1307,7 @@ def make_sinedoublewithexpdecay_fit(
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["s1_frequency"].value
     try:
@@ -1534,7 +1516,7 @@ def make_sinedoublewithtwoexpdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = two_sine_two_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The sinedoublewithtwoexpdecay fit did not work. Error message: {str(result.message)}"
         )
@@ -1543,7 +1525,7 @@ def make_sinedoublewithtwoexpdecay_fit(
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["e1_frequency"].value
     try:
@@ -1758,7 +1740,7 @@ def make_sinetriple_fit(self, x_axis, data, estimator, units=None, add_params=No
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = two_sine_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The threesineexpdecayoffset fit did not work. Error message: {str(result.message)}"
         )
@@ -1767,7 +1749,7 @@ def make_sinetriple_fit(self, x_axis, data, estimator, units=None, add_params=No
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["s1_frequency"].value
     try:
@@ -2025,7 +2007,7 @@ def make_sinetriplewithexpdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = three_sine_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The sinetriplewithexpdecay fit did not work. Error message: {str(result.message)}"
         )
@@ -2034,7 +2016,7 @@ def make_sinetriplewithexpdecay_fit(
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["s1_frequency"].value
     try:
@@ -2312,7 +2294,7 @@ def make_sinetriplewiththreeexpdecay_fit(
     params = self._substitute_params(initial_params=params, update_params=add_params)
     try:
         result = three_sine_three_exp_decay_offset.fit(data, x=x_axis, params=params, **kwargs)
-    except:
+    except Exception:
         self.log.warning(
             f"The twosinetwoexpdecayoffset fit did not work. Error message: {str(result.message)}"
         )
@@ -2321,7 +2303,7 @@ def make_sinetriplewiththreeexpdecay_fit(
     if units is None:
         units = ["arb. unit", "arb. unit"]
 
-    result_str_dict = dict()  # create result string for gui or OrderedDict()
+    result_str_dict = dict()  # create result string for gui or {}
 
     period1 = 1 / result.params["e1_frequency"].value
     try:

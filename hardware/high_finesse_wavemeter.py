@@ -119,7 +119,7 @@ class HighFinesseWavemeter(Base, WavemeterInterface):
             # imports the spectrometer specific function from dll
             self._wavemeterdll = ctypes.windll.LoadLibrary("wlmData.dll")
 
-        except:
+        except Exception:
             self.log.critical(
                 "There is no Wavemeter installed on this "
                 "Computer.\nPlease install a High Finesse Wavemeter and "
@@ -179,7 +179,7 @@ class HighFinesseWavemeter(Base, WavemeterInterface):
             # clean up by removing reference to the ctypes library object
             del self._wavemeterdll
             return 0
-        except:
+        except Exception:
             self.log.error("Could not unload the wlmData.dll of the wavemeter.")
 
     #############################################

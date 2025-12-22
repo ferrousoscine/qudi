@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 from core.module import Base
 from interface.motor_interface import MotorInterface
@@ -48,7 +47,7 @@ class MotorDummy(Base, MotorInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
         # these label should be actually set by the config.
@@ -106,7 +105,7 @@ class MotorDummy(Base, MotorInterface):
         insert just None. If you are not sure about the meaning, look in other
         hardware files to get an impression.
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         axis0 = {
             "label": self._x_axis.label,
@@ -206,7 +205,7 @@ class MotorDummy(Base, MotorInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     "was reached! Ignore command!".format(
                         self._x_axis.label,
                         move_x,
@@ -227,7 +226,7 @@ class MotorDummy(Base, MotorInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     "was reached! Ignore command!".format(
                         self._y_axis.label,
                         move_y,
@@ -248,7 +247,7 @@ class MotorDummy(Base, MotorInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     "was reached! Ignore command!".format(
                         self._z_axis.label,
                         move_z,
@@ -269,7 +268,7 @@ class MotorDummy(Base, MotorInterface):
             ):
                 self.log.warning(
                     "Cannot make further movement of the axis "
-                    '"{0}" with the step {1}, since the border [{2},{3}] '
+                    '"{}" with the step {}, since the border [{},{}] '
                     "was reached! Ignore command!".format(
                         self._phi_axis.label,
                         move_phi,
@@ -300,8 +299,8 @@ class MotorDummy(Base, MotorInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._x_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -316,8 +315,8 @@ class MotorDummy(Base, MotorInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._y_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -332,8 +331,8 @@ class MotorDummy(Base, MotorInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._z_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -348,8 +347,8 @@ class MotorDummy(Base, MotorInterface):
             if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._phi_axis.label, desired_pos, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -514,11 +513,11 @@ class MotorDummy(Base, MotorInterface):
             desired_vel = param_dict[self._x_axis.label]
             constr = constraints[self._x_axis.label]
 
-            if not (constr["vel_min"] <= desired_pos <= constr["vel_max"]):
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._x_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -529,11 +528,11 @@ class MotorDummy(Base, MotorInterface):
             desired_vel = param_dict[self._y_axis.label]
             constr = constraints[self._y_axis.label]
 
-            if not (constr["vel_min"] <= desired_pos <= constr["vel_max"]):
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._y_axis.label, desired_vel, constr["vel_min"], constr["vel_max"]
                     )
                 )
@@ -544,11 +543,11 @@ class MotorDummy(Base, MotorInterface):
             desired_vel = param_dict[self._z_axis.label]
             constr = constraints[self._z_axis.label]
 
-            if not (constr["vel_min"] <= desired_pos <= constr["vel_max"]):
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._z_axis.label, desired_vel, constr["pos_min"], constr["pos_max"]
                     )
                 )
@@ -559,11 +558,11 @@ class MotorDummy(Base, MotorInterface):
             desired_vel = param_dict[self._phi_axis.label]
             constr = constraints[self._phi_axis.label]
 
-            if not (constr["vel_min"] <= desired_pos <= constr["vel_max"]):
+            if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                 self.log.warning(
                     "Cannot make absolute movement of the axis "
-                    '"{0}" to possition {1}, since it exceeds the limits '
-                    "[{2},{3}] ! Command is ignored!".format(
+                    '"{}" to possition {}, since it exceeds the limits '
+                    "[{},{}] ! Command is ignored!".format(
                         self._phi_axis.label, desired_vel, constr["pos_min"], constr["pos_max"]
                     )
                 )

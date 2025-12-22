@@ -36,7 +36,7 @@ class NuclearOperationsMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_nuclear_operations_gui.ui")
 
         # Load it
-        super(NuclearOperationsMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -371,12 +371,12 @@ class NuclearOperationsGui(GUIBase):
 
         if len(filetag) > 0:
             filename = os.path.join(
-                filepath, "{0}_{1}_NuclearOps".format(timestamp.strftime("%Y%m%d-%H%M-%S"), filetag)
+                filepath, "{}_{}_NuclearOps".format(timestamp.strftime("%Y%m%d-%H%M-%S"), filetag)
             )
         else:
             filename = os.path.join(
                 filepath,
-                "{0}_NuclearOps".format(
+                "{}_NuclearOps".format(
                     timestamp.strftime("%Y%m%d-%H%M-%S"),
                 ),
             )

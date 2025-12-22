@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 
 from logic.pulsed.sampling_functions import SamplingBase
@@ -44,7 +42,7 @@ class DC(SamplingBase):
     Object representing an DC element (constant voltage)
     """
 
-    params = OrderedDict()
+    params = {}
     params["voltage"] = {"unit": "V", "init": 0.0, "min": -np.inf, "max": +np.inf, "type": float}
 
     def __init__(self, voltage=None):
@@ -69,7 +67,7 @@ class Sin(SamplingBase):
     Object representing a sine wave element
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["frequency"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
     params["phase"] = {"unit": "°", "init": 0.0, "min": -np.inf, "max": np.inf, "type": float}
@@ -105,7 +103,7 @@ class DoubleSinSum(SamplingBase):
     Object representing a double sine wave element (Superposition of two sine waves; NOT normalized)
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude_1"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["frequency_1"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
     params["phase_1"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
@@ -170,7 +168,7 @@ class DoubleSinProduct(SamplingBase):
     Object representing a double sine wave element (Product of two sine waves; NOT normalized)
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude_1"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["frequency_1"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
     params["phase_1"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
@@ -236,7 +234,7 @@ class TripleSinSum(SamplingBase):
     (Superposition of three sine waves; NOT normalized)
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude_1"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["frequency_1"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
     params["phase_1"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
@@ -325,7 +323,7 @@ class TripleSinProduct(SamplingBase):
     (Product of three sine waves; NOT normalized)
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude_1"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["frequency_1"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
     params["phase_1"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
@@ -414,7 +412,7 @@ class Chirp(SamplingBase):
     Landau-Zener-Stueckelberg-Majorana model with a constant amplitude and a linear chirp
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["phase"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
     params["start_freq"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
@@ -463,7 +461,7 @@ class AllenEberlyChirp(SamplingBase):
     Analytical solution is given in: F. T. Hioe, Phys. Rev. A 30, 2100 (1984).
     """
 
-    params = OrderedDict()
+    params = {}
     params["amplitude"] = {"unit": "V", "init": 0.0, "min": 0.0, "max": np.inf, "type": float}
     params["phase"] = {"unit": "°", "init": 0.0, "min": -360, "max": 360, "type": float}
     params["start_freq"] = {"unit": "Hz", "init": 2.87e9, "min": 0.0, "max": np.inf, "type": float}
@@ -542,7 +540,7 @@ class AllenEberlyChirp(SamplingBase):
 #     """
 #     Object representing an element of a pre-sampled waveform from file (as for optimal control).
 #     """
-#     params = OrderedDict()
+#     params = {}
 #     params['import_path'] = {'unit': '', 'init': '', 'min': '', 'max': '', 'type': str}
 #
 #     def __init__(self, importpath):

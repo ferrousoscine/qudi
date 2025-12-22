@@ -347,7 +347,7 @@ class EdwardsVacuumController(Base):
 
     def get_extra_info(self):
         """Get extra information about pumping system."""
-        return "Controller: {0}\nTurbo: {1}\nBacking: {2}".format(
+        return "Controller: {}\nTurbo: {}\nBacking: {}".format(
             self.inst.ask("?S902"), self.inst.ask("?S904"), self.inst.ask("?S910")
         )
 
@@ -376,10 +376,10 @@ class EdwardsVacuumController(Base):
         """St pump states"""
         new_state = {}
         if "turbo" in states:
-            reply = self.inst.ask("!C904 {0}".format(1 if states["turbo"] else 0))
+            self.inst.ask("!C904 {}".format(1 if states["turbo"] else 0))
 
         if "backing" in states:
-            reply = self.inst.ask("!C910 {0}".format(1 if states["backing"] else 0))
+            self.inst.ask("!C910 {}".format(1 if states["backing"] else 0))
         return new_state
 
     def get_system_state(self):

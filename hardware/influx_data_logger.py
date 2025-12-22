@@ -96,10 +96,8 @@ class InfluxLogger(Base, DataLoggerInterface):
         @param channel str: channel name
         @param values list: data to be logged
         """
-        if channel in self.log_channels.keys() and len(values) == len(
-            self.log_channels[channel][values]
-        ):
-            conn.write_points(format_data(channel, values, channeltags))
+        if channel in self.log_channels and len(values) == len(self.log_channels[channel][values]):
+            self.conn.write_points(self.format_data(channel, values, self.channeltags))
 
     def format_data(self, channel_name, values, tags):
         """Format data according to InfluxDB JSON API.

@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import datetime
 import time
-from collections import OrderedDict
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -148,11 +147,11 @@ class WavemeterLoggerLogic(GenericLogic):
         if "fits" in self._statusVariables and isinstance(self._statusVariables["fits"], dict):
             self.fc.load_from_dict(self._statusVariables["fits"])
         else:
-            d1 = OrderedDict()
+            d1 = {}
             d1["Lorentzian peak"] = {"fit_function": "lorentzian", "estimator": "peak"}
             d1["Two Lorentzian peaks"] = {"fit_function": "lorentziandouble", "estimator": "peak"}
             d1["Two Gaussian peaks"] = {"fit_function": "gaussiandouble", "estimator": "peak"}
-            default_fits = OrderedDict()
+            default_fits = {}
             default_fits["1d"] = d1
             self.fc.load_from_dict(default_fits)
 
@@ -297,7 +296,7 @@ class WavemeterLoggerLogic(GenericLogic):
     def stop_scanning(self):
         """Set a flag to request stopping counting."""
 
-        if not self.module_state() == "idle":
+        if self.module_state() != "idle":
             # self._wavemeter_device.stop_acqusition()
             # stop the measurement thread
             self.sig_handle_timer.emit(False)
@@ -457,12 +456,12 @@ class WavemeterLoggerLogic(GenericLogic):
             timestamp = datetime.datetime.now()
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["Wavelength (nm)"] = np.array(self.histogram_axis)
         data["Signal (counts/s)"] = np.array(self.histogram)
 
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Bins (#)"] = self._bins
         parameters["Xmin (nm)"] = self._xmin
         parameters["XMax (nm)"] = self._xmax
@@ -485,10 +484,10 @@ class WavemeterLoggerLogic(GenericLogic):
         filelabel = "wavemeter_log_wavelength"
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["Time (s), Wavelength (nm)"] = self._wavelength_data
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Acquisition Timing (ms)"] = self._logic_acquisition_timing
         parameters["Start Time (s)"] = time.strftime(
             "%d.%m.%Y %Hh:%Mmin:%Ss", time.localtime(self._acqusition_start_time)
@@ -509,11 +508,11 @@ class WavemeterLoggerLogic(GenericLogic):
         filelabel = "wavemeter_log_counts"
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["Time (s),Signal (counts/s)"] = self._counter_logic._data_to_save
 
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Start counting time (s)"] = time.strftime(
             "%d.%m.%Y %Hh:%Mmin:%Ss", time.localtime(self._counter_logic._saving_start_time)
         )
@@ -539,14 +538,14 @@ class WavemeterLoggerLogic(GenericLogic):
         filelabel = "wavemeter_log_counts_with_wavelength"
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         data["Measurement Time (s), Signal (counts/s), Interpolated Wavelength (nm)"] = np.array(
             self.counts_with_wavelength
         )
 
         fig = self.draw_figure()
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Start Time (s)"] = time.strftime(
             "%d.%m.%Y %Hh:%Mmin:%Ss", time.localtime(self._acqusition_start_time)
         )

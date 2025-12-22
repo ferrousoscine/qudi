@@ -56,7 +56,7 @@ class SoftPIDController(GenericLogic, PIDControllerInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         # number of lines in the matrix plot

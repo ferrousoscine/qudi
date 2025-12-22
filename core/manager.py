@@ -22,31 +22,29 @@ Copyright 2010  Luke Campagnola
 Originally distributed under MIT/X11 license. See documentation/MITLicense.txt for more infomation.
 """
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 import importlib
+import logging
 import os
 import re
 import sys
-from collections import OrderedDict
 
 from qtpy import QtCore
 
 from . import config
+from .connector import Connector
 from .logger import register_exception_handler
+from .module import BaseMixin
 from .threadmanager import ThreadManager
 from .util.modules import is_base, toposort
-from .util.mutex import Mutex  # Mutex provides access serialization between threads
+from .util.mutex import Mutex
+
+logger = logging.getLogger(__name__)
 
 # try to import RemoteObjectManager. Might fail if rpyc is not installed.
 try:
     from .remote import RemoteObjectManager
 except ImportError:
     RemoteObjectManager = None
-from .connector import Connector
-from .module import BaseMixin
 
 
 class Manager(QtCore.QObject):
@@ -82,21 +80,21 @@ class Manager(QtCore.QObject):
         """
         # used for keeping some basic methods thread-safe
         self.lock = Mutex(recursive=True)
-        self.tree = OrderedDict()
-        self.tree["config"] = OrderedDict()
-        self.tree["defined"] = OrderedDict()
-        self.tree["loaded"] = OrderedDict()
+        self.tree = {}
+        self.tree["config"] = {}
+        self.tree["defined"] = {}
+        self.tree["loaded"] = {}
 
-        self.tree["defined"]["hardware"] = OrderedDict()
-        self.tree["loaded"]["hardware"] = OrderedDict()
+        self.tree["defined"]["hardware"] = {}
+        self.tree["loaded"]["hardware"] = {}
 
-        self.tree["defined"]["gui"] = OrderedDict()
-        self.tree["loaded"]["gui"] = OrderedDict()
+        self.tree["defined"]["gui"] = {}
+        self.tree["loaded"]["gui"] = {}
 
-        self.tree["defined"]["logic"] = OrderedDict()
-        self.tree["loaded"]["logic"] = OrderedDict()
+        self.tree["defined"]["logic"] = {}
+        self.tree["loaded"]["logic"] = {}
 
-        self.tree["global"] = OrderedDict()
+        self.tree["global"] = {}
         self.tree["global"]["startup"] = list()
 
         self.hasGui = not args.no_gui
@@ -128,10 +126,7 @@ class Manager(QtCore.QObject):
                 self.gui.setAppIcon()
 
             # Read in configuration file
-            if args.config == "":
-                config_file = self._getConfigFile()
-            else:
-                config_file = args.config
+            config_file = self._getConfigFile() if args.config == "" else args.config
             self.configDir = os.path.dirname(config_file)
             self.readConfig(config_file)
 
@@ -174,7 +169,7 @@ class Manager(QtCore.QObject):
                             # successfully started remote server
                             logger.info(f"Started server rpyc://{server_address}:{server_port}")
                             self.remote_server = True
-                        except:
+                        except Exception:
                             logger.exception("Rpyc server could not be started.")
                 elif "serveraddress" in self.tree["global"]:
                     logger.warning(
@@ -200,7 +195,7 @@ class Manager(QtCore.QObject):
                         self.sigModulesChanged.emit()
                     else:
                         logger.error(f"Loading startup module {key} failed, not defined anywhere.")
-        except:
+        except Exception:
             logger.exception("Error while configuring Manager:")
         finally:
             if len(self.tree["loaded"]["logic"]) == 0 and len(self.tree["loaded"]["gui"]) == 0:
@@ -238,7 +233,7 @@ class Manager(QtCore.QObject):
                         return confDict["configfile"]
                     else:
                         logger.critical(
-                            "Couldn't find config file specified in load.cfg: {0}".format(
+                            "Couldn't find config file specified in load.cfg: {}".format(
                                 confDict["configfile"]
                             )
                         )
@@ -368,7 +363,7 @@ class Manager(QtCore.QObject):
                                     continue
                                 # check for __init__.py files within extension
                                 # and issue warning if existing
-                                for paths, dirs, files in os.walk(path):
+                                for _paths, _dirs, files in os.walk(path):
                                     if "__init__.py" in files:
                                         logger.warning(
                                             f"Warning: Extension {path} contains "
@@ -408,7 +403,7 @@ class Manager(QtCore.QObject):
                             self.tree["config"][key][key2] = cfg[key][key2]
                     else:
                         self.tree["config"][key] = cfg[key]
-            except:
+            except Exception:
                 logger.exception("Error in configuration:")
         # print self.tree['config']
         self.sigConfigChanged.emit()
@@ -464,7 +459,7 @@ class Manager(QtCore.QObject):
 
         @param str filename: path where the config flie should be saved
         """
-        saveconfig = OrderedDict()
+        saveconfig = {}
         saveconfig.update(self.tree["defined"])
         saveconfig["global"] = self.tree["global"]
 
@@ -590,7 +585,7 @@ class Manager(QtCore.QObject):
         thismodule = self.tree["defined"][base][mkey]
         if not self.isModuleLoaded(base, mkey):
             logger.error(
-                "Loading of {0} module {1} as {2} was not successful, not connecting it.".format(
+                "Loading of {} module {} as {} was not successful, not connecting it.".format(
                     base, thismodule["module.Class"], mkey
                 )
             )
@@ -598,7 +593,7 @@ class Manager(QtCore.QObject):
         loaded_module = self.tree["loaded"][base][mkey]
         if "connect" not in thismodule:
             return 0
-        if not isinstance(loaded_module.connectors, OrderedDict):
+        if not isinstance(loaded_module.connectors, dict):
             logger.error(f"Connectors attribute of module {base}.{mkey} is not a dictionary.")
             return -1
         if "module.Class" not in thismodule:
@@ -606,7 +601,7 @@ class Manager(QtCore.QObject):
                 f"Connection configuration of module {base}.{mkey} is broken: no module defined."
             )
             return -1
-        if not isinstance(thismodule["connect"], OrderedDict):
+        if not isinstance(thismodule["connect"], dict):
             logger.error(
                 f"Connection configuration of module {base}.{mkey} "
                 "is broken: connect is not a dictionary."
@@ -628,13 +623,13 @@ class Manager(QtCore.QObject):
             if isinstance(connectors[c], Connector):
                 pass
             # legacy connector
-            elif isinstance(connectors[c], OrderedDict):
+            elif isinstance(connectors[c], dict):
                 if "class" not in connectors[c]:
                     logger.error(f"{c}.{base}.{mkey}: No class key in connection declaration.")
                     continue
                 if not isinstance(connectors[c]["class"], str):
                     logger.error(
-                        "{0}.{1}.{2}: Value {3} for class key is not a string.".format(
+                        "{}.{}.{}: Value {} for class key is not a string.".format(
                             c, base, mkey, connectors[c]["class"]
                         )
                     )
@@ -754,7 +749,7 @@ class Manager(QtCore.QObject):
                         cacertsfile=cacertsfile,
                     )
                     logger.info(
-                        "Remote module {0} loaded as {1}.{2}.".format(
+                        "Remote module {} loaded as {}.{}.".format(
                             defined_module["remote"], base, key
                         )
                     )
@@ -766,7 +761,7 @@ class Manager(QtCore.QObject):
                             raise Exception(
                                 f"You are trying to cheat the system with some category {base}"
                             )
-                except:
+                except Exception:
                     logger.exception(f"Error while loading {base} module: {key}")
                     return -1
             else:
@@ -804,7 +799,7 @@ class Manager(QtCore.QObject):
                             )
                             return 1
                         self.rm.shareModule(key, self.tree["loaded"][base][key])
-                except:
+                except Exception:
                     logger.exception(f"Error while loading {base} module: {key}")
                     return -1
         else:
@@ -831,9 +826,7 @@ class Manager(QtCore.QObject):
             try:
                 instance = self.rm.getRemoteModuleUrl(defined_module["remote"])
                 logger.info(
-                    "Remote module {0} loaded as .{1}.{2}.".format(
-                        defined_module["remote"], base, key
-                    )
+                    "Remote module {} loaded as .{}.{}.".format(defined_module["remote"], base, key)
                 )
                 with self.lock:
                     if is_base(base):
@@ -843,14 +836,14 @@ class Manager(QtCore.QObject):
                         raise Exception(
                             f"You are trying to cheat the system with some category {base}"
                         )
-            except:
+            except Exception:
                 logger.exception(f"Error while loading {base} module: {key}")
         elif key in self.tree["loaded"][base] and "module.Class" in defined_module:
             try:
                 # state machine: deactivate
                 if self.isModuleActive(base, key):
                     self.deactivateModule(base, key)
-            except:
+            except Exception:
                 logger.exception(f"Error while deactivating {base} module: {key}")
                 return -1
             try:
@@ -868,7 +861,7 @@ class Manager(QtCore.QObject):
                 # des Pudels Kern
                 importlib.reload(modObj)
                 self.configureModule(modObj, base, class_name, key, defined_module)
-            except:
+            except Exception:
                 logger.exception(f"Error while reloading {base} module: {key}")
                 return -1
         else:
@@ -953,7 +946,7 @@ class Manager(QtCore.QObject):
             else:
                 success = module.module_state.activate()  # runs on_activate in main thread
             logger.debug(f"Activation success: {success}")
-        except:
+        except Exception:
             logger.exception(f"{base} module {name}: error during activation:")
         QtCore.QCoreApplication.instance().processEvents()
 
@@ -974,7 +967,7 @@ class Manager(QtCore.QObject):
             if not self.isModuleActive(base, name):
                 logger.error(f"{base} module {name} is not activated.")
                 return
-        except:
+        except Exception:
             logger.exception(
                 f"Error while getting status of {name}, removing reference without deactivation."
             )
@@ -1004,7 +997,7 @@ class Manager(QtCore.QObject):
 
             self.saveStatusVariables(base, name, module.getStatusVariables())
             logger.debug(f"Deactivation success: {success}")
-        except:
+        except Exception:
             logger.exception(f"{base} module {name}: error during deactivation:")
         QtCore.QCoreApplication.instance().processEvents()
 
@@ -1029,7 +1022,7 @@ class Manager(QtCore.QObject):
                 if "connect" not in mod:
                     continue
                 connections = mod["connect"]
-                if not isinstance(connections, OrderedDict):
+                if not isinstance(connections, dict):
                     logger.error(f"{bname} module {mname}: connect is not a dictionary")
                     continue
                 for cname, connection in connections.items():
@@ -1071,7 +1064,7 @@ class Manager(QtCore.QObject):
         defined_module = self.tree["defined"][base][key]
         if "connect" not in defined_module:
             return dict()
-        if not isinstance(defined_module["connect"], OrderedDict):
+        if not isinstance(defined_module["connect"], dict):
             logger.error(f"{base} module {key}: connect is not a dictionary")
             return None
         connections = defined_module["connect"]
@@ -1193,7 +1186,7 @@ class Manager(QtCore.QObject):
                 if mkey in self.tree["defined"][mbase] and mkey in self.tree["loaded"][mbase]:
                     try:
                         deact = self.tree["loaded"][mbase][mkey].module_state.can("deactivate")
-                    except:
+                    except Exception:
                         deact = True
                     if deact:
                         logger.info(f"Deactivating module {mbase}.{mkey}")
@@ -1284,7 +1277,7 @@ class Manager(QtCore.QObject):
                 classname = self.tree["loaded"][base][module].__class__.__name__
                 filename = os.path.join(statusdir, f"status-{classname}_{base}_{module}.cfg")
                 config.save(filename, variables)
-            except:
+            except Exception:
                 print(variables)
                 logger.exception(
                     f"Failed to save status variables of module {base}.{module}:\n{repr(variables)}"
@@ -1302,13 +1295,10 @@ class Manager(QtCore.QObject):
             statusdir = self.getStatusDir()
             classname = self.tree["loaded"][base][module].__class__.__name__
             filename = os.path.join(statusdir, f"status-{classname}_{base}_{module}.cfg")
-            if os.path.isfile(filename):
-                variables = config.load(filename)
-            else:
-                variables = OrderedDict()
-        except:
+            variables = config.load(filename) if os.path.isfile(filename) else {}
+        except Exception:
             logger.exception("Failed to load status variables.")
-            variables = OrderedDict()
+            variables = {}
         return variables
 
     @QtCore.Slot(str, str)
@@ -1319,7 +1309,7 @@ class Manager(QtCore.QObject):
             filename = os.path.join(statusdir, f"status-{classname}_{base}_{module}.cfg")
             if os.path.isfile(filename):
                 os.remove(filename)
-        except:
+        except Exception:
             logger.exception("Failed to remove module status file.")
 
     @QtCore.Slot()
@@ -1327,13 +1317,13 @@ class Manager(QtCore.QObject):
         """Nicely request that all modules shut down."""
         lockedmodules = False
         brokenmodules = False
-        for base, mods in self.tree["loaded"].items():
-            for name, module in mods.items():
+        for _base, mods in self.tree["loaded"].items():
+            for _name, module in mods.items():
                 try:
                     state = module.module_state()
                     if state == "locked":
                         lockedmodules = True
-                except:
+                except Exception:
                     brokenmodules = True
         if lockedmodules:
             if self.hasGui:
@@ -1350,8 +1340,8 @@ class Manager(QtCore.QObject):
         """Stop all modules, no questions asked."""
         deps = self.getAllRecursiveModuleDependencies(self.tree["loaded"])
         sorteddeps = toposort(deps)
-        for b, mods in self.tree["loaded"].items():
-            for m in mods.keys():
+        for _b, mods in self.tree["loaded"].items():
+            for m in mods:
                 if m not in sorteddeps:
                     sorteddeps.append(m)
 
@@ -1361,7 +1351,7 @@ class Manager(QtCore.QObject):
             base = self.findBase(module)
             try:
                 deact = self.tree["loaded"][base][module].can("deactivate")
-            except:
+            except Exception:
                 deact = True
             if deact:
                 logger.info(f"Deactivating module {base}.{module}")

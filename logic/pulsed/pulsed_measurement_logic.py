@@ -18,10 +18,11 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import builtins
+import contextlib
 import copy
 import datetime
 import time
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -118,7 +119,7 @@ class PulsedMeasurementLogic(GenericLogic):
 
         self.log.debug("The following configuration was found.")
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         # timer for measurement
@@ -137,7 +138,7 @@ class PulsedMeasurementLogic(GenericLogic):
         self.laser_data = np.zeros((10, 20), dtype="int64")
         self.raw_data = np.zeros((10, 20), dtype="int64")
 
-        self._saved_raw_data = OrderedDict()  # temporary saved raw data
+        self._saved_raw_data = {}  # temporary saved raw data
         self._recalled_raw_data_tag = None  # the currently recalled raw data dict key
 
         # Paused measurement flag
@@ -324,10 +325,7 @@ class PulsedMeasurementLogic(GenericLogic):
         if not isinstance(switch_on, bool):
             return -1
 
-        if switch_on:
-            err = self.fast_counter_on()
-        else:
-            err = self.fast_counter_off()
+        err = self.fast_counter_on() if switch_on else self.fast_counter_off()
         return err
 
     def fast_counter_pause(self):
@@ -350,10 +348,7 @@ class PulsedMeasurementLogic(GenericLogic):
         if not isinstance(continue_counter, bool):
             return -1
 
-        if continue_counter:
-            err = self.fast_counter_continue()
-        else:
-            err = self.fast_counter_pause()
+        err = self.fast_counter_continue() if continue_counter else self.fast_counter_pause()
         return err
 
     @property
@@ -422,10 +417,7 @@ class PulsedMeasurementLogic(GenericLogic):
         if not isinstance(switch_on, bool):
             return -1
 
-        if switch_on:
-            err = self.microwave_on()
-        else:
-            err = self.microwave_off()
+        err = self.microwave_on() if switch_on else self.microwave_off()
         return err
 
     @QtCore.Slot(dict)
@@ -515,10 +507,7 @@ class PulsedMeasurementLogic(GenericLogic):
         if not isinstance(switch_on, bool):
             return -1
 
-        if switch_on:
-            err = self.pulse_generator_on()
-        else:
-            err = self.pulse_generator_off()
+        err = self.pulse_generator_on() if switch_on else self.pulse_generator_off()
         return err
 
     ############################################################################
@@ -836,10 +825,8 @@ class PulsedMeasurementLogic(GenericLogic):
         Stop the measurement
         """
         # Get raw data and analyze it a last time just before stopping the measurement.
-        try:
+        with contextlib.suppress(builtins.BaseException):
             self._pulsed_analysis_loop()
-        except:
-            pass
 
         with self._threadlock:
             if self.module_state() == "locked":
@@ -1229,7 +1216,7 @@ class PulsedMeasurementLogic(GenericLogic):
         # get raw data from fast counter
         fc_data = self.fastcounter().get_data_trace()
         if (
-            type(fc_data) == tuple and len(fc_data) == 2
+            isinstance(fc_data, tuple) and len(fc_data) == 2
         ):  # if the hardware implement the new version of the interface
             fc_data, info_dict = fc_data
         else:
@@ -1329,18 +1316,15 @@ class PulsedMeasurementLogic(GenericLogic):
         ####                Save extracted laser pulses                  ####
         #####################################################################
         if save_laser_pulses:
-            if tag:
-                filelabel = tag + "_laser_pulses"
-            else:
-                filelabel = "laser_pulses"
+            filelabel = tag + "_laser_pulses" if tag else "laser_pulses"
 
             # prepare the data in a dict or in an OrderedDict:
-            data = OrderedDict()
+            data = {}
             laser_trace = self.laser_data
             data["Signal (counts)"] = laser_trace.transpose()
 
             # write the parameters:
-            parameters = OrderedDict()
+            parameters = {}
             parameters["bin width (s)"] = self.__fast_counter_binwidth
             parameters["record length (s)"] = self.__fast_counter_record_length
             parameters["gated counting"] = self.fast_counter_settings["is_gated"]
@@ -1361,10 +1345,7 @@ class PulsedMeasurementLogic(GenericLogic):
         ####                Save measurement data                        ####
         #####################################################################
         if save_pulsed_measurement:
-            if tag:
-                filelabel = tag + "_pulsed_measurement"
-            else:
-                filelabel = "pulsed_measurement"
+            filelabel = tag + "_pulsed_measurement" if tag else "pulsed_measurement"
 
             # prepare the data in a dict or in an OrderedDict:
             header_str = "Controlled variable"
@@ -1385,7 +1366,7 @@ class PulsedMeasurementLogic(GenericLogic):
                     header_str += "\tError2"
                     if self._data_units[1]:
                         header_str += f"({self._data_units[1]})"
-            data = OrderedDict()
+            data = {}
             if with_error:
                 data[header_str] = np.vstack(
                     (self.signal_data, self.measurement_error[1:])
@@ -1394,7 +1375,7 @@ class PulsedMeasurementLogic(GenericLogic):
                 data[header_str] = self.signal_data.transpose()
 
             # write the parameters:
-            parameters = OrderedDict()
+            parameters = {}
             parameters["Approx. measurement time (s)"] = self.__elapsed_time
             parameters["Measurement sweeps"] = self.__elapsed_sweeps
             parameters["Number of laser pulses"] = self._number_of_lasers
@@ -1721,11 +1702,11 @@ class PulsedMeasurementLogic(GenericLogic):
         filelabel = "raw_timetrace" if not tag else tag + "_raw_timetrace"
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         raw_trace = self.raw_data.astype("int64")
         data["Signal(counts)"] = raw_trace.transpose()
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["bin width (s)"] = self.__fast_counter_binwidth
         parameters["record length (s)"] = self.__fast_counter_record_length
         parameters["gated counting"] = self.fast_counter_settings["is_gated"]

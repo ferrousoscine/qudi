@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 import visa
 
@@ -139,7 +138,7 @@ class MotorStagePI(Base, MotorInterface):
         Each constraint is a tuple of the form
             (min_value, max_value, stepsize)
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         axis0 = {
             "label": self._first_axis_label,
@@ -210,12 +209,12 @@ class MotorStagePI(Base, MotorInterface):
         """
 
         # There are sometimes connections problems therefore up to 3 attempts are started
-        for attempt in range(3):
+        for _attempt in range(3):
             try:
                 for axis_label in param_dict:
                     step = param_dict[axis_label]
                     self._do_move_rel(axis_label, step)
-            except:
+            except Exception:
                 self.log.warning("Motor connection problem! Try again...")
             else:
                 break
@@ -241,7 +240,7 @@ class MotorStagePI(Base, MotorInterface):
         @return dict pos: dictionary with the current axis position
         """
         # There are sometimes connections problems therefore up to 3 attempts are started
-        for attept in range(3):
+        for _attept in range(3):
             try:
                 for axis_label in param_dict:
                     move = param_dict[axis_label]
@@ -249,7 +248,7 @@ class MotorStagePI(Base, MotorInterface):
                 while not self._motor_stopped():
                     time.sleep(0.02)
 
-            except:
+            except Exception:
                 self.log.warning("Motor connection problem! Try again...")
             else:
                 break
@@ -273,7 +272,7 @@ class MotorStagePI(Base, MotorInterface):
             while not self._motor_stopped():
                 time.sleep(0.2)
             return 0
-        except:
+        except Exception:
             self.log.error("MOTOR MOVEMENT NOT STOPPED!!!)")
             return -1
 
@@ -297,29 +296,29 @@ class MotorStagePI(Base, MotorInterface):
         try:
             if param_list is not None:
                 for axis_label in param_list:
-                    for attempt in range(5):
+                    for _attempt in range(5):
                         # self.log.debug(attempt)
                         try:
                             pos = int(self._ask_xyz(axis_label, "TT").split(":", 1)[1])
                             param_dict[axis_label] = pos * 1e-7
-                        except:
+                        except Exception:
                             continue
                         else:
                             break
             else:
                 for axis_label in constraints:
-                    for attempt in range(5):
+                    for _attempt in range(5):
                         # self.log.debug(attempt)
                         try:
                             # pos = int(self._ask_xyz(axis_label,'TT')[8:])
                             pos = int(self._ask_xyz(axis_label, "TT").split(":", 1)[1])
                             param_dict[axis_label] = pos * 1e-7
-                        except:
+                        except Exception:
                             continue
                         else:
                             break
             return param_dict
-        except:
+        except Exception:
             self.log.error("Could not find current xyz motor position")
             return -1
 
@@ -349,7 +348,7 @@ class MotorStagePI(Base, MotorInterface):
                     status = self._ask_xyz(axis_label, "TS").split(":", 1)[1]
                     param_dict[axis_label] = status
             return param_dict
-        except:
+        except Exception:
             self.log.error("Status request unsuccessful")
             return -1
 
@@ -377,7 +376,7 @@ class MotorStagePI(Base, MotorInterface):
                 time.sleep(0.2)
             for axis_label in param_list:
                 self._write_xyz(axis_label, "DH")
-        except:
+        except Exception:
             self.log.error("Calibration did not work")
 
         for axis_label in param_list:
@@ -410,7 +409,7 @@ class MotorStagePI(Base, MotorInterface):
                     vel = int(self._ask_xyz(axis_label, "TY").split(":", 1)[1])
                     param_dict[axis_label] = vel * 1e-7
             return param_dict
-        except:
+        except Exception:
             self.log.error("Could not find current axis velocity")
             return -1
 
@@ -436,7 +435,7 @@ class MotorStagePI(Base, MotorInterface):
             # retrun param_dict2
             return param_dict
 
-        except:
+        except Exception:
             self.log.error("Could not set axis velocity")
             return -1
 
@@ -454,9 +453,9 @@ class MotorStagePI(Base, MotorInterface):
         try:
             # self.log.info(constraints[axis]['ID'] + command + '\n')
             self._serial_connection_xyz.write(constraints[axis]["ID"] + command + "\n")
-            trash = self._read_answer_xyz()  # deletes possible answers
+            self._read_answer_xyz()  # deletes possible answers
             return 0
-        except:
+        except Exception:
             self.log.error("Command was no accepted")
             return -1
 
@@ -470,7 +469,7 @@ class MotorStagePI(Base, MotorInterface):
         while still_reading:
             try:
                 answer = answer + self._serial_connection_xyz.read()[:-1]
-            except:
+            except Exception:
                 still_reading = False
         return answer
 
@@ -523,8 +522,8 @@ class MotorStagePI(Base, MotorInterface):
         # self.log.info(axis + 'MA{0}'.format(int(move*1e8)))
         if not (constraints[axis]["pos_min"] <= move <= constraints[axis]["pos_max"]):
             self.log.warning(
-                'Cannot make the movement of the axis "{0}"'
-                "since the border [{1},{2}] would be crossed! Ignore command!"
+                'Cannot make the movement of the axis "{}"'
+                "since the border [{},{}] would be crossed! Ignore command!"
                 "".format(axis, constraints[axis]["pos_min"], constraints[axis]["pos_max"])
             )
         else:

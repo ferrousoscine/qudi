@@ -115,7 +115,7 @@ class QudiKernelLogic(GenericLogic):
         if external is not None:
             try:
                 external.exit()
-            except:
+            except Exception:
                 self.log.warning("External qudikernel starter did not exit")
 
     def updateModuleList(self):

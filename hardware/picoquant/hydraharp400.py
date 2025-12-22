@@ -89,7 +89,7 @@ class HydraHarp400(Base, FastCounterInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
         self.stopped_or_halt = "stopped"
@@ -161,7 +161,7 @@ class HydraHarp400(Base, FastCounterInterface):
         the file 'errorcodes.h'.
         """
 
-        if not func_val == 0:
+        if func_val != 0:
             self.log.error(
                 f"Fastcounter: Error in HydraHarp400 with errorcode {func_val}:\n{self.errorcode[func_val]}"
             )
@@ -623,7 +623,6 @@ class HydraHarp400(Base, FastCounterInterface):
         if retcode < 0:
             self.dll.HH_GetErrorString(errorString, ctypes.c_int(retcode))
             self.log.error(
-                "Fastcounter: HH_%s error %d (%s). Aborted."
-                % (funcName, retcode, errorString.value.decode("utf-8"))
+                f"Fastcounter: HH_{funcName} error {retcode} ({errorString.value.decode('utf-8')}). Aborted."
             )
         return retcode

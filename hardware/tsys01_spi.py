@@ -19,6 +19,7 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import contextlib
 import struct
 import time
 
@@ -84,7 +85,7 @@ class TSYS01SPI(Base, ProcessInterface):
 
     def reset(self):
         """Reset the sensor chip."""
-        rbuf = self.spi.xfer([self.RESET], 8000, 3000)
+        self.spi.xfer([self.RESET], 8000, 3000)
         time.sleep(0.003)
 
     def readRomAddr(self, addr):
@@ -108,10 +109,8 @@ class TSYS01SPI(Base, ProcessInterface):
 
     def startADC(self):
         """Start the temperature sensor ADC."""
-        try:
-            rbuf = self.spi.xfer([self.START_ADC])
-        except OSError:
-            pass
+        with contextlib.suppress(OSError):
+            self.spi.xfer([self.START_ADC])
         time.sleep(0.010)
 
     def readADC(self):

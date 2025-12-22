@@ -24,7 +24,6 @@ import inspect
 import logging
 import os
 import sys
-from collections import OrderedDict
 from enum import Enum
 
 import numpy as np
@@ -131,7 +130,7 @@ class SamplingBase:
     Base class for all sampling functions
     """
 
-    params = OrderedDict()
+    params = {}
     log = logging.getLogger(__name__)
 
     def __repr__(self):
@@ -141,7 +140,7 @@ class SamplingBase:
                 kwargs.append(f"{param}='{getattr(self, param)}'")
             else:
                 kwargs.append(f"{param}={getattr(self, param)}")
-        return "{0}({1})".format(type(self).__name__, ", ".join(kwargs))
+        return "{}({})".format(type(self).__name__, ", ".join(kwargs))
 
     def __str__(self):
         kwargs = ("=".join((param, str(getattr(self, param)))) for param in self.params)

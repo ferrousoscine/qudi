@@ -20,12 +20,11 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import logging
 
-logger = logging.getLogger(__name__)
-from collections import OrderedDict
-
 from qtpy import QtCore
 
 from .util.mutex import Mutex
+
+logger = logging.getLogger(__name__)
 
 
 class ThreadManager(QtCore.QAbstractTableModel):
@@ -33,7 +32,7 @@ class ThreadManager(QtCore.QAbstractTableModel):
 
     def __init__(self):
         super().__init__()
-        self._threads = OrderedDict()
+        self._threads = {}
         self.lock = Mutex()
         self.headers = ["Name", "Thread"]
         self.thread = QtCore.QThread.currentThread()

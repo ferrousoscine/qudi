@@ -51,7 +51,7 @@ class FastCounterDummy(Base, FastCounterInterface):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
         if self.trace_path is None:
@@ -150,7 +150,7 @@ class FastCounterDummy(Base, FastCounterInterface):
         self.statusvar = 2
         try:
             self._count_data = np.loadtxt(self.trace_path, dtype="int64")
-        except:
+        except Exception:
             return -1
 
         if self._gated:

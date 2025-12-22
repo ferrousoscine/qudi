@@ -19,6 +19,7 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import ctypes
+import os
 import time
 
 import numpy as np
@@ -180,7 +181,7 @@ class PicoHarp300(Base, SlowCounterInterface, FastCounterInterface):
         try:
             with open(filename) as f:
                 content = f.readlines()
-        except:
+        except Exception:
             self.log.error(
                 'No file "errorcodes.h" could be found in the PicoHarp hardware directory!'
             )
@@ -245,7 +246,7 @@ class PicoHarp300(Base, SlowCounterInterface, FastCounterInterface):
         the file 'errorcodes.h'.
         """
 
-        if not func_val == 0:
+        if func_val != 0:
             self.log.error(
                 f"Error in PicoHarp300 with errorcode {func_val}:\n{self.errorcode[func_val]}"
             )
@@ -821,7 +822,7 @@ class PicoHarp300(Base, SlowCounterInterface, FastCounterInterface):
         #        else:
         self.check(self._dll.PH_SetMarkerEnable(self._deviceID, me0, me1, me2, me3))
 
-    def tttr_set_marker_holdofftime(self, holfofftime):
+    def tttr_set_marker_holdofftime(self, holdofftime):
         """Set the holdofftime for the markers.
 
         @param int holdofftime: holdofftime in ns. Maximal value is HOLDOFFMAX.
@@ -838,10 +839,10 @@ class PicoHarp300(Base, SlowCounterInterface, FastCounterInterface):
             self.log.error(
                 "PicoHarp: Holdofftime could not be set.\n"
                 "Value of holdofftime must be within the range "
-                f"[0,{self.HOLDOFFMAX}], but a value of {holfofftime} was passed."
+                f"[0,{self.HOLDOFFMAX}], but a value of {holdofftime} was passed."
             )
         else:
-            self.check(self._dll.PH_SetMarkerHoldofftime(self._deviceID, holfofftime))
+            self.check(self._dll.PH_SetMarkerHoldofftime(self._deviceID, holdofftime))
 
     # =========================================================================
     #  Special functions for Routing Devices
@@ -1065,7 +1066,7 @@ class PicoHarp300(Base, SlowCounterInterface, FastCounterInterface):
         constraints.max_detectors = 1
         constraints.min_count_frequency = 1e-3
         constraints.max_count_frequency = 10e9
-        conetraints.counting_mode = [CountingMode.CONTINUOUS]
+        constraints.counting_mode = [CountingMode.CONTINUOUS]
         return constraints
 
     def get_counter(self, samples=None):

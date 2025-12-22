@@ -20,7 +20,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import os
 import time
-from collections import OrderedDict
 
 import numpy as np
 import okfrontpanel as ok
@@ -152,7 +151,7 @@ class OkFpgaPulser(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["all"] = frozenset(
             {"d_ch1", "d_ch2", "d_ch3", "d_ch4", "d_ch5", "d_ch6", "d_ch7", "d_ch8"}
         )
@@ -360,10 +359,10 @@ class OkFpgaPulser(Base, PulserInterface):
         # Round sample rate either to 500MHz or 950MHz since no other values are possible.
         if sample_rate < 725e6:
             self.__sample_rate = 500e6
-            bitfile_name = "pulsegen_8chnl_500MHz_{0}.bit".format(self._fpga_type.split("_")[1])
+            bitfile_name = "pulsegen_8chnl_500MHz_{}.bit".format(self._fpga_type.split("_")[1])
         else:
             self.__sample_rate = 950e6
-            bitfile_name = "pulsegen_8chnl_950MHz_{0}.bit".format(self._fpga_type.split("_")[1])
+            bitfile_name = "pulsegen_8chnl_950MHz_{}.bit".format(self._fpga_type.split("_")[1])
 
         bitfile_path = os.path.join(get_main_dir(), "thirdparty", "qo_fpga", bitfile_name)
 

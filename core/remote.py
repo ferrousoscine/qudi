@@ -19,9 +19,7 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import logging
-
-logger = logging.getLogger(__name__)
-
+import os
 import ssl
 from urllib.parse import urlparse
 
@@ -31,9 +29,9 @@ from rpyc.utils.server import ThreadedServer
 
 from .util.models import DictTableModel, ListTableModel
 
+logger = logging.getLogger(__name__)
+
 rpyc.core.protocol.DEFAULT_CONFIG["allow_pickle"] = True
-import os
-import sys
 
 
 class SSLAuthenticator:
@@ -55,9 +53,8 @@ class SSLAuthenticator:
 
         try:
             conn = context.wrap_socket(sock, server_side=True)
-        except ssl.SSLError:
-            ex = sys.exc_info()[1]
-            raise Exception(str(ex))
+        except ssl.SSLError as ex:
+            raise Exception(str(ex)) from ex
         return conn, conn.getpeercert()
 
 

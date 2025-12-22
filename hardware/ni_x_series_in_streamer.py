@@ -19,6 +19,7 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
+import contextlib
 import ctypes
 
 import nidaqmx as ni
@@ -160,7 +161,7 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
             if invalid_sources:
                 self.log.error(
                     "Invalid digital source terminals encountered. Following sources will "
-                    "be ignored:\n  {0}\nValid digital input terminals are:\n  {1}"
+                    "be ignored:\n  {}\nValid digital input terminals are:\n  {}"
                     "".format(
                         ", ".join(natural_sort(invalid_sources)),
                         ", ".join(self.__all_digital_terminals),
@@ -175,7 +176,7 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
             if invalid_sources:
                 self.log.error(
                     "Invalid analog source channels encountered. Following sources will "
-                    "be ignored:\n  {0}\nValid analog input channels are:\n  {1}"
+                    "be ignored:\n  {}\nValid analog input channels are:\n  {}"
                     "".format(
                         ", ".join(natural_sort(invalid_sources)),
                         ", ".join(self.__all_analog_terminals),
@@ -707,7 +708,7 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
         try:
             write_offset = 0
             # Read digital channels
-            for i, reader in enumerate(self._di_readers):
+            for _i, reader in enumerate(self._di_readers):
                 # read the counter value. This function is blocking.
                 read_samples = reader.read_many_sample_double(
                     buffer[write_offset:],
@@ -860,10 +861,8 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
                 task.timing.cfg_implicit_timing(sample_mode=ni.constants.AcquisitionType.CONTINUOUS)
             except ni.DaqError:
                 self.log.exception("Error while configuring sample clock task.")
-                try:
+                with contextlib.suppress(NameError):
                     del task
-                except NameError:
-                    pass
                 return -1
 
             # Try to reserve resources for the task
@@ -871,14 +870,10 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
                 task.control(ni.constants.TaskMode.TASK_RESERVE)
             except ni.DaqError:
                 # Try to clean up task handle
-                try:
+                with contextlib.suppress(ni.DaqError):
                     task.close()
-                except ni.DaqError:
-                    pass
-                try:
+                with contextlib.suppress(NameError):
                     del task
-                except NameError:
-                    pass
 
                 # Return if no counter could be reserved
                 if src == self.__all_counters[-1]:
@@ -922,13 +917,13 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
 
         if self._external_sample_clock_source:
             clock_channel = f"/{self._device_name}/{self._external_sample_clock_source}"
-            sample_freq = float(self._external_sample_clock_frequency)
+            float(self._external_sample_clock_frequency)
         else:
             clock_channel = f"/{self._clk_task_handle.channel_names[0]}InternalOutput"
-            sample_freq = float(self._clk_task_handle.co_channels.all.co_pulse_freq)
+            float(self._clk_task_handle.co_channels.all.co_pulse_freq)
 
         # Set up digital counting tasks
-        for i, chnl in enumerate(digital_channels):
+        for _i, chnl in enumerate(digital_channels):
             chnl_name = f"/{self._device_name}/{chnl}"
             task_name = f"PeriodCounter_{chnl}"
             # Try to find available counter
@@ -965,7 +960,7 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
                             ctypes.c_char_p(ctr_name.encode("ascii")),
                             ctypes.c_char_p(chnl_name.encode("ascii")),
                         )
-                    except:
+                    except Exception:
                         lib_importer.cdll.DAQmxSetCIPeriodTerm(
                             task._handle,
                             ctypes.c_char_p(ctr_name.encode("ascii")),
@@ -982,10 +977,8 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
                         samps_per_chan=self.__buffer_size,
                     )
                 except ni.DaqError:
-                    try:
+                    with contextlib.suppress(NameError):
                         del task
-                    except NameError:
-                        pass
                     self.terminate_all_tasks()
                     self.log.exception(
                         "Something went wrong while configuring digital counter "
@@ -1094,10 +1087,8 @@ class NIXSeriesInStreamer(Base, DataInStreamInterface):
             )
         except ni.DaqError:
             self.log.exception("Something went wrong while configuring the analog-in task.")
-            try:
+            with contextlib.suppress(NameError):
                 del ai_task
-            except NameError:
-                pass
             self.terminate_all_tasks()
             return -1
 

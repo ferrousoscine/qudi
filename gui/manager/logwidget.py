@@ -140,7 +140,7 @@ class LogModel(QtCore.QAbstractTableModel):
         """
         self.beginInsertRows(parent, row, row + count - 1)
         insertion = list()
-        for ii in range(count):
+        for _ii in range(count):
             insertion.append([None, None, None, None])
         self.entries[row:row] = insertion
         self.endInsertRows()
@@ -413,9 +413,8 @@ class LogWidget(QtWidgets.QWidget):
             if item.checkState(0):
                 for ii in range(item.childCount()):
                     item.child(ii).setCheckState(0, QtCore.Qt.Checked)
-        elif item.parent() == self.filterTree.topLevelItem(1):
-            if not item.checkState(0):
-                self.filterTree.topLevelItem(1).setCheckState(0, QtCore.Qt.Unchecked)
+        elif item.parent() == self.filterTree.topLevelItem(1) and not item.checkState(0):
+            self.filterTree.topLevelItem(1).setCheckState(0, QtCore.Qt.Unchecked)
 
         # level filter
         levelFilter = []

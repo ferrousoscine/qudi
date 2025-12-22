@@ -90,7 +90,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         # Create block and append to created_blocks list
         hhphase_block = PulseBlock(name=name)
         hhphase_block.append(pihalf_element)
-        for n in range(xy8_order):
+        for _n in range(xy8_order):
             hhphase_block.append(pix_element)
             hhphase_block.append(piy_element)
             hhphase_block.append(pix_element)
@@ -105,7 +105,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         hhphase_block.append(waiting_element)
         if alternating:
             hhphase_block.append(pihalf_element)
-            for n in range(xy8_order):
+            for _n in range(xy8_order):
                 hhphase_block.append(pix_element)
                 hhphase_block.append(piy_element)
                 hhphase_block.append(pix_element)
@@ -202,7 +202,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         hhphase_block = PulseBlock(name=name)
         for xy8_order in order_array:
             hhphase_block.append(pihalf_element)
-            for n in range(xy8_order):
+            for _n in range(xy8_order):
                 hhphase_block.append(pix_element)
                 hhphase_block.append(piy_element)
                 hhphase_block.append(pix_element)
@@ -217,7 +217,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
             hhphase_block.append(waiting_element)
             if alternating:
                 hhphase_block.append(pihalf_element)
-                for n in range(xy8_order):
+                for _n in range(xy8_order):
                     hhphase_block.append(pix_element)
                     hhphase_block.append(piy_element)
                     hhphase_block.append(pix_element)
@@ -317,7 +317,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         # Create block and append to created_blocks list
         rotecho_block = PulseBlock(name=name)
         rotecho_block.append(pihalf_element)
-        for n in range(order):
+        for _n in range(order):
             rotecho_block.append(pix_element)
             rotecho_block.append(piy_element)
         rotecho_block.append(pihalf_element)
@@ -326,7 +326,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         rotecho_block.append(waiting_element)
         if alternating:
             rotecho_block.append(pihalf_element)
-            for n in range(order):
+            for _n in range(order):
                 rotecho_block.append(pix_element)
                 rotecho_block.append(piy_element)
             rotecho_block.append(pi3half_element)
@@ -416,7 +416,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
         rot_echo_tau = PulseBlock(name=name)
         for order in order_array:
             rot_echo_tau.append(pihalf_element)
-            for n in range(order):
+            for _n in range(order):
                 rot_echo_tau.append(pix_element)
                 rot_echo_tau.append(piy_element)
             rot_echo_tau.append(pihalf_element)
@@ -425,7 +425,7 @@ class ContDDPredefinedGenerator(PredefinedGeneratorBase):
             rot_echo_tau.append(waiting_element)
             if alternating:
                 rot_echo_tau.append(pihalf_element)
-                for n in range(order):
+                for _n in range(order):
                     rot_echo_tau.append(pix_element)
                     rot_echo_tau.append(piy_element)
                 rot_echo_tau.append(pi3half_element)

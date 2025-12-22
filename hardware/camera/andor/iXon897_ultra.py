@@ -22,7 +22,7 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from ctypes import *
+from ctypes import byref, c_float, c_int, c_long, c_ulong, cdll, pointer
 from enum import Enum
 
 import numpy as np
@@ -347,10 +347,7 @@ class IxonUltra(Base, CameraInterface):
         """
         status = c_int()
         self._get_status(status)
-        if ERROR_DICT[status.value] == "DRV_IDLE":
-            return True
-        else:
-            return False
+        return ERROR_DICT[status.value] == "DRV_IDLE"
 
     # soon to be interface functions for using
     # a camera as a part of a (slow) photon counter
@@ -377,10 +374,7 @@ class IxonUltra(Base, CameraInterface):
         if check_val == 0:
             check_val = ret_val1 | ret_val2
 
-        if msg != "DRV_SUCCESS":
-            ret_val3 = -1
-        else:
-            ret_val3 = 0
+        ret_val3 = -1 if msg != "DRV_SUCCESS" else 0
 
         check_val = ret_val3 | check_val
 
@@ -576,10 +570,7 @@ class IxonUltra(Base, CameraInterface):
         return check_val
 
     def _set_cooler(self, state):
-        if state:
-            error_code = self.dll.CoolerON()
-        else:
-            error_code = self.dll.CoolerOFF()
+        error_code = self.dll.CoolerON() if state else self.dll.CoolerOFF()
 
         return ERROR_DICT[error_code]
 

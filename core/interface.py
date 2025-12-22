@@ -42,7 +42,7 @@ class InterfaceMethod:
     def __new__(cls, default_callable, is_abstractmethod=False):
         func_name = default_callable.__name__
         if func_name not in cls._latest_unregistered_instances:
-            cls._latest_unregistered_instances[func_name] = super(InterfaceMethod, cls).__new__(cls)
+            cls._latest_unregistered_instances[func_name] = super().__new__(cls)
         return cls._latest_unregistered_instances[func_name]
 
     def __init__(self, default_callable, is_abstractmethod=False):

@@ -71,7 +71,7 @@ class MagnetMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_magnet_gui.ui")
 
         # Load it
-        super(MagnetMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -83,7 +83,7 @@ class MagnetSettingsWindow(QtWidgets.QDialog):
         ui_file = os.path.join(this_dir, "ui_magnet_settings.ui")
 
         # Load it
-        super(MagnetSettingsWindow, self).__init__()
+        super().__init__()
 
         uic.loadUi(ui_file, self)
 
@@ -140,7 +140,7 @@ class MagnetGui(GUIBase):
         # self._mw.addDockWidget(QtCore.Qt.DockWidgetArea(2), self._mw.move_rel_DockWidget)
         # self._mw.addDockWidget(QtCore.Qt.DockWidgetArea(3), self._mw.move_abs_DockWidget)
         self.set_default_view_main_window()
-        raw_data_2d = self._magnet_logic.get_2d_data_matrix()
+        self._magnet_logic.get_2d_data_matrix()
 
         # After a movement command, the device should not block the program, at
         # least on the hardware level. That meant that the dll (or whatever
@@ -1184,7 +1184,7 @@ class MagnetGui(GUIBase):
         If no value is passed, the current position is retrieved from the
         logic and the display is changed.
         """
-        constraints = self._magnet_logic.get_hardware_constraints()
+        self._magnet_logic.get_hardware_constraints()
         curr_pos = self._magnet_logic.get_pos()
         if (param_list is not None) and (type(param_list) is not bool):
             param_list = list(param_list)
@@ -1608,12 +1608,12 @@ class MagnetGui(GUIBase):
 
         if len(filetag) > 0:
             filename = os.path.join(
-                filepath, "{0}_{1}_Magnet".format(timestamp.strftime("%Y%m%d-%H%M-%S"), filetag)
+                filepath, "{}_{}_Magnet".format(timestamp.strftime("%Y%m%d-%H%M-%S"), filetag)
             )
         else:
             filename = os.path.join(
                 filepath,
-                "{0}_Magnet".format(
+                "{}_Magnet".format(
                     timestamp.strftime("%Y%m%d-%H%M-%S"),
                 ),
             )

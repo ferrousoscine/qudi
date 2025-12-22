@@ -43,7 +43,7 @@ class ODMRMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_odmrgui.ui")
 
         # Load it
-        super(ODMRMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -57,7 +57,7 @@ class ODMRSettingDialog(QtWidgets.QDialog):
         ui_file = os.path.join(this_dir, "ui_odmr_settings.ui")
 
         # Load it
-        super(ODMRSettingDialog, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
 
 
@@ -991,7 +991,7 @@ class ODMRGui(GUIBase):
             self._mw.odmr_fit_results_DisplayWidget.clear()
             try:
                 formated_results = units.create_formatted_output(result_str_dict)
-            except:
+            except Exception:
                 formated_results = "this fit does not return formatted results"
             self._mw.odmr_fit_results_DisplayWidget.setPlainText(formated_results)
 
@@ -1021,7 +1021,6 @@ class ODMRGui(GUIBase):
             self._mw.odmr_control_DockWidget.matrix_range_SpinBox.value()
         )
         # need to update the plot that is showed
-        key = f"Matrix range: {self._odmr_logic.matrix_range}"
         self.odmr_matrix_image.setImage(
             self._odmr_logic.select_odmr_matrix_data(
                 self._odmr_logic.odmr_plot_xy, self.display_channel, self._odmr_logic.matrix_range

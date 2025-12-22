@@ -18,7 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
 from enum import Enum
 
 from qtpy import QtCore, QtGui
@@ -36,7 +35,7 @@ class MultipleCheckboxWidget(QtGui.QWidget):
 
         checkbox_labels = list() if checkbox_labels is None else list(checkbox_labels)
 
-        self._checkboxes = OrderedDict()
+        self._checkboxes = {}
         self._checkbox_width = 30
         self._width_hint = self._checkbox_width * len(checkbox_labels)
 
@@ -67,7 +66,7 @@ class MultipleCheckboxWidget(QtGui.QWidget):
         self.setLayout(main_layout)
 
     def data(self):
-        checkbox_states = OrderedDict()
+        checkbox_states = {}
         for box_label, box_dict in self._checkboxes.items():
             checkbox_states[box_label] = box_dict["widget"].isChecked()
         return checkbox_states
@@ -90,18 +89,18 @@ class AnalogParametersWidget(QtGui.QWidget):
     def __init__(self, parent=None, parameters_dict=None):
         super().__init__(parent)
         if parameters_dict is None:
-            self._parameters = OrderedDict()
+            self._parameters = {}
         else:
             self._parameters = parameters_dict
 
         self._width_hint = 90 * len(self._parameters)
-        self._ach_widgets = OrderedDict()
+        self._ach_widgets = {}
 
         main_layout = QtGui.QHBoxLayout()
         for param in self._parameters:
             label = QtGui.QLabel(param)
             label.setAlignment(QtCore.Qt.AlignCenter)
-            if self._parameters[param]["type"] == float:
+            if self._parameters[param]["type"] is float:
                 widget = ScienDSpinBox()
                 widget.setMinimum(self._parameters[param]["min"])
                 widget.setMaximum(self._parameters[param]["max"])
@@ -112,7 +111,7 @@ class AnalogParametersWidget(QtGui.QWidget):
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]["type"] == int:
+            elif self._parameters[param]["type"] is int:
                 widget = ScienSpinBox()
                 widget.setValue(self._parameters[param]["init"])
                 widget.setMinimum(self._parameters[param]["min"])
@@ -122,14 +121,14 @@ class AnalogParametersWidget(QtGui.QWidget):
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]["type"] == str:
+            elif self._parameters[param]["type"] is str:
                 widget = QtGui.QLineEdit()
                 widget.setText(self._parameters[param]["init"])
                 # Set size constraints
                 widget.setFixedWidth(90)
                 # Forward editingFinished signal of child widget
                 widget.editingFinished.connect(self.editingFinished)
-            elif self._parameters[param]["type"] == bool:
+            elif self._parameters[param]["type"] is bool:
                 widget = QtGui.QCheckBox()
                 widget.setChecked(self._parameters[param]["init"])
                 # Set size constraints
@@ -166,9 +165,9 @@ class AnalogParametersWidget(QtGui.QWidget):
             widget = self._ach_widgets[param]["widget"]
             if self._parameters[param]["type"] in [int, float]:
                 widget.setValue(data[param])
-            elif self._parameters[param]["type"] == str:
+            elif self._parameters[param]["type"] is str:
                 widget.setText(data[param])
-            elif self._parameters[param]["type"] == bool:
+            elif self._parameters[param]["type"] is bool:
                 widget.setChecked(data[param])
             elif issubclass(self._parameters[param]["type"], Enum):
                 widget.setCurrentText(data[param].name)
@@ -178,14 +177,14 @@ class AnalogParametersWidget(QtGui.QWidget):
 
     def data(self):
         # Get all analog parameters from widgets
-        analog_params = OrderedDict()
+        analog_params = {}
         for param in self._parameters:
             widget = self._ach_widgets[param]["widget"]
             if self._parameters[param]["type"] in [int, float]:
                 analog_params[param] = widget.value()
-            elif self._parameters[param]["type"] == str:
+            elif self._parameters[param]["type"] is str:
                 analog_params[param] = widget.text()
-            elif self._parameters[param]["type"] == bool:
+            elif self._parameters[param]["type"] is bool:
                 analog_params[param] = widget.isChecked()
             elif issubclass(self._parameters[param]["type"], Enum):
                 analog_params[param] = widget.itemData(widget.currentIndex())

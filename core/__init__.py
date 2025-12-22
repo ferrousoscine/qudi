@@ -46,7 +46,7 @@ if sys.platform == "win32":
 
         myappid = "quantumoptics.quantumdiamond.mainapp"  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    except:
+    except (AttributeError, OSError):
         print(
             "SetCurrentProcessExplicitAppUserModelID failed! This is "
             "probably not Microsoft Windows!"

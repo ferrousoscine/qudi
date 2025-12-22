@@ -623,12 +623,12 @@ class OptimizerLogic(GenericLogic):
         """
         try:
             rv = self._scanning_device.close_scanner()
-        except:
+        except Exception:
             self.log.exception("Closing refocus scanner failed.")
             return -1
         try:
             rv2 = self._scanning_device.close_scanner_clock()
-        except:
+        except Exception:
             self.log.exception("Closing refocus scanner clock failed.")
             return -1
         self.module_state.unlock()

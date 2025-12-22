@@ -68,13 +68,13 @@ class Lightfield(Base, SpectrometerInterface):
 
         sys.path.append(lfpath)
         sys.path.append(lfaddinpath)
-        ref1 = clr.AddReference("PrincetonInstruments.LightFieldViewV4")
+        clr.AddReference("PrincetonInstruments.LightFieldViewV4")
         ref2 = clr.AddReference("PrincetonInstruments.LightField.AutomationV4")
         # print(dir(ref), '\n\n')
         # ref.LoadFrom(ref.Location)
 
-        verbose = list(clr.ListAssemblies(True))
-        short = list(clr.ListAssemblies(False))
+        list(clr.ListAssemblies(True))
+        list(clr.ListAssemblies(False))
         # for i in short:
         #        print('ASSEMBLY:', i)
         # for i in verbose:

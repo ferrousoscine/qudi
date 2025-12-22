@@ -49,7 +49,7 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
         self._doubleclicked = False
 
         # Load it
-        super(ConfocalMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -71,7 +71,7 @@ class ConfocalSettingDialog(QtWidgets.QDialog):
         ui_file = os.path.join(this_dir, "ui_cf_settings.ui")
 
         # Load it
-        super(ConfocalSettingDialog, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
 
 
@@ -84,7 +84,7 @@ class OptimizerSettingDialog(QtWidgets.QDialog):
         ui_file = os.path.join(this_dir, "ui_optim_settings.ui")
 
         # Load it
-        super(OptimizerSettingDialog, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
 
 
@@ -1867,7 +1867,7 @@ class ConfocalGui(GUIBase):
         self._mw.y_max_InputWidget.setValue(yMax)
         self.change_y_image_range()
 
-        for i in range(2):
+        for _i in range(2):
             self.xy_image.getViewBox().setRange(
                 xRange=(xMin, xMax), yRange=(yMin, yMax), update=True
             )
@@ -1918,7 +1918,7 @@ class ConfocalGui(GUIBase):
         self._mw.z_max_InputWidget.setValue(vMax)
         self.change_z_image_range()
 
-        for i in range(2):
+        for _i in range(2):
             self.depth_image.getViewBox().setRange(
                 xRange=(hMin, hMax), yRange=(vMin, vMax), update=True
             )

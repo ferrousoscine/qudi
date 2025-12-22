@@ -173,7 +173,7 @@ def _exception_handler(manager, *args):
                 sys.setrecursionlimit(recursionLimit + 100)
                 try:
                     logging.error("", exc_info=args)
-                    if args[0] == KeyboardInterrupt:
+                    if args[0] is KeyboardInterrupt:
                         manager.quit()
                 except Exception:
                     print("   --------------------------------------------------------------")

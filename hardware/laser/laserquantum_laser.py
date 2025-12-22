@@ -371,7 +371,7 @@ class LaserQuantumLaser(Base, SimpleLaserInterface):
         try:
             while True:
                 lines.append(self.inst.read())
-        except:
+        except Exception:
             pass
         return lines
 
@@ -385,7 +385,7 @@ class LaserQuantumLaser(Base, SimpleLaserInterface):
         try:
             while True:
                 lines.append(self.inst.read())
-        except:
+        except Exception:
             pass
         return lines
 
@@ -399,7 +399,7 @@ class LaserQuantumLaser(Base, SimpleLaserInterface):
         try:
             while True:
                 lines.append(self.inst.read())
-        except:
+        except Exception:
             pass
         return lines
 

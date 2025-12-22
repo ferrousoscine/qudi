@@ -37,7 +37,7 @@ class VoltScanMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_laserscannergui.ui")
 
         # Load it
-        super(VoltScanMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 

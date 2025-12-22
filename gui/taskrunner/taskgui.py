@@ -81,7 +81,7 @@ class TaskGui(GUIBase):
         try:
             if index2 is not None and selected[0].row() != index2.row():
                 return
-        except:
+        except IndexError:
             return
 
         if len(selected) >= 1:

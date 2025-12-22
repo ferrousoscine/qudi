@@ -22,6 +22,7 @@ Copyright 2010  Luke Campagnola
 Originally distributed under MIT/X11 license. See documentation/MITLicense.txt for more infomation.
 """
 
+import contextlib
 import os
 
 
@@ -94,14 +95,16 @@ def toposort(deps, cost=None):
     # Compute total branch cost for each node
     key = None
     if cost is not None:
-        order = Manager.toposort(deps)
+        order = toposort(deps)
         allDeps = {n: set(n) for n in order}
         for n in order[::-1]:
             for n2 in deps.get(n, []):
                 allDeps[n2] |= allDeps.get(n, set())
 
         totalCost = {n: sum([cost.get(x, 0) for x in allDeps[n]]) for n in allDeps}
-        key = lambda x: totalCost.get(x, 0)
+
+        def key(x):
+            return totalCost.get(x, 0)
 
     # compute weighted order
     order = []
@@ -123,10 +126,8 @@ def toposort(deps, cost=None):
         order.append(ready[0])
         del deps[ready[0]]
         for v in list(deps.values()):
-            try:
+            with contextlib.suppress(ValueError):
                 v.remove(ready[0])
-            except ValueError:
-                pass
 
     return order
 

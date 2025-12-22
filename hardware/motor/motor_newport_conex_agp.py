@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import serial
 
 from core.configoption import ConfigOption
@@ -101,7 +99,7 @@ class MotorNewportConexAGP(Base, MotorInterface):
         ret = self._serial_connection.read_until(b"\r\n")
         if cmd[0:4] != ret[0:4]:
             self.log.error(
-                "Command {0} preamble not equal to reply {1} preamble".format(
+                "Command {} preamble not equal to reply {} preamble".format(
                     cmd.decode("ascii"), ret.decode("ascii")
                 )
             )
@@ -155,7 +153,7 @@ class MotorNewportConexAGP(Base, MotorInterface):
         Each constraint is a tuple of the form
             (min_value, max_value, stepsize)
         """
-        constraints = OrderedDict()
+        constraints = {}
 
         axis = {
             "label": self._axis_label,

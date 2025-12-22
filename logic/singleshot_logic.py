@@ -22,7 +22,6 @@ import copy
 import datetime
 import os
 import time
-from collections import OrderedDict
 
 import numpy as np
 import pylab as pb
@@ -67,7 +66,7 @@ class SingleShotLogic(GenericLogic):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         # initalize internal variables here
@@ -114,7 +113,7 @@ class SingleShotLogic(GenericLogic):
         @return: dictionary containing shape of the data as well as the raw data coming from fastcounter and
                  possible additional data to calculate dt ( the time between two singleshot measurements ) later.
         """
-        return_dict = OrderedDict()
+        return_dict = {}
 
         if not self._fast_counter_device.is_gated():
             if fastcounter == "fastcomtec":
@@ -376,10 +375,7 @@ class SingleShotLogic(GenericLogic):
         # pull data. This will also update the variable self.data_dict
         self.get_data()
 
-        if normalized:
-            bin_list = self.calc_all_binnings()
-        else:
-            bin_list = self.calc_all_binnings_normalized()
+        bin_list = self.calc_all_binnings() if normalized else self.calc_all_binnings_normalized()
 
         return bin_list
 

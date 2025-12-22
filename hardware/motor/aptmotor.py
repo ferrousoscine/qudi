@@ -18,21 +18,18 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-"""
-This module was developed from PyAPT, written originally by Michael Leung
-(mcleung@stanford.edu). Have a look in:
-    https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/cdllservers/APTMotor/APTMotorServer.py
-APT.dll and APT.lib were provided to PyAPT thanks to SeanTanner@ThorLabs .
-All the specific error and status code are taken from:
-    https://github.com/UniNE-CHYN/thorpy
-The rest of the documentation is based on the Thorlabs APT Server documentation
-which can be obtained directly from
-    https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=APT
-"""
+# This module was developed from PyAPT, written originally by Michael Leung
+# (mcleung@stanford.edu). Have a look in:
+#     https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/cdllservers/APTMotor/APTMotorServer.py
+# APT.dll and APT.lib were provided to PyAPT thanks to SeanTanner@ThorLabs .
+# All the specific error and status code are taken from:
+#     https://github.com/UniNE-CHYN/thorpy
+# The rest of the documentation is based on the Thorlabs APT Server documentation
+# which can be obtained directly from
+#     https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=APT
 
 import os
 import platform
-from collections import OrderedDict
 from ctypes import c_buffer, c_float, c_long, pointer, windll
 
 from core.module import Base
@@ -872,7 +869,7 @@ class APTStage(Base, MotorInterface):
                 self.log.error("Unknown platform, cannot load the Thorlabs dll.")
 
         # Get the list of axis labels.
-        if "axis_labels" in config.keys():
+        if "axis_labels" in config:
             axis_label_list = config["axis_labels"]
         else:
             self.log.error(
@@ -883,7 +880,7 @@ class APTStage(Base, MotorInterface):
             )
 
         # The references to the different axis are stored in this dictionary:
-        self._axis_dict = OrderedDict()
+        self._axis_dict = {}
 
         hw_conf_dict = self._get_config()
 
@@ -977,12 +974,12 @@ class APTStage(Base, MotorInterface):
             if "constraints" in axisconfig:
                 constraintsconfig = axisconfig["constraints"]
             else:
-                constraintsconfig = OrderedDict()
+                constraintsconfig = {}
 
             # Now we can read through these axisconstraints
 
             # Position minimum (units)
-            if "pos_min" in constraintsconfig.keys():
+            if "pos_min" in constraintsconfig:
                 this_axis["pos_min"] = constraintsconfig["pos_min"]
             else:
                 self.log.warning(
@@ -991,7 +988,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["pos_min"] = 0
 
             # Position maximum (units)
-            if "pos_max" in constraintsconfig.keys():
+            if "pos_max" in constraintsconfig:
                 this_axis["pos_max"] = constraintsconfig["pos_max"]
             else:
                 self.log.warning(
@@ -1000,7 +997,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["pos_max"] = 360
 
             # Velocity minimum (units/s)
-            if "vel_min" in constraintsconfig.keys():
+            if "vel_min" in constraintsconfig:
                 this_axis["vel_min"] = constraintsconfig["vel_min"]
             else:
                 self.log.warning(
@@ -1009,7 +1006,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["vel_min"] = 0.1
 
             # Velocity maximum (units/s)
-            if "vel_max" in constraintsconfig.keys():
+            if "vel_max" in constraintsconfig:
                 this_axis["vel_max"] = constraintsconfig["vel_max"]
             else:
                 self.log.warning(
@@ -1018,7 +1015,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["vel_max"] = 5.0
 
             # Acceleration minimum (units/s^2)
-            if "acc_min" in constraintsconfig.keys():
+            if "acc_min" in constraintsconfig:
                 this_axis["acc_min"] = constraintsconfig["acc_min"]
             else:
                 self.log.warning(
@@ -1027,7 +1024,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["acc_min"] = 4.0
 
             # Acceleration maximum (units/s^2)
-            if "acc_max" in constraintsconfig.keys():
+            if "acc_max" in constraintsconfig:
                 this_axis["acc_max"] = constraintsconfig["acc_max"]
             else:
                 self.log.warning(
@@ -1077,9 +1074,9 @@ class APTStage(Base, MotorInterface):
                 ):
                     self.log.warning(
                         "Cannot make further relative movement "
-                        'of the axis "{0}" since the motor is at '
-                        "position {1} and with the step of {2} it would "
-                        "exceed the allowed border [{3},{4}]! Movement "
+                        'of the axis "{}" since the motor is at '
+                        "position {} and with the step of {} it would "
+                        "exceed the allowed border [{},{}]! Movement "
                         "is ignored!".format(
                             label_axis,
                             move,
@@ -1112,8 +1109,8 @@ class APTStage(Base, MotorInterface):
                 if not (constr["pos_min"] <= desired_pos <= constr["pos_max"]):
                     self.log.warning(
                         "Cannot make absolute movement of the "
-                        'axis "{0}" to position {1}, since it exceeds '
-                        "the limts [{2},{3}]. Movement is ignored!"
+                        'axis "{}" to position {}, since it exceeds '
+                        "the limts [{},{}]. Movement is ignored!"
                         "".format(label_axis, desired_pos, constr["pos_min"], constr["pos_max"])
                     )
                 else:
@@ -1192,7 +1189,7 @@ class APTStage(Base, MotorInterface):
         zero point for the passed axis. The calibration procedure will be
         different for each stage.
         """
-        raise InterfaceImplementationError("MagnetStageInterface>calibrate")
+        raise NotImplementedError("MagnetStageInterface>calibrate")
 
         # TODO: read out a saved home position in file and compare that with the
         #       last position saved also in file. The difference between these
@@ -1278,9 +1275,9 @@ class APTStage(Base, MotorInterface):
                 constr = constraints[label_axis]
                 if not (constr["vel_min"] <= desired_vel <= constr["vel_max"]):
                     self.log.warning(
-                        'Cannot set velocity of the axis "{0}" '
-                        'to the desired velocity of "{1}", since it '
-                        "exceeds the limts [{2},{3}] ! Command is ignored!"
+                        'Cannot set velocity of the axis "{}" '
+                        'to the desired velocity of "{}", since it '
+                        "exceeds the limts [{},{}] ! Command is ignored!"
                         "".format(label_axis, desired_vel, constr["vel_min"], constr["vel_max"])
                     )
             else:
@@ -1303,7 +1300,7 @@ class APTStage(Base, MotorInterface):
             # get the axis config parameters from the config file
             axis_config = config[axis_label]
 
-            if "serial_num" in axis_config.keys():
+            if "serial_num" in axis_config:
                 this_axis["serial_num"] = axis_config["serial_num"]
             else:
                 self.log.error(
@@ -1312,7 +1309,7 @@ class APTStage(Base, MotorInterface):
                 )
                 break
 
-            if "hw_type" in axis_config.keys():
+            if "hw_type" in axis_config:
                 this_axis["hw_type"] = axis_config["hw_type"]
             else:
                 self.log.warning(
@@ -1322,7 +1319,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["hw_type"] = "unknown"
 
             # Read the config for motor pitch, otherwise take default as 1
-            if "pitch" in axis_config.keys():
+            if "pitch" in axis_config:
                 this_axis["pitch"] = axis_config["pitch"]
             else:
                 self.log.warning(
@@ -1333,7 +1330,7 @@ class APTStage(Base, MotorInterface):
                 this_axis["pitch"] = 1
 
             # Unit must be 'degree' or 'meter'
-            if "unit" in axis_config.keys():
+            if "unit" in axis_config:
                 this_axis["unit"] = axis_config["unit"]
             else:
                 self.log.warning(

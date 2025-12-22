@@ -19,8 +19,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import lmfit
 import numpy as np
 from lmfit import Parameters
@@ -63,7 +61,7 @@ def _substitute_params(self, initial_params, update_params=None):
         return initial_params
 
     # Check the case for an lmfit.parameter.Parameters
-    elif type(update_params) == lmfit.parameter.Parameters:
+    elif isinstance(update_params, lmfit.parameter.Parameters):
         # Go though each parameter in the Parameters object
         for para in update_params:
             if para not in initial_params:
@@ -94,8 +92,8 @@ def _substitute_params(self, initial_params, update_params=None):
 
                 initial_params[para].value = update_params[para].value
 
-    # Check the case for an OrderedDict or dict parameter:
-    elif type(update_params) == OrderedDict or type(update_params) == dict:
+    # Check the case for a dict parameter:
+    elif isinstance(update_params, dict):
         for para in update_params:
             if para not in initial_params:
                 initial_params.add(para)
@@ -128,9 +126,8 @@ def _substitute_params(self, initial_params, update_params=None):
     else:
         self.log.error(
             f"The type of the passed update_params object <{type(update_params)}> is "
-            "neither of type lmfit.parameter.Parameters, "
-            "OrderedDict or dict! Correct that, the initial_params"
-            "will be returned."
+            "neither of type lmfit.parameter.Parameters nor dict! "
+            "Correct that, the initial_params will be returned."
         )
 
     return initial_params
@@ -172,16 +169,16 @@ def create_fit_string(
             if decimal_digits_err <= 0:
                 decimal_digits_err = 1
         try:
-            fit_result += "{0} [{1}] : {2} ± {3}\n".format(
+            fit_result += "{} [{}] : {} ± {}\n".format(
                 str(variable),
                 units[variable],
                 "{0:.{1}e}".format(float(result.params[variable].value), decimal_digits_value),
                 "{0:.{1}e}".format(float(result.params[variable].stderr), decimal_digits_err),
             )
-        except:
+        except Exception:
             # self.log.warning('No unit given for parameter {}, setting unit '
             #             'to empty string'.format(variable))
-            fit_result += "{0} [{1}] : {2} ± {3}\n".format(
+            fit_result += "{} [{}] : {} ± {}\n".format(
                 str(variable),
                 "arb. u.",
                 "{0:.{1}e}".format(float(result.params[variable].value), decimal_digits_value),

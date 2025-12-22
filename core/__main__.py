@@ -107,7 +107,7 @@ def qt_message_handler(msgType, msg):
         import traceback
 
         logger.critical(
-            "Fatal error occurred: {0}\nTraceback:\n{1}".format(
+            "Fatal error occurred: {}\nTraceback:\n{}".format(
                 msg, "".join(traceback.format_stack())
             )
         )
@@ -117,7 +117,7 @@ def qt_message_handler(msgType, msg):
             try:
                 man.quit()
                 QtCore.QCoreApplication.instance().processEvents()
-            except:
+            except Exception:
                 logger.exception("Manager failed quitting.")
 
 

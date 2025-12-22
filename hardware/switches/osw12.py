@@ -140,7 +140,7 @@ class OSW12(Base, SwitchInterface):
         assert switch in avail_states, f'Invalid switch name "{switch}"'
 
         with self.lock:
-            for attempt in range(3):
+            for _attempt in range(3):
                 try:
                     response = self._instrument.query("S?").strip()
                 except visa.VisaIOError:

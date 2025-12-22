@@ -23,7 +23,6 @@ import importlib
 import inspect
 import os
 import sys
-from collections import OrderedDict
 
 import lmfit
 import numpy as np
@@ -96,10 +95,10 @@ class FitLogic(GenericLogic):
                         sys.path.append(path)
 
         # A dictionary containing all fit methods and their estimators.
-        self.fit_list = OrderedDict()
-        self.fit_list["1d"] = OrderedDict()
-        self.fit_list["2d"] = OrderedDict()
-        self.fit_list["3d"] = OrderedDict()
+        self.fit_list = {}
+        self.fit_list["1d"] = {}
+        self.fit_list["2d"] = {}
+        self.fit_list["3d"] = {}
 
         # Go through the fitmethods files and import all methods.
         # Also determine which methods need to be added to the fit_list dictionary
@@ -123,7 +122,7 @@ class FitLogic(GenericLogic):
                             models_for_dict.append(method_str.split("_", 1)[1].rsplit("_", 1)[0])
                         elif method_str.startswith("estimate_"):
                             estimators_for_dict.append(method_str.split("_", 1)[1])
-                    except:
+                    except Exception:
                         self.log.error(f'Method "{str(method)}" could not be imported to FitLogic.')
 
         fits_for_dict.sort()
@@ -144,7 +143,7 @@ class FitLogic(GenericLogic):
 
             # Attach make_*_fit method to fit_list
             if fit_name not in self.fit_list[dimension]:
-                self.fit_list[dimension][fit_name] = OrderedDict()
+                self.fit_list[dimension][fit_name] = {}
             self.fit_list[dimension][fit_name]["make_fit"] = getattr(self, fit_method)
 
             # Attach make_*_model method to fit_list
@@ -209,11 +208,11 @@ class FitLogic(GenericLogic):
                 'estimator': function reference to estimator function
                 'parameters': lmfit.parameter.Parameters object
         """
-        user_fits = OrderedDict()
+        user_fits = {}
         for dim, dfits in fits.items():
             if dim not in ("1d", "2d", "3d"):
                 continue
-            user_fits[dim] = OrderedDict()
+            user_fits[dim] = {}
             for name, fit in dfits.items():
                 try:
                     fname = fit["fit_function"]
@@ -227,7 +226,7 @@ class FitLogic(GenericLogic):
                     try:
                         par = lmfit.parameter.Parameters()
                         par.loads(fit["parameters"])
-                    except:
+                    except Exception:
                         model, par = self.fit_list[dim][fname]["make_model"]()
                     new_fit["parameters"] = par
                     user_fits[dim][name] = new_fit
@@ -244,11 +243,11 @@ class FitLogic(GenericLogic):
 
         For the format of this dictionary, ess validate_load_fits.
         """
-        save_fits = OrderedDict()
+        save_fits = {}
         for dim, dfits in fits.items():
             if dim not in ("1d", "2d", "3d"):
                 continue
-            save_fits[dim] = OrderedDict()
+            save_fits[dim] = {}
             for name, fit in dfits.items():
                 try:
                     new_fit = {
@@ -324,7 +323,7 @@ class FitContainer(QtCore.QObject):
         else:
             raise Exception(f"Invalid dimension {dimension}")
         self.dimension = dimension
-        self.fit_list = OrderedDict()
+        self.fit_list = {}
         # variables for fitting
         self.fit_granularity_fact = 10
         self.current_fit = "No Fit"
@@ -351,7 +350,7 @@ class FitContainer(QtCore.QObject):
         try:
             self.fit_list = self.fit_logic.validate_load_fits(fit_dict)[self.dimension]
         except KeyError:
-            self.fit_list = OrderedDict()
+            self.fit_list = {}
 
     def save_to_dict(self):
         """Convert self.fit_list to a storable dictionary.

@@ -27,10 +27,10 @@ from interface.simple_data_interface import SimpleDataInterface
 
 try:
     from ThorlabsPM100 import ThorlabsPM100
-except ImportError:
+except ImportError as err:
     raise ImportError(
         'ThorlabsPM100 module not found. Please install it by typing command "pip install ThorlabsPM100"'
-    )
+    ) from err
 
 
 class PM100D(Base, SimpleDataInterface, ProcessInterface):
@@ -57,7 +57,7 @@ class PM100D(Base, SimpleDataInterface, ProcessInterface):
         rm = visa.ResourceManager()
         try:
             self._inst = rm.open_resource(self._address, timeout=self._timeout)
-        except:
+        except Exception:
             self.log.error("Could not connect to hardware. Please check the wires and the address.")
 
         self._power_meter = ThorlabsPM100(inst=self._inst)

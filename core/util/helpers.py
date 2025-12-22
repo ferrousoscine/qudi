@@ -24,6 +24,7 @@ Copyright:
 """
 
 import atexit
+import contextlib
 import importlib
 import logging
 import os
@@ -112,10 +113,8 @@ def close_fd(fd_set):
                        should be closed (or at least tried to close).
     """
     for fd in fd_set:
-        try:
+        with contextlib.suppress(OSError):
             os.close(fd)
-        except OSError:
-            pass
 
 
 def import_check():
@@ -189,7 +188,7 @@ def import_check():
 
     # check qt
     try:
-        from qtpy.QtCore import Qt
+        from qtpy.QtCore import Qt  # noqa: F401
     except ImportError:
         logger.error(
             "No Qt bindungs detected! Perform e.g.\n\n"
@@ -219,7 +218,7 @@ def natural_sort(iterable):
 
     try:
         return sorted(iterable, key=lambda key: [conv(i) for i in re.split(r"(\d+)", key)])
-    except:
+    except (TypeError, AttributeError):
         return sorted(iterable)
 
 

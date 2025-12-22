@@ -40,7 +40,7 @@ import core.config
 from menu import ModMenu
 from port import QudiPortType
 from config_model import ModuleConfigModel
-from collections import OrderedDict
+
 
 import listmods
 import logging
@@ -69,7 +69,7 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
         uic.loadUi(ui_file, self)
 
         self.modnodes = dict()
-        self.globalsection = OrderedDict()
+        self.globalsection = {}
         self.currentFile = ""
 
         # palette
@@ -278,17 +278,17 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
 
     def nodesToConfig(self):
         """Convert nodes into OrderedDict for saving."""
-        config = OrderedDict()
-        config["global"] = OrderedDict()
-        config["hardware"] = OrderedDict()
-        config["logic"] = OrderedDict()
-        config["gui"] = OrderedDict()
+        config = {}
+        config["global"] = {}
+        config["hardware"] = {}
+        config["logic"] = {}
+        config["gui"] = {}
 
         for key, value in self.globalsection.items():
             config["global"][key] = value
 
         for mod_name, mod in self.modnodes.items():
-            entry = OrderedDict()
+            entry = {}
             path = mod.module.path.split(".")
 
             if len(path) > 1 and path[0] in ("hardware", "logic", "gui"):
@@ -296,7 +296,7 @@ class ConfigMainWindow(QtWidgets.QMainWindow):
                 entry["module.Class"] = ".".join(path[1:])
 
                 portin = (mod.node.getPort(x[0]) for x in mod.module.conn)
-                conndict = OrderedDict()
+                conndict = {}
                 for port in portin:
                     conns = port.inCircle().getConnections()
                     if len(conns) == 1:

@@ -296,7 +296,7 @@ class MicrowaveAnritsu(Base, MicrowaveInterface):
         if power is not None:
             self._command_wait(":LIST:IND 0")
             self._command_wait(
-                ":LIST:POW {0}".format((len(frequency) - 1) * (str(power) + ", ") + str(power))
+                ":LIST:POW {}".format((len(frequency) - 1) * (str(power) + ", ") + str(power))
             )
 
         self._command_wait(":LIST:IND 0")

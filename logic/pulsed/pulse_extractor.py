@@ -248,14 +248,14 @@ class PulseExtractor(PulseExtractorBase):
         """
         kwargs_dict = dict()
         method_signature = inspect.signature(method)
-        for name in method_signature.parameters.keys():
+        for name in method_signature.parameters:
             if name == "count_data":
                 continue
 
             default = method_signature.parameters[name].default
             recalled = self._parameters.get(name)
 
-            if recalled is not None and type(recalled) == type(default):
+            if recalled is not None and type(recalled) is type(default):
                 kwargs_dict[name] = recalled
             else:
                 kwargs_dict[name] = default

@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import datetime
-from collections import OrderedDict
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -151,7 +150,7 @@ class CameraLogic(GenericLogic):
         filepath = self._save_logic.get_path_for_module("Camera")
         timestamp = datetime.datetime.now()
         # Prepare the metadata parameters (common to both saved files):
-        parameters = OrderedDict()
+        parameters = {}
 
         parameters["Gain"] = self._gain
         parameters["Exposure time (s)"] = self._exposure
@@ -170,7 +169,7 @@ class CameraLogic(GenericLogic):
         )
 
         # data for the text-array "image":
-        image_data = OrderedDict()
+        image_data = {}
         image_data["XY image data."] = self._last_image
         filelabel = "xy_image"
         self._save_logic.save_data(
@@ -185,7 +184,7 @@ class CameraLogic(GenericLogic):
         )
 
         # prepare the full raw data in an OrderedDict:
-        # data = OrderedDict()
+        # data = {}
         # data['x position (m)'] = self.xy_image[:, :, 0].flatten()
         # data['y position (m)'] = self.xy_image[:, :, 1].flatten()
         # data['z position (m)'] = self.xy_image[:, :, 2].flatten()

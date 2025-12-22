@@ -21,7 +21,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 import os
 import re
 import time
-from collections import OrderedDict
 from fnmatch import fnmatch
 from ftplib import FTP
 from socket import AF_INET, SOCK_STREAM, socket
@@ -93,7 +92,7 @@ class AWG5002C(Base, PulserInterface):
         # the ftp connection will be established during runtime if needed and
         # closed directly afterwards. This makes the connection stable.
 
-        if "default_sample_rate" in config.keys():
+        if "default_sample_rate" in config:
             self._sample_rate = self.set_sample_rate(config["default_sample_rate"])
         else:
             self.log.warning(
@@ -106,7 +105,7 @@ class AWG5002C(Base, PulserInterface):
         # settings for remote access on the AWG PC
         self.asset_directory = "\\waves"
 
-        if "tmp_work_dir" in config.keys():
+        if "tmp_work_dir" in config:
             self._tmp_work_dir = config["tmp_work_dir"]
 
             if not os.path.exists(self._tmp_work_dir):
@@ -240,7 +239,7 @@ class AWG5002C(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["config1"] = frozenset(
             {"a_ch1", "d_ch1", "d_ch2", "a_ch2", "d_ch3", "d_ch4"}
         )
@@ -381,7 +380,7 @@ class AWG5002C(Base, PulserInterface):
         else:
             for file in file_list:
                 if file == asset_name + "_ch1.wfm":
-                    self.tell('SOUR1:FUNC:USER "{0}/{1}"\n'.format(path, asset_name + "_ch1.wfm"))
+                    self.tell('SOUR1:FUNC:USER "{}/{}"\n'.format(path, asset_name + "_ch1.wfm"))
                     # if the asset is not a sequence file, then it must be a wfm
                     # file and either both or one of the channels should contain
                     # the asset name:
@@ -389,7 +388,7 @@ class AWG5002C(Base, PulserInterface):
 
                     filename.append(file)
                 elif file == asset_name + "_ch2.wfm":
-                    self.tell('SOUR2:FUNC:USER "{0}/{1}"\n'.format(path, asset_name + "_ch2.wfm"))
+                    self.tell('SOUR2:FUNC:USER "{}/{}"\n'.format(path, asset_name + "_ch2.wfm"))
                     filename.append(file)
                     # if the asset is not a sequence file, then it must be a wfm
                     # file and either both or one of the channels should contain
@@ -460,7 +459,7 @@ class AWG5002C(Base, PulserInterface):
 
         try:
             message = int(self.ask("AWGC:RSTate?\n"))
-        except:
+        except Exception:
             # if nothing comes back than the output should be marked as error
             return -1
 
@@ -885,10 +884,7 @@ class AWG5002C(Base, PulserInterface):
             if "a_ch" in channel:
                 ana_chan = int(channel[4:])
                 if 0 <= ana_chan <= self._get_num_a_ch():
-                    if ch[channel]:
-                        state = "ON"
-                    else:
-                        state = "OFF"
+                    state = "ON" if ch[channel] else "OFF"
                     self.tell(f"OUTPUT{ana_chan}:STATE {state}")
 
                 else:
@@ -997,7 +993,7 @@ class AWG5002C(Base, PulserInterface):
 
             try:
                 ftp.cwd(dir_path)
-            except:
+            except Exception:
                 self.log.info(f"Desired directory {dir_path} not found on AWG device.\nCreate new.")
                 ftp.mkd(dir_path)
 

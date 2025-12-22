@@ -14,8 +14,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 import scipy.integrate as integrate
 from qtpy import QtCore
@@ -48,7 +46,7 @@ class TraceAnalysisLogic(GenericLogic):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         self.hist_data = None
@@ -183,7 +181,7 @@ class TraceAnalysisLogic(GenericLogic):
 
         # extract the number of state, which has been flipped to dark state
         # (True) started in the bright state (=False)
-        num_flip_to_dark = len(np.where(next_filtered_bin_arr == True)[0])
+        num_flip_to_dark = len(np.where(next_filtered_bin_arr)[0])
 
         # flip probability:
         # In the array filtered_bin_arr all states are in bright state meaning
@@ -199,7 +197,7 @@ class TraceAnalysisLogic(GenericLogic):
         flip_prob = next_filtered_bin_arr.mean()
 
         # put all the calculated parameters in a proper dict:
-        param = OrderedDict()
+        param = {}
         param["num_dark_state"] = num_dark_state  # Number of Dark States
         param["num_bright_state"] = num_bright_state  # Number of Bright States
         param["num_flip_to_dark"] = num_flip_to_dark  # Number of flips from bright to dark
@@ -352,12 +350,13 @@ class TraceAnalysisLogic(GenericLogic):
             center2 = fit_params["g1_center"]
             std1 = fit_params["g0_sigma"]
             std2 = fit_params["g1_sigma"]
-            gaussian1 = lambda x: fit_params["g0_amplitude"] * np.exp(
-                -((x - center1) ** 2) / (2 * std1**2)
-            )
-            gaussian2 = lambda x: fit_params["g1_amplitude"] * np.exp(
-                -((x - center2) ** 2) / (2 * std2**2)
-            )
+
+            def gaussian1(x):
+                return fit_params["g0_amplitude"] * np.exp(-((x - center1) ** 2) / (2 * std1**2))
+
+            def gaussian2(x):
+                return fit_params["g1_amplitude"] * np.exp(-((x - center2) ** 2) / (2 * std2**2))
+
             if center1 > center2:
                 gaussian = gaussian1
                 gaussian1 = gaussian2
@@ -368,7 +367,7 @@ class TraceAnalysisLogic(GenericLogic):
             area_right2 = integrate.quad(gaussian2, init_threshold[1], np.inf)
             self.fidelity_left = area_left1[0] / (area_left1[0] + area_left2[0])
             self.fidelity_right = area_right2[0] / (area_right1[0] + area_right2[0])
-        except:
+        except Exception:
             self.log.warning("Not enough data points yet!")
 
         # calculate the flip probability
@@ -445,7 +444,7 @@ class TraceAnalysisLogic(GenericLogic):
         if self.hist_data is None:
             hist_fit_x = []
             hist_fit_y = []
-            param_dict = OrderedDict()
+            param_dict = {}
             fit_result = None
             return hist_fit_x, hist_fit_y, param_dict, fit_result
         else:
@@ -639,7 +638,6 @@ class TraceAnalysisLogic(GenericLogic):
             return self.do_no_fit()
 
         else:
-            parameters_to_substitute = dict()
             update_dict = dict()
 
             # TODO: move this to "gated counter" estimator in fitlogic
@@ -675,7 +673,7 @@ class TraceAnalysisLogic(GenericLogic):
             hist_fit_x = np.linspace(axis[0], axis[-1], 1000)
             hist_fit_y = model.eval(x=hist_fit_x, params=result.params)
 
-            param_dict = OrderedDict()
+            param_dict = {}
 
             # create the proper param_dict with the values:
             param_dict["sigma_0"] = {
@@ -732,7 +730,7 @@ class TraceAnalysisLogic(GenericLogic):
             hist_fit_y = model.eval(x=hist_fit_x, params=result.params)
 
             # this dict will be passed to the formatting method
-            param_dict = OrderedDict()
+            param_dict = {}
 
             # create the proper param_dict with the values:
             param_dict["sigma_0"] = {
@@ -806,7 +804,7 @@ class TraceAnalysisLogic(GenericLogic):
             hist_fit_y = model.eval(x=hist_fit_x, params=result.params)
 
             # this dict will be passed to the formatting method
-            param_dict = OrderedDict()
+            param_dict = {}
 
             # create the proper param_dict with the values:
             param_dict["lambda_0"] = {
@@ -856,7 +854,7 @@ class TraceAnalysisLogic(GenericLogic):
             hist_fit_y = model.eval(x=hist_fit_x, params=result.params)
 
             # this dict will be passed to the formatting method
-            param_dict = OrderedDict()
+            param_dict = {}
 
             # create the proper param_dict with the values:
             param_dict["lambda"] = {
@@ -1115,14 +1113,13 @@ class TraceAnalysisLogic(GenericLogic):
 
                 param_dict = {}
                 fidelity = 1 - (gp0[0] / gc0[0] + gp1[0] / gc1[0]) / 2
-                fidelity1 = 1 - (gp0[0] / gc0[0])
+                1 - (gp0[0] / gc0[0])
                 fidelity2 = 1 - gp1[0] / gc1[0]
                 threshold_fit = threshold
                 # if the fit worked, add also the result to the param_dict, which might be useful for debugging
                 param_dict["result"] = result
-            except:
+            except Exception:
                 self.log.error("could not fit the data")
-                error = True
                 fidelity = 0
                 threshold_fit = 0
                 param_dict = {}
@@ -1155,9 +1152,6 @@ class TraceAnalysisLogic(GenericLogic):
                     np.array filtered_array: the actual values of the trace,
                                              which are equal or below threshold
         """
-        if below:
-            index_array = np.where(trace <= threshold)[0]
-        else:
-            index_array = np.where(trace > threshold)[0]
+        index_array = np.where(trace <= threshold)[0] if below else np.where(trace > threshold)[0]
         filtered_array = trace[index_array]
         return index_array, filtered_array

@@ -257,9 +257,7 @@ class InterruptableTask(QtCore.QObject, Fysom, metaclass=TaskMetaclass):
                     msgType="error",
                 )
                 return False
-        if not self.checkExtraStartPrerequisites():
-            return False
-        return True
+        return self.checkExtraStartPrerequisites()
 
     def checkExtraStartPrerequisites(self):
         """If your task has extra prerequisites that are not covered by

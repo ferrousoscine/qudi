@@ -18,8 +18,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-from collections import OrderedDict
-
 import numpy as np
 import pulsestreamer as ps
 
@@ -177,7 +175,7 @@ class PulseStreamer(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_conf = OrderedDict()
+        activation_conf = {}
         activation_conf['yourconf'] = {'a_ch1', 'd_ch1', 'd_ch2', 'a_ch2', 'd_ch3', 'd_ch4'}
         activation_conf['different_conf'] = {'a_ch1', 'd_ch1', 'd_ch2'}
         activation_conf['something_else'] = {'a_ch2', 'd_ch3', 'd_ch4'}
@@ -212,7 +210,7 @@ class PulseStreamer(Base, PulserInterface):
         # the name a_ch<num> and d_ch<num> are generic names, which describe UNAMBIGUOUSLY the
         # channels. Here all possible channel configurations are stated, where only the generic
         # names should be used. The names for the different configurations can be customary chosen.
-        activation_config = OrderedDict()
+        activation_config = {}
         activation_config["all"] = frozenset(
             {"d_ch1", "d_ch2", "d_ch3", "d_ch4", "d_ch5", "d_ch6", "d_ch7", "d_ch8"}
         )
@@ -643,7 +641,7 @@ class PulseStreamer(Base, PulserInterface):
             self.__current_waveform_name = name
             self.__samples_written = 0
             # initalise to a dict of lists that describe pulse pattern in swabian language
-            self.__current_waveform = {key: [] for key in digital_samples.keys()}
+            self.__current_waveform = {key: [] for key in digital_samples}
 
         for channel_number, samples in digital_samples.items():
             new_channel_indices = np.where(samples[:-1] != samples[1:])[0]

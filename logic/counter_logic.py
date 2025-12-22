@@ -19,7 +19,6 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 """
 
 import time
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,7 +80,7 @@ class CounterLogic(GenericLogic):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         # in bins
@@ -107,8 +106,7 @@ class CounterLogic(GenericLogic):
         if "counting_mode" in self._statusVariables:
             self._counting_mode = CountingMode[self._statusVariables["counting_mode"]]
 
-        constraints = self.get_hardware_constraints()
-        number_of_detectors = constraints.max_detectors
+        self.get_hardware_constraints()
 
         # initialize data arrays
         self.countdata = np.zeros([len(self.get_channels()), self._count_length])
@@ -156,10 +154,7 @@ class CounterLogic(GenericLogic):
         @return int: oversampling in units of bins.
         """
         # Determine if the counter has to be restarted after setting the parameter
-        if self.module_state() == "locked":
-            restart = True
-        else:
-            restart = False
+        restart = self.module_state() == "locked"
 
         if samples > 0:
             self._stopCount_wait()
@@ -181,10 +176,7 @@ class CounterLogic(GenericLogic):
 
         This makes sure, the counter is stopped first and restarted afterwards.
         """
-        if self.module_state() == "locked":
-            restart = True
-        else:
-            restart = False
+        restart = self.module_state() == "locked"
 
         if length > 0:
             self._stopCount_wait()
@@ -208,10 +200,7 @@ class CounterLogic(GenericLogic):
         """
         constraints = self.get_hardware_constraints()
 
-        if self.module_state() == "locked":
-            restart = True
-        else:
-            restart = False
+        restart = self.module_state() == "locked"
 
         if constraints.min_count_frequency <= frequency <= constraints.max_count_frequency:
             self._stopCount_wait()
@@ -287,7 +276,7 @@ class CounterLogic(GenericLogic):
         self._saving_stop_time = time.time()
 
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         parameters["Start counting time"] = time.strftime(
             "%d.%m.%Y %Hh:%Mmin:%Ss", time.localtime(self._saving_start_time)
         )
@@ -300,23 +289,17 @@ class CounterLogic(GenericLogic):
 
         if to_file:
             # If there is a postfix then add separating underscore
-            if postfix == "":
-                filelabel = "count_trace"
-            else:
-                filelabel = "count_trace_" + postfix
+            filelabel = "count_trace" if postfix == "" else "count_trace_" + postfix
 
             # prepare the data in a dict or in an OrderedDict:
             header = "Time (s)"
-            for i, detector in enumerate(self.get_channels()):
+            for i, _detector in enumerate(self.get_channels()):
                 header = header + f",Signal{i} (counts/s)"
 
             data = {header: self._data_to_save}
             filepath = self._save_logic.get_path_for_module(module_name="Counter")
 
-            if save_figure:
-                fig = self.draw_figure(data=np.array(self._data_to_save))
-            else:
-                fig = None
+            fig = self.draw_figure(data=np.array(self._data_to_save)) if save_figure else None
             self._save_logic.save_data(
                 data,
                 filepath=filepath,
@@ -514,30 +497,27 @@ class CounterLogic(GenericLogic):
         """
 
         # If there is a postfix then add separating underscore
-        if name_tag == "":
-            filelabel = "snapshot_count_trace"
-        else:
-            filelabel = "snapshot_count_trace_" + name_tag
+        filelabel = "snapshot_count_trace" if name_tag == "" else "snapshot_count_trace_" + name_tag
 
         stop_time = self._count_length / self._count_frequency
         time_step_size = stop_time / len(self.countdata)
         x_axis = np.arange(0, stop_time, time_step_size)
 
         # prepare the data in a dict or in an OrderedDict:
-        data = OrderedDict()
+        data = {}
         chans = self.get_channels()
         savearr = np.empty((len(chans) + 1, len(x_axis)))
         savearr[0] = x_axis
         datastr = "Time (s)"
 
-        for i, ch in enumerate(chans):
+        for i, _ch in enumerate(chans):
             savearr[i + 1] = self.countdata[i]
             datastr += f",Signal {i} (counts/s)"
 
         data[datastr] = savearr.transpose()
 
         # write the parameters:
-        parameters = OrderedDict()
+        parameters = {}
         timestr = time.strftime("%d.%m.%Y %Hh:%Mmin:%Ss", time.localtime(time.time()))
         parameters["Saved at time"] = timestr
         parameters["Count frequency (Hz)"] = self._count_frequency
@@ -564,7 +544,7 @@ class CounterLogic(GenericLogic):
         Processes the raw data from the counting device
         @return:
         """
-        for i, ch in enumerate(self.get_channels()):
+        for i, _ch in enumerate(self.get_channels()):
             # remember the new count data in circular array
             self.countdata[i, 0] = np.average(self.rawdata[i])
         # move the array to the left to make space for the new data
@@ -573,7 +553,7 @@ class CounterLogic(GenericLogic):
         self.countdata_smoothed = np.roll(self.countdata_smoothed, -1, axis=1)
         # calculate the median and save it
         window = -int(self._smooth_window_length / 2) - 1
-        for i, ch in enumerate(self.get_channels()):
+        for i, _ch in enumerate(self.get_channels()):
             self.countdata_smoothed[i, window:] = np.median(
                 self.countdata[i, -self._smooth_window_length :]
             )
@@ -585,7 +565,7 @@ class CounterLogic(GenericLogic):
                 chans = self.get_channels()
                 self._sampling_data = np.empty([len(chans) + 1, self._counting_samples])
                 self._sampling_data[0, :] = time.time() - self._saving_start_time
-                for i, ch in enumerate(chans):
+                for i, _ch in enumerate(chans):
                     self._sampling_data[i + 1, 0] = self.rawdata[i]
 
                 self._data_to_save.extend(list(self._sampling_data))
@@ -595,7 +575,7 @@ class CounterLogic(GenericLogic):
                 chans = self.get_channels()
                 newdata = np.empty((len(chans) + 1,))
                 newdata[0] = time.time() - self._saving_start_time
-                for i, ch in enumerate(chans):
+                for i, _ch in enumerate(chans):
                     newdata[i + 1] = self.countdata[i, -1]
                 self._data_to_save.append(newdata)
         return

@@ -40,7 +40,7 @@ class GatedCounterMainWindow(QtWidgets.QMainWindow):
         ui_file = os.path.join(this_dir, "ui_gated_counter_gui.ui")
 
         # Load it
-        super(GatedCounterMainWindow, self).__init__()
+        super().__init__()
         uic.loadUi(ui_file, self)
         self.show()
 
@@ -61,7 +61,7 @@ class GatedCounterGui(GUIBase):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
     def on_activate(self, e=None):

@@ -56,7 +56,7 @@ class SimpleDataGui(GUIBase):
         self.log.debug("The following configuration was found.")
 
         # checking for the right configuration
-        for key in config.keys():
+        for key in config:
             self.log.info(f"{key}: {config[key]}")
 
     def on_activate(self):

@@ -318,7 +318,7 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
         @return str: laser information
         """
         lines = ""
-        lines += "Didoe Serial: {0}\n".format(self.inst.query("?DSN"))
+        lines += "Didoe Serial: {}\n".format(self.inst.query("?DSN"))
         return lines
 
     def timers(self):
@@ -327,9 +327,9 @@ class MillenniaeVLaser(Base, SimpleLaserInterface):
         @return str: laser component run times
         """
         lines = ""
-        lines += "Diode ON: {0}\n".format(self.inst.query("?DH"))
-        lines += "Head ON: {0}\n".format(self.inst.query("?HEADHRS"))
-        lines += "PSU ON: {0}\n".format(self.inst.query("?PSHRS"))
+        lines += "Diode ON: {}\n".format(self.inst.query("?DH"))
+        lines += "Head ON: {}\n".format(self.inst.query("?HEADHRS"))
+        lines += "PSU ON: {}\n".format(self.inst.query("?PSHRS"))
         return lines
 
     def get_extra_info(self):

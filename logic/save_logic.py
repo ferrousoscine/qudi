@@ -351,7 +351,7 @@ class SaveLogic(GenericLogic):
             if not isinstance(data[keyname], np.ndarray):
                 try:
                     data[keyname] = np.array(data[keyname])
-                except:
+                except Exception:
                     self.log.error(
                         f'Casting data array of type "{type(data[keyname])}" into numpy.ndarray failed. '
                         "Could not save data."
@@ -377,9 +377,8 @@ class SaveLogic(GenericLogic):
                 return -1
 
             # determine array data types
-            if len(arr_dtype) > 0:
-                if arr_dtype[-1] != data[keyname].dtype:
-                    multiple_dtypes = True
+            if len(arr_dtype) > 0 and arr_dtype[-1] != data[keyname].dtype:
+                multiple_dtypes = True
             arr_dtype.append(data[keyname].dtype)
 
         # Raise error if data contains a mixture of 1D and 2D arrays
@@ -398,7 +397,7 @@ class SaveLogic(GenericLogic):
             mod = inspect.getmodule(frm[0])
             # that will extract the name of the class.
             module_name = mod.__name__.split(".")[-1]
-        except:
+        except Exception:
             # Sometimes it is not possible to get the object which called the save_data function
             # (such as when calling this from the console).
             module_name = "UNSPECIFIED"
@@ -430,7 +429,7 @@ class SaveLogic(GenericLogic):
             return -1
 
         # Create header string for the file
-        header = "Saved Data from the class {0} on {1}.\n".format(
+        header = "Saved Data from the class {} on {}.\n".format(
             module_name, timestamp.strftime("%d.%m.%Y at %Hh%Mm%Ss")
         )
         header += "\nParameters:\n===========\n\n"
@@ -692,7 +691,7 @@ class SaveLogic(GenericLogic):
                 "argument of type dict."
             )
 
-        for key in param_dict.keys():
+        for key in param_dict:
             param_dict[key] = netobtain(param_dict[key])
         self._additional_parameters.update(param_dict)
         return

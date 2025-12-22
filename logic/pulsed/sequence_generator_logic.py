@@ -24,7 +24,6 @@ import os
 import pickle
 import time
 import traceback
-from collections import OrderedDict
 
 import numpy as np
 from qtpy import QtCore
@@ -91,21 +90,19 @@ class SequenceGeneratorLogic(GenericLogic):
     # Global parameters describing the channel usage and common parameters used during pulsed object
     # generation for predefined methods.
     _generation_parameters = StatusVar(
-        default=OrderedDict(
-            [
-                ("laser_channel", "d_ch1"),
-                ("sync_channel", ""),
-                ("gate_channel", ""),
-                ("microwave_channel", "a_ch1"),
-                ("microwave_frequency", 2.87e9),
-                ("microwave_amplitude", 0.0),
-                ("rabi_period", 100e-9),
-                ("laser_length", 3e-6),
-                ("laser_delay", 500e-9),
-                ("wait_time", 1e-6),
-                ("analog_trigger_voltage", 0.0),
-            ]
-        )
+        default={
+            "laser_channel": "d_ch1",
+            "sync_channel": "",
+            "gate_channel": "",
+            "microwave_channel": "a_ch1",
+            "microwave_frequency": 2.87e9,
+            "microwave_amplitude": 0.0,
+            "rabi_period": 100e-9,
+            "laser_length": 3e-6,
+            "laser_delay": 500e-9,
+            "wait_time": 1e-6,
+            "analog_trigger_voltage": 0.0,
+        }
     )
 
     # The created pulse objects (PulseBlock, PulseBlockEnsemble, PulseSequence) are saved in
@@ -142,7 +139,7 @@ class SequenceGeneratorLogic(GenericLogic):
         super().__init__(config=config, **kwargs)
 
         self.log.debug("The following configuration was found.")
-        for key in config.keys():
+        for key in config:
             self.log.debug(f"{key}: {config[key]}")
 
         # current pulse generator settings that are frequently used by this logic.
@@ -167,9 +164,9 @@ class SequenceGeneratorLogic(GenericLogic):
 
         # The created pulse objects (PulseBlock, PulseBlockEnsemble, PulseSequence) are saved in
         # these dictionaries. The keys are the names.
-        self._saved_pulse_blocks = OrderedDict()
-        self._saved_pulse_block_ensembles = OrderedDict()
-        self._saved_pulse_sequences = OrderedDict()
+        self._saved_pulse_blocks = {}
+        self._saved_pulse_block_ensembles = {}
+        self._saved_pulse_sequences = {}
         return
 
     def on_activate(self):
@@ -229,9 +226,9 @@ class SequenceGeneratorLogic(GenericLogic):
         self._read_settings_from_device()
 
         # Update saved blocks/ensembles/sequences from serialized files
-        self._saved_pulse_blocks = OrderedDict()
-        self._saved_pulse_block_ensembles = OrderedDict()
-        self._saved_pulse_sequences = OrderedDict()
+        self._saved_pulse_blocks = {}
+        self._saved_pulse_block_ensembles = {}
+        self._saved_pulse_sequences = {}
         self._update_blocks_from_file()
         self._update_ensembles_from_file()
         self._update_sequences_from_file()
@@ -397,7 +394,7 @@ class SequenceGeneratorLogic(GenericLogic):
                 set_config = None
                 # Allow argument types str, set and tuple
                 if isinstance(activation_config, str):
-                    if activation_config in available_configs.keys():
+                    if activation_config in available_configs:
                         set_config = self._apply_activation_config(
                             available_configs[activation_config]
                         )
@@ -760,32 +757,32 @@ class SequenceGeneratorLogic(GenericLogic):
             if settings_dict.get("laser_channel"):
                 if settings_dict["laser_channel"] not in self.__activation_config[1]:
                     self.log.error(
-                        'Unable to set laser channel "{0}".\nChannel to set is not part '
-                        "of the current channel activation config ({1})."
+                        'Unable to set laser channel "{}".\nChannel to set is not part '
+                        "of the current channel activation config ({})."
                         "".format(settings_dict["laser_channel"], self.__activation_config[1])
                     )
                     del settings_dict["laser_channel"]
             if settings_dict.get("sync_channel"):
                 if settings_dict["sync_channel"] not in self.__activation_config[1]:
                     self.log.error(
-                        'Unable to set sync channel "{0}".\nChannel to set is not part '
-                        "of the current channel activation config ({1})."
+                        'Unable to set sync channel "{}".\nChannel to set is not part '
+                        "of the current channel activation config ({})."
                         "".format(settings_dict["sync_channel"], self.__activation_config[1])
                     )
                     del settings_dict["sync_channel"]
             if settings_dict.get("gate_channel"):
                 if settings_dict["gate_channel"] not in self.__activation_config[1]:
                     self.log.error(
-                        'Unable to set gate channel "{0}".\nChannel to set is not part '
-                        "of the current channel activation config ({1})."
+                        'Unable to set gate channel "{}".\nChannel to set is not part '
+                        "of the current channel activation config ({})."
                         "".format(settings_dict["gate_channel"], self.__activation_config[1])
                     )
                     del settings_dict["gate_channel"]
             if settings_dict.get("microwave_channel"):
                 if settings_dict["microwave_channel"] not in self.__activation_config[1]:
                     self.log.error(
-                        'Unable to set microwave channel "{0}".\nChannel to set is not '
-                        "part of the current channel activation config ({1})."
+                        'Unable to set microwave channel "{}".\nChannel to set is not '
+                        "part of the current channel activation config ({})."
                         "".format(settings_dict["microwave_channel"], self.__activation_config[1])
                     )
                     del settings_dict["microwave_channel"]
@@ -894,7 +891,7 @@ class SequenceGeneratorLogic(GenericLogic):
         try:
             with open(os.path.join(self._assets_storage_dir, filename), "wb") as file:
                 pickle.dump(block, file)
-        except:
+        except Exception:
             self.log.error(f'Failed to serialize PulseBlock "{block.name}" to file.')
         return
 
@@ -1012,7 +1009,7 @@ class SequenceGeneratorLogic(GenericLogic):
         try:
             with open(os.path.join(self._assets_storage_dir, filename), "wb") as file:
                 pickle.dump(ensemble, file)
-        except:
+        except Exception:
             self.log.error(f'Failed to serialize PulseBlockEnsemble "{ensemble.name}" to file.')
         return
 
@@ -1185,7 +1182,7 @@ class SequenceGeneratorLogic(GenericLogic):
         try:
             with open(os.path.join(self._assets_storage_dir, filename), "wb") as file:
                 pickle.dump(sequence, file)
-        except:
+        except Exception:
             self.log.error(f'Failed to serialize PulseSequence "{sequence.name}" to file.')
         return
 
@@ -1225,7 +1222,7 @@ class SequenceGeneratorLogic(GenericLogic):
 
         try:
             blocks, ensembles, sequences = gen_method(**kwargs_dict)
-        except:
+        except Exception:
             self.log.exception(
                 f'Generation of predefined sequence "{predefined_sequence_name}" failed with exception:'
             )
@@ -1754,7 +1751,7 @@ class SequenceGeneratorLogic(GenericLogic):
     def _sampling_ensemble_sanity_check(self, ensemble):
         blocks_missing = set()
         channel_activation_mismatch = False
-        for block_name, reps in ensemble.block_list:
+        for block_name, _reps in ensemble.block_list:
             block = self._saved_pulse_blocks.get(block_name)
             # Check if block is present
             if block is None:
@@ -1878,13 +1875,13 @@ class SequenceGeneratorLogic(GenericLogic):
         # This is done by appending an idle block
         granularity = self.pulse_generator_constraints.waveform_length.step
         self.log.debug(
-            "length: {0}, mod {1}".format(
+            "length: {}, mod {}".format(
                 ensemble_info["number_of_samples"], ensemble_info["number_of_samples"] % granularity
             )
         )
         if ensemble_info["number_of_samples"] % granularity != 0:
             self.log.warn(
-                "Length {0} does not fulfil step constraint {1}.".format(
+                "Length {} does not fulfil step constraint {}.".format(
                     ensemble_info["number_of_samples"], granularity
                 )
             )
@@ -1914,15 +1911,15 @@ class SequenceGeneratorLogic(GenericLogic):
             if ensemble_info["number_of_samples"] != target_total_samples:
                 self.log.error(
                     "Expanding the PulseBlockEnsemble to match the waveform granularity "
-                    "has failed.\nTarget number of samples was {0:d}.\nfinal number of "
-                    "samples is {1:d}.\nThis is probably due to a rounding error in "
+                    "has failed.\nTarget number of samples was {:d}.\nfinal number of "
+                    "samples is {:d}.\nThis is probably due to a rounding error in "
                     "SequenceGeneratorLogic.sample_pulse_block_ensemble."
                     "".format(target_total_samples, ensemble_info["number_of_samples"])
                 )
             else:
                 self.log.warn(
-                    "Extending waveform {0} by {2} bins. New length {1}.".format(
-                        ensemble.name, ensemble_info["number_of_samples"], extension_samples
+                    "Extending waveform {} by {} bins. New length {}.".format(
+                        ensemble.name, extension_samples, ensemble_info["number_of_samples"]
                     )
                 )
 
@@ -1993,7 +1990,7 @@ class SequenceGeneratorLogic(GenericLogic):
         for block_name, reps in ensemble.block_list:
             block = self.get_block(block_name)
             # Iterate over all repetitions of the current block
-            for rep_no in range(reps + 1):
+            for _rep_no in range(reps + 1):
                 # Iterate over the PulseBlockElement instances inside the current block
                 for element in block.element_list:
                     digital_high = element.digital_high

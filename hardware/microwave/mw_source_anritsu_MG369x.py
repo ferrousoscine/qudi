@@ -152,10 +152,7 @@ class MicrowaveAnritsuMG369x(Base, MicrowaveInterface):
         @return float: the output power in dBm
         """
         mode, dummy = self.get_status()
-        if mode == "cw":
-            power = float(self._gpib_connection.query("OL0"))
-        else:
-            power = self._list_power
+        power = float(self._gpib_connection.query("OL0")) if mode == "cw" else self._list_power
         return power
 
     def get_frequency(self):

@@ -24,7 +24,7 @@ top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi
 
 import ctypes
 import platform
-from ctypes import *
+from ctypes import byref, c_double, c_int
 
 import numpy as np
 
@@ -32,7 +32,7 @@ from core.configoption import ConfigOption
 from core.module import Base
 from interface.camera_interface import CameraInterface
 
-from .uc480_h import *
+from .uc480_h import *  # noqa: F403
 
 
 class CameraThorlabs(Base, CameraInterface):
